@@ -1,6 +1,6 @@
 FROM node:lts-alpine
 WORKDIR /usr/src/app
-COPY package*.json ./
+COPY package.json ./
 
 RUN npm install
 
@@ -9,4 +9,4 @@ COPY . .
 RUN npm i
 RUN npm run build
 
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:dev"]
