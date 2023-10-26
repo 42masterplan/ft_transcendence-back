@@ -12,16 +12,19 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UsersUseCases } from '../application/use-case/users.use-case';
 
 @Controller('users')
 export class UsersController {
+  constructor(private readonly useCases: UsersUseCases) {}
+
   @Post('')
   findOne(@Body() createUserDto: CreateUserDto) {
     console.log('name:' + createUserDto.name);
     console.log('profileImage:' + createUserDto.profileImage);
     console.log('introduction:' + createUserDto.introduction);
     console.log('is2faEnabled:' + createUserDto.is2faEnabled);
-    return true;
+    return this.useCases.findOne(1);
   }
 
   @Post('hasDuplicateName')
