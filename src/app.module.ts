@@ -16,7 +16,7 @@ import * as Joi from 'joi';
         process.env.NODE_ENV === 'develop' ? '.env.develop' : '.env.production',
 
       validationSchema: Joi.object({
-        PORT: Joi.number().default(3000),
+        PORT: Joi.number().default(8080),
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().default(3306),
         POSTGRES_USERNAME: Joi.string().required(),

@@ -27,13 +27,22 @@ export class UsersController {
     return this.useCases.findOne(1);
   }
 
-  @Post('hasDuplicateName')
+  @Get('auth-callback')
+  getAuthCode(@Query('code') code: string) {
+    code;
+    return {
+      hasAccount: true,
+      isTwoFactorEnabled: true,
+    };
+  }
+
+  @Post('is-duplicated-name')
   hasDuplicateName(@Query('name') name: string): boolean {
     console.log(name);
     return true;
   }
 
-  @Post('profile')
+  @Post('profile-image')
   @UseInterceptors(FileInterceptor('profile'))
   updateProfile(@UploadedFile() profile: Express.Multer.File) {
     console.log(profile);
