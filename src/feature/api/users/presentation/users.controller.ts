@@ -36,7 +36,7 @@ export class UsersController {
     };
   }
 
-  @Post('is-duplicated-name')
+  @Get('is-duplicated-name')
   hasDuplicateName(@Query('name') name: string): boolean {
     console.log(name);
     return true;
