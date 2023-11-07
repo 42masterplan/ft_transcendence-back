@@ -43,7 +43,6 @@ export class UsersController {
   }
 
   @Post('profile-image')
-  @Post('profile-image')
   @UseInterceptors(FileInterceptor('profile'))
   updateProfile(@UploadedFile() profile: Express.Multer.File) {
     console.log(profile);
