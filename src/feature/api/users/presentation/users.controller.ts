@@ -37,9 +37,11 @@ export class UsersController {
   }
 
   @Get('is-duplicated-name')
-  hasDuplicateName(@Query('name') name: string): boolean {
+  hasDuplicateName(@Query('name') name: string) {
     console.log(name);
-    return true;
+    return {
+      isDuplicated: true,
+    };
   }
 
   @Post('profile-image')
