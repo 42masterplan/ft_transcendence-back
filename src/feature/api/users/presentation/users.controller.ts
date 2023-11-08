@@ -45,9 +45,9 @@ export class UsersController {
   }
 
   @Post('profile-image')
-  @UseInterceptors(FileInterceptor('profile'))
-  updateProfile(@UploadedFile() profile: Express.Multer.File) {
-    console.log(profile);
+  @UseInterceptors(FileInterceptor('profileImage'))
+  updateProfile(@UploadedFile() profileImage: Express.Multer.File) {
+    console.log(profileImage);
     return {
       profileImage: 'https://localhost:8080/resources/test.jpg',
     };
