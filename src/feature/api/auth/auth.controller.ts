@@ -6,8 +6,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('callback')
-  async getAccessToken(@Query('code') code: string) {
-    const accessToken = await this.authService.getAccessToken(code);
+  async getAccessTokenFromFT(@Query('code') code: string) {
+    const accessToken = await this.authService.getAccessTokenFromFT(code);
     const intraId = await this.authService.getUserIntraId(accessToken);
     const jwtToken = await this.authService.getJwtToken(intraId);
 

@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  async getAccessToken(code: string): Promise<string> {
+  async getAccessTokenFromFT(code: string): Promise<string> {
     const requestUrl = `https://api.intra.42.fr/oauth/token?grant_type=authorization_code&client_id=${process.env.AUTH_CLIENT_ID}&client_secret=${process.env.AUTH_CLIENT_SECRET}&code=${code}&redirect_uri=${process.env.AUTH_REDIRECT_URL}`;
 
     let res: Response;
