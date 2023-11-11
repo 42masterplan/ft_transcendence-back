@@ -11,8 +11,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UsersUseCases } from '../application/use-case/users.use-case';
+import { CreateUserDto } from './presentation/dto/create-user.dto';
+import { UsersUseCases } from './application/use-case/users.use-case';
 
 @Controller('users')
 export class UsersController {
@@ -25,6 +25,11 @@ export class UsersController {
     console.log('introduction:' + createUserDto.introduction);
     console.log('is2faEnabled:' + createUserDto.is2faEnabled);
     return this.useCases.findOne(1);
+  }
+
+  @Delete('')
+  quit() {
+    return true;
   }
 
   @Get('auth-callback')
@@ -66,7 +71,7 @@ export class UsersController {
   }
 
   @Get('info')
-  getInfo(@Param('id') id: string) {
+  getInfo(@Param(':id') id: string) {
     return {
       id: id,
       name: 'test',
@@ -91,7 +96,7 @@ export class UsersController {
   }
 
   @Get('game-history')
-  getGameHistory(@Param('id') id: string, @Query('page') page: number) {
+  getGameHistory(@Param(':id') id: string, @Query('page') page: number) {
     console.log('id:' + id);
     console.log('page:' + page);
     return [
@@ -113,8 +118,36 @@ export class UsersController {
   }
 
   /* FRIENDS */
+  @Get('friends/request')
+  getFriendsRequest() {
+    return [
+      {
+        id: 'randomUuid',
+        profileImage: 'https://localhost:8080/resources/test.jpg',
+        introduction: 'Hello world!',
+      },
+      {
+        id: 'randomUuid2',
+        profileImage: 'https://localhost:8080/resources/test.jpg',
+        introduction: 'Bye world!',
+      },
+    ];
+  }
+
+  @Post('friends/request')
+  acceptFriendsRequest(@Param(':friend-id') friendId: string) {
+    console.log(friendId);
+    return true;
+  }
+
+  @Delete('friends/request')
+  rejectFriendsRequest(@Param(':friend-id') friendId: string) {
+    console.log(friendId);
+    return true;
+  }
+
   @Get('friends')
-  getFriends(@Param('id') id: string) {
+  getFriends(@Param(':id') id: string) {
     console.log(id);
     return [
       {
@@ -135,36 +168,8 @@ export class UsersController {
   }
 
   @Delete('friends')
-  deleteFriends(@Param('id') id: string) {
+  deleteFriends(@Param(':id') id: string) {
     console.log(id);
-    return true;
-  }
-
-  @Get('friends/request')
-  getFriendsRequest() {
-    return [
-      {
-        id: 'randomUuid',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        introduction: 'Hello world!',
-      },
-      {
-        id: 'randomUuid2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        introduction: 'Bye world!',
-      },
-    ];
-  }
-
-  @Post('friends/request')
-  acceptFriendsRequest(@Param('friend-id') friendId: string) {
-    console.log(friendId);
-    return true;
-  }
-
-  @Delete('friends/request')
-  rejectFriendsRequest(@Param('friend-id') friendId: string) {
-    console.log(friendId);
     return true;
   }
 
@@ -190,13 +195,7 @@ export class UsersController {
   }
 
   @Post('block')
-  block(@Param('id') id: string) {
-    console.log(id);
-    return true;
-  }
-
-  @Delete('')
-  quit(@Param('id') id: string) {
+  block(@Param(':id') id: string) {
     console.log(id);
     return true;
   }
