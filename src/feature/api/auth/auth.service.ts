@@ -13,7 +13,7 @@ export class AuthService {
   async getAccessToken(code: string): Promise<string> {
     const requestUrl = `https://api.intra.42.fr/oauth/token?grant_type=authorization_code&client_id=${process.env.AUTH_CLIENT_ID}&client_secret=${process.env.AUTH_CLIENT_SECRET}&code=${code}&redirect_uri=${process.env.AUTH_REDIRECT_URL}`;
 
-    let res;
+    let res: Response;
     try {
       res = await fetch(requestUrl, { method: 'post' });
     } catch (err) {
@@ -30,6 +30,7 @@ export class AuthService {
       );
     try {
       const data = await res.json();
+
       return data.access_token;
     } catch (err) {
       throw new InternalServerErrorException(
@@ -42,7 +43,7 @@ export class AuthService {
   async getUserIntraId(accessToken: string): Promise<string> {
     const requestUrl = 'https://api.intra.42.fr/v2/me';
 
-    let res;
+    let res: Response;
     try {
       res = await fetch(requestUrl, {
         method: 'get',
@@ -64,6 +65,7 @@ export class AuthService {
       );
     try {
       const data = await res.json();
+
       return data.login;
     } catch (err) {
       throw new InternalServerErrorException(err);
@@ -73,6 +75,7 @@ export class AuthService {
   async getJwtToken(intraId: string): Promise<string> {
     const payload: JwtPayload = { sub: intraId };
     const jwtToken = await this.jwtService.signAsync(payload);
+
     return jwtToken;
   }
 }
