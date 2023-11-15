@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/user.repository';
 import { User } from '../../domain/user';
+import { UserEntity } from '../../infrastructure/user.entity';
+import { use } from 'passport';
+import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 
 @Injectable()
 export class UsersUseCases {
@@ -9,7 +12,11 @@ export class UsersUseCases {
     private readonly repository: UserRepository,
   ) {}
 
-  findOne(id: number): Promise<User> {
+  findOne(id: string): Promise<User> {
     return this.repository.findOne(id);
+  }
+
+  saveOne(createUserDto: CreateUserDto): Promise<User> {
+    return this.repository.save(createUserDto);
   }
 }

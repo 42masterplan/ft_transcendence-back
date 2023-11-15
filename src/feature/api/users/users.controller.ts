@@ -19,12 +19,12 @@ export class UsersController {
   constructor(private readonly useCases: UsersUseCases) {}
 
   @Post('')
-  findOne(@Body() createUserDto: CreateUserDto) {
+  saveOne(@Body() createUserDto: CreateUserDto) {
     console.log('name:' + createUserDto.name);
     console.log('profileImage:' + createUserDto.profileImage);
     console.log('introduction:' + createUserDto.introduction);
     console.log('is2faEnabled:' + createUserDto.is2faEnabled);
-    return this.useCases.findOne(1);
+    return this.useCases.saveOne(createUserDto);
   }
 
   @Delete('')
