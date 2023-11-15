@@ -1,24 +1,25 @@
 import { Logger } from '@nestjs/common';
 import { Options } from '@mikro-orm/core';
 import { SqlHighlighter } from '@mikro-orm/sql-highlighter';
-import { ConfigService } from '@nestjs/config';
+import custom_env from 'custom-env';
 
-const configService = new ConfigService();
+custom_env.env('develop');
 
 const logger = new Logger('MikroORM');
 const MikroORMConfig: Options = {
-  dbName: configService.get('POSTGRES_DATABASE'),
-  user: configService.get('POSTGRES_USER'),
-  password: configService.get('POSTGRES_PASSWORD'),
-  host: configService.get('POSTGRES_HOST'),
-  port: configService.get('POSTGRES_PORT'),
+  dbName: process.env.POSTGRES_DATABASE,
+  user: process.env.POSTGRES_USERNAME,
+  password: process.env.POSTGRES_PASSWORD,
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT),
   type: 'postgresql',
   entities: ['./dist/**/*.entity.js'],
   entitiesTs: ['./src/**/*.entity.ts'],
+  debug: true,
   highlighter: new SqlHighlighter(),
-  // migrations: {
-  //   path: './src/database/migrations',
-  // },
+  migrations: {
+    path: './src/migrations',
+  },
   logger: logger.log.bind(logger),
 };
 
