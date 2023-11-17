@@ -13,5 +13,6 @@ import { UserRepository } from './domain/user.repository';
       useClass: UserRepositoryImpl,
     },
   ],
+  exports: [UsersUseCases],
 })
 export class UsersModule {}
