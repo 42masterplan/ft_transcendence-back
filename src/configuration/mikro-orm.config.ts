@@ -21,6 +21,7 @@ const MikroORMConfig: Options = {
     path: './src/migrations',
   },
   logger: logger.log.bind(logger),
+  allowGlobalContext: true,
 };
 
 export default MikroORMConfig;
