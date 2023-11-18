@@ -3,12 +3,12 @@ import { IsBoolean, IsNotEmpty, IsString, IsUrl } from 'class-validator';
 export class CreateChannelDto {
   @IsString()
   @IsNotEmpty()
-  channelName: string;
+  name: string;
 
   @IsString()
   password: string;
 
-  @IsString()
+  // @IsString()
   invitedFriendIds: string[];
 
   @IsString()
