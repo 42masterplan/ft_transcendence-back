@@ -67,9 +67,9 @@ export class UserEntity {
   // )
   // channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
 
-  // @OneToMany(
-  //   () => ChannelParticipantEntity,
-  //   (channelParticipant) => channelParticipant.participant,
-  // )
-  // channelParticipants = new Collection<ChannelParticipantEntity>(this);
+  @OneToMany(
+    () => ChannelParticipantEntity,
+    (channelParticipant) => channelParticipant.participant,
+  )
+  channelParticipants = new Collection<ChannelParticipantEntity>(this);
 }

@@ -13,7 +13,7 @@ import { ChannelParticipantEntity } from './channelParticipant.entity';
 @Entity({ tableName: 'channel' })
 export class ChannelEntity {
   @PrimaryKey({ type: 'uuid' })
-  id: number = v4();
+  id: string = v4();
 
   @Property({ length: 64 })
   name: string;
