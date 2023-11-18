@@ -1,5 +1,6 @@
 import {
   Collection,
+  DateTimeType,
   Entity,
   OneToMany,
   PrimaryKey,
@@ -23,6 +24,12 @@ export class ChannelEntity {
 
   @Property({ length: 32 })
   password: string;
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 
   // @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
   // channels = new Collection<ChannelMessageEntity>(this);

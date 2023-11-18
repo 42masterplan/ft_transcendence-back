@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, Property } from '@mikro-orm/core';
+import { DateTimeType, Entity, ManyToOne, Property } from '@mikro-orm/core';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelEntity } from './channel.entity';
 import { channel } from 'diagnostics_channel';
@@ -17,16 +17,9 @@ export class ChannelParticipantEntity {
   @Property()
   chatableAt: string;
 
-  static create(
-    role: string,
-    channel: ChannelEntity,
-    user: UserEntity,
-  ): ChannelParticipantEntity {
-    const channelParticipant = new ChannelParticipantEntity();
-    channelParticipant.role = role;
-    channelParticipant.participant = user;
-    channelParticipant.channel = channel;
-    channelParticipant.chatableAt = '';
-    return channelParticipant;
-  }
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }

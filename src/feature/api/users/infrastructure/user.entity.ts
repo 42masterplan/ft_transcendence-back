@@ -1,5 +1,6 @@
 import {
   Collection,
+  DateTimeType,
   Entity,
   OneToMany,
   PrimaryKey,
@@ -70,9 +71,14 @@ export class UserEntity {
   // )
   // channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
 
-  @OneToMany(
-    () => ChannelParticipantEntity,
-    (channelParticipant) => channelParticipant.participant,
-  )
-  channelParticipants = new Collection<ChannelParticipantEntity>(this);
+  // @OneToMany(
+  //   () => ChannelParticipantEntity,
+  //   (channelParticipant) => channelParticipant.participant,)
+  // channelParticipants = new Collection<ChannelParticipantEntity>(this);
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }

@@ -1,4 +1,10 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  DateTimeType,
+  Entity,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+} from '@mikro-orm/core';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelEntity } from './channel.entity';
 import { v4 } from 'uuid';
@@ -17,15 +23,9 @@ export class ChannelMessageEntity {
   @Property({ length: 512 })
   content: string;
 
-  static create(
-    user: UserEntity,
-    channel: ChannelEntity,
-    content: string,
-  ): ChannelMessageEntity {
-    const channelMessage = new ChannelMessageEntity();
-    channelMessage.participant = user;
-    channelMessage.channel = channel;
-    channelMessage.content = content;
-    return channelMessage;
-  }
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }

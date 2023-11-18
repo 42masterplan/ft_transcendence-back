@@ -1,4 +1,5 @@
 import {
+  DateTimeType,
   Entity,
   ManyToMany,
   ManyToOne,
@@ -21,4 +22,10 @@ export class FriendEntity {
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }
