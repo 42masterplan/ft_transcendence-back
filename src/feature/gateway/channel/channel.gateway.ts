@@ -11,7 +11,7 @@ import { Socket } from 'dgram';
 import { CreateChannelDto } from './dto/createChannel.dto';
 import { ChannelService } from './channel.service';
 
-@WebSocketGateway(4001)
+@WebSocketGateway()
 export class ChannelGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
