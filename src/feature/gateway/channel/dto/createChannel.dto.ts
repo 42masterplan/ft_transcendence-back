@@ -1,7 +1,8 @@
-import { IsBoolean, IsString, IsUrl } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString, IsUrl } from 'class-validator';
 
 export class CreateChannelDto {
   @IsString()
+  @IsNotEmpty()
   channelName: string;
 
   @IsString()
@@ -11,5 +12,6 @@ export class CreateChannelDto {
   invitedFriendIds: string[];
 
   @IsString()
+  @IsNotEmpty()
   status: string;
 }
