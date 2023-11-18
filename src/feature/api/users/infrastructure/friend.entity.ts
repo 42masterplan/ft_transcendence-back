@@ -14,10 +14,10 @@ export class FriendEntity {
   id: number;
 
   @ManyToOne(() => UserEntity)
-  my: string;
+  my: UserEntity;
 
   @ManyToOne(() => UserEntity)
-  friend: string;
+  friend: UserEntity;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;

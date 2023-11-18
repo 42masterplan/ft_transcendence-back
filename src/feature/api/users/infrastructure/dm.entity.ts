@@ -5,10 +5,10 @@ import { DmMessageEntity } from './dmMessage.entity';
 @Entity({ tableName: 'dm' })
 export class DmEntity {
   @ManyToOne(() => UserEntity, { primary: true })
-  user1: string;
+  user1: UserEntity;
 
   @ManyToOne(() => UserEntity, { primary: true })
-  user2: string;
+  user2: UserEntity;
 
   // @OneToMany(() => DmMessageEntity, (message) => message.dm)
   // dmMessages = new Collection<DmMessageEntity>(this);

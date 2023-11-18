@@ -5,8 +5,8 @@ import { ChannelEntity } from './channel.entity';
 @Entity({ tableName: 'channel_banned_user' })
 export class ChannelBannedUserEntity {
   @ManyToOne(() => UserEntity, { primary: true })
-  user: string;
+  user: UserEntity;
 
   @ManyToOne(() => ChannelEntity, { primary: true })
-  channel: string;
+  channel: ChannelEntity;
 }

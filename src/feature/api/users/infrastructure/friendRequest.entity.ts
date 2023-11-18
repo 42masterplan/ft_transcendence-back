@@ -8,10 +8,10 @@ export class FriendRequestEntity {
   id: number;
 
   @ManyToOne(() => UserEntity)
-  primaryUser: number;
+  primaryUserId: UserEntity;
 
   @ManyToOne(() => UserEntity)
-  targetUser: number;
+  targetUserId: UserEntity;
 
   @Property({ type: bool, default: false })
   isAccepted: boolean;

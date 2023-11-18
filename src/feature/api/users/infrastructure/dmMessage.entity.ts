@@ -2,13 +2,13 @@ import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { DmEntity } from './dm.entity';
 
-@Entity({ tableName: 'message' })
+@Entity({ tableName: 'dm_message' })
 export class DmMessageEntity {
   @PrimaryKey()
   id: number;
 
   @ManyToOne(() => UserEntity)
-  participant: string;
+  participant: UserEntity;
 
   @ManyToOne(() => DmEntity)
   dm: string;

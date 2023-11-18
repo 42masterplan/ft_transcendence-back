@@ -10,6 +10,9 @@ export class CreateUserDto {
   @IsString()
   introduction: string;
 
+  @IsString()
+  intraId: string;
+
   @IsBoolean()
   is2faEnabled: boolean;
 }

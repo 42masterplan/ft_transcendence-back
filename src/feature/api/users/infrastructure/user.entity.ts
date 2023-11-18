@@ -16,10 +16,13 @@ import { ChannelMessageEntity } from '../../channel/infrastructure/channelMessag
 import { ChannelBannedUserEntity } from '../../channel/infrastructure/channelBannedUser.entity';
 import { ChannelParticipantEntity } from '../../channel/infrastructure/channelParticipant.entity';
 
-@Entity({ tableName: 'user_entity' })
+@Entity({ tableName: 'user' })
 export class UserEntity {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
+
+  @Property({ length: 32 })
+  intraId: string;
 
   @Property({ length: 32 })
   name: string;
