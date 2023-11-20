@@ -6,12 +6,26 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Socket } from 'dgram';
 import { CreateChannelDto } from './dto/createChannel.dto';
 import { ChannelService } from './channel.service';
+import { UsePipes, ValidationPipe, ValidationError } from '@nestjs/common';
 
 @WebSocketGateway()
+@UsePipes(
+  new ValidationPipe({
+    exceptionFactory(validationErrors: ValidationError[] = []) {
+      if (this.isDetailedOutputDisable) {
+        return new WsException('');
+      }
+      const errors = this.flattenValidationErrors(validationErrors);
+      console.log(new WsException(errors));
+      return new WsException(errors);
+    },
+  }),
+)
 export class ChannelGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -49,12 +63,18 @@ export class ChannelGateway
     client.emit('myChannels', list);
   }
 
-  @SubscribeMessage('allPublicChannel')
-  async getAllPublicChannel(client: Socket) {
+  @SubscribeMessage('getPublicChannels')
+  async getPublicChannels(client: Socket) {
     console.log('socket: allPublicChannel');
-    const list = await this.channelService.getPublicChannels();
-    // console.log(list);
-    client.emit('allPublicChannel', list);
+    const channels = await this.channelService.getPublicChannels();
+    // console.log(channels);
+    client.emit('getPublicChannels', channels);
+  }
+
+  @SubscribeMessage('joinChannel')
+  async joinChannel(client: Socket, { id, password }) {
+    console.log('socket: joinChannel');
+    return await this.channelService.joinChannel({ id, password });
   }
 
   @SubscribeMessage('myRole')
@@ -80,8 +100,8 @@ export class ChannelGateway
     done,
   ) {
     console.log('socket: createChannel');
-    this.channelService.createChannel(client, createChannelDto);
-    console.log(done);
-    this.getMyChannels(client);
+    await this.channelService.createChannel(client, createChannelDto);
+    await this.getMyChannels(client);
+    return 'create Success!';
   }
 }

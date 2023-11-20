@@ -7,9 +7,15 @@ import { UserRepositoryImpl } from 'src/feature/api/users/infrastructure/user.re
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
 import { MikroORM } from '@mikro-orm/postgresql';
 import { UsersModule } from 'src/feature/api/users/users.module';
+import { ChannelMessageRepository } from './channelMessage.repository';
 
 @Module({
   imports: [UsersModule],
-  providers: [ChannelGateway, ChannelService, ChannelRepository],
+  providers: [
+    ChannelGateway,
+    ChannelService,
+    ChannelRepository,
+    ChannelMessageRepository,
+  ],
 })
 export class ChannelModule {}

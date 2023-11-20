@@ -12,12 +12,17 @@ import { PublicChannelDto } from './dto/publicChannel.dto';
 import { MyChannelDto } from './dto/myChannel.dto';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ChannelMessageEntity } from 'src/feature/api/channel/infrastructure/channelMessage.entity';
+import { ChannelMessageRepository } from './channelMessage.repository';
+import { User } from 'src/feature/api/users/domain/user';
+import { Channel } from 'diagnostics_channel';
+import { string } from 'joi';
 
 @WebSocketGateway()
 @Injectable()
 export class ChannelService {
   constructor(
     private readonly channelRepository: ChannelRepository,
+    private readonly channelMessageRepository: ChannelMessageRepository,
     private readonly usersUseCase: UsersUseCases,
     private readonly em: EntityManager,
   ) {}
@@ -28,14 +33,16 @@ export class ChannelService {
   //   }
 
   async getMyChannels() {
-    const user = await this.usersUseCase.findOne(
-      '72f7dd8d-d014-4f9a-ad0a-c378c0ab3ac0',
+    // const user = await this.usersUseCase.findOne(
+    //   '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
+    // );
+    const myChannelList = await this.channelRepository.getMyChannels(
+      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
     );
-    const myChannelList = await this.channelRepository.getMyChannels(user.id);
-    return Promise.all(
+    return await Promise.all(
       myChannelList.map(async (list) => ({
         id: list.channel.id,
-        name: (await this.channelRepository.findOne(list.channel.id)).name,
+        name: (await this.channelRepository.findOneById(list.channel.id)).name,
         userCount: await this.channelRepository.countUser(list.channel),
         isUnread: true,
       })),
@@ -43,27 +50,36 @@ export class ChannelService {
   }
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
-    const publicChannels =
-      await this.channelRepository.getAllByStatus('Public');
+    const participant = await this.channelRepository.getPublicChannels(
+      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
+    );
+    console.log(participant);
     const publicChannelDto =
-      await this.channelToPublicChannelDto(publicChannels);
+      await this.participantToPublicChannelDto(participant);
     console.log('list :');
     console.log(publicChannelDto);
-    return await publicChannelDto;
+    return publicChannelDto;
+  }
+
+  async joinChannel({ id, password }): Promise<string> {
+    const channel = await this.channelRepository.findOneById(id);
+    if (!channel) return 'fail';
+    if (channel.status == 'private') return 'Unacceptable';
+    if (channel.password != password) return 'Wrong password!';
+    const user = await this.usersUseCase.findOne(
+      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
+    );
+    await this.createChannelParticipant('user', user, channel);
+    return 'success';
   }
 
   async newMessage(message, roomId): Promise<ChannelMessageEntity> {
     const user = await this.usersUseCase.findOne(
-      '72f7dd8d-d014-4f9a-ad0a-c378c0ab3ac0',
+      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
     );
-    const channel = await this.channelRepository.findOne(roomId);
-    console.log(roomId);
-    const newMessage = await ChannelMessageEntity.create(
-      user,
-      channel,
-      message,
-    );
-    return await this.channelRepository.saveMessage(newMessage);
+    const channel = await this.channelRepository.findOneById(roomId);
+    const newMessage = new ChannelMessageEntity();
+    return await this.channelMessageRepository.saveOne(newMessage);
   }
 
   async getChannelHistory(channelId) {
@@ -107,16 +123,38 @@ export class ChannelService {
     return await publicChannels;
   }
 
+  async participantToPublicChannelDto(
+    participants: ChannelParticipantEntity[],
+  ): Promise<PublicChannelDto[]> {
+    const publicChannels = (PublicChannelDto[participants.length] = []);
+
+    for (const participant of participants) {
+      const publicChannelDto = new PublicChannelDto();
+      publicChannelDto.name = (
+        await this.channelRepository.findOneById(participant.channel.id)
+      ).name;
+      publicChannelDto.isPassword = participant.channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
+      publicChannelDto.id = participant.channel.id;
+      publicChannelDto.userCount = await this.channelRepository.countUser(
+        participant.channel,
+      );
+
+      publicChannels.push(publicChannelDto);
+    }
+    return await publicChannels;
+  }
+
   async createChannel(client, createChannelDto: CreateChannelDto) {
-    if (createChannelDto.channelName == '')
+    if (createChannelDto.name == '')
       client.emit('error_exist', '방 이름을 입력해주세요.');
     console.log('service');
     console.log(createChannelDto);
     const user = await this.usersUseCase.findOne(
-      '72f7dd8d-d014-4f9a-ad0a-c378c0ab3ac0',
-    );
+      '72e6bc5e-c1f8-4953-a0fe-0c962325eecb',
+    ); // User
     const channel = await this.channelRepository.saveChannel(createChannelDto);
-    this.createChannelParticipant('owner', user, channel);
+    await this.createChannelParticipant('owner', user, channel);
+    return 'hi';
   }
 
   async createChannelParticipant(
@@ -124,12 +162,14 @@ export class ChannelService {
     user: UserEntity,
     channel: ChannelEntity,
   ): Promise<ChannelParticipantEntity> {
-    const channelParticipant = ChannelParticipantEntity.create(
-      role,
-      channel,
-      user,
-    );
-    this.channelRepository.saveChannelParticipant(channelParticipant);
+    console.log(user);
+    console.log(channel);
+    const channelParticipant = new ChannelParticipantEntity();
+    channelParticipant.role = role;
+    channelParticipant.participant = user;
+    channelParticipant.channel = channel;
+    channelParticipant.chatableAt = '';
+    await this.channelRepository.saveChannelParticipant(channelParticipant);
     return channelParticipant;
   }
 }
