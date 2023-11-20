@@ -31,18 +31,18 @@ export class ChannelEntity {
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  // @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
-  // channels = new Collection<ChannelMessageEntity>(this);
+  @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
+  channels = new Collection<ChannelMessageEntity>(this);
 
-  // @OneToMany(
-  //   () => ChannelBannedUserEntity,
-  //   (channelBannedUser) => channelBannedUser.channel,
-  // )
-  // channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
+  @OneToMany(
+    () => ChannelBannedUserEntity,
+    (channelBannedUser) => channelBannedUser.channel,
+  )
+  channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
 
-  // @OneToMany(
-  //   () => ChannelParticipantEntity,
-  //   (channelParticipant) => channelParticipant.channel,
-  // )
-  // channelParticipants = new Collection<ChannelParticipantEntity>(this);
+  @OneToMany(
+    () => ChannelParticipantEntity,
+    (channelParticipant) => channelParticipant.channel,
+  )
+  channelParticipants = new Collection<ChannelParticipantEntity>(this);
 }
