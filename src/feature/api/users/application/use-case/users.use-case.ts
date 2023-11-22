@@ -12,7 +12,7 @@ export class UsersUseCases {
     private readonly repository: UserRepository,
   ) {}
 
-  findOne(id: string): Promise<User> {
+  findOne(id: string): Promise<UserEntity> {
     return this.repository.findOne(id);
   }
 

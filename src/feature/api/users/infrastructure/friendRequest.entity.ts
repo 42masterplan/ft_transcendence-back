@@ -1,4 +1,10 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  DateTimeType,
+  Entity,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+} from '@mikro-orm/core';
 import { bool } from 'joi';
 import { UserEntity } from './user.entity';
 
@@ -8,11 +14,17 @@ export class FriendRequestEntity {
   id: number;
 
   @ManyToOne(() => UserEntity)
-  primaryUser: number;
+  primaryUserId: UserEntity;
 
   @ManyToOne(() => UserEntity)
-  targetUser: number;
+  targetUserId: UserEntity;
 
   @Property({ type: bool, default: false })
   isAccepted: boolean;
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }

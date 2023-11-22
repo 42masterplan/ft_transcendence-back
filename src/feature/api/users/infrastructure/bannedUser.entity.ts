@@ -1,6 +1,12 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  DateTimeType,
+  Entity,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+} from '@mikro-orm/core';
 import { UserEntity } from './user.entity';
-import { bool, boolean } from 'joi';
+import { bool } from 'joi';
 
 @Entity({ tableName: 'banned_user' })
 export class BannedUserEntity {
@@ -8,11 +14,17 @@ export class BannedUserEntity {
   id: number;
 
   @ManyToOne(() => UserEntity)
-  primaryUser: string;
+  primaryUser: UserEntity;
 
   @ManyToOne(() => UserEntity)
-  targetUser: string;
+  targetUser: UserEntity;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }

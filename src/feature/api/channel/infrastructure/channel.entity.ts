@@ -1,5 +1,6 @@
 import {
   Collection,
+  DateTimeType,
   Entity,
   OneToMany,
   PrimaryKey,
@@ -13,7 +14,7 @@ import { ChannelParticipantEntity } from './channelParticipant.entity';
 @Entity({ tableName: 'channel' })
 export class ChannelEntity {
   @PrimaryKey({ type: 'uuid' })
-  id: number = v4();
+  id: string = v4();
 
   @Property({ length: 64 })
   name: string;
@@ -24,18 +25,24 @@ export class ChannelEntity {
   @Property({ length: 32 })
   password: string;
 
-  // @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
-  // channels = new Collection<ChannelMessageEntity>(this);
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
 
-  // @OneToMany(
-  //   () => ChannelBannedUserEntity,
-  //   (channelBannedUser) => channelBannedUser.channel,
-  // )
-  // channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 
-  // @OneToMany(
-  //   () => ChannelParticipantEntity,
-  //   (channelParticipant) => channelParticipant.channel,
-  // )
-  // channelParticipants = new Collection<ChannelParticipantEntity>(this);
+  @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
+  channels = new Collection<ChannelMessageEntity>(this);
+
+  @OneToMany(
+    () => ChannelBannedUserEntity,
+    (channelBannedUser) => channelBannedUser.channel,
+  )
+  channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
+
+  @OneToMany(
+    () => ChannelParticipantEntity,
+    (channelParticipant) => channelParticipant.channel,
+  )
+  channelParticipants = new Collection<ChannelParticipantEntity>(this);
 }

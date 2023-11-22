@@ -1,18 +1,31 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  DateTimeType,
+  Entity,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+} from '@mikro-orm/core';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelEntity } from './channel.entity';
+import { v4 } from 'uuid';
 
 @Entity({ tableName: 'channel_message' })
 export class ChannelMessageEntity {
-  @PrimaryKey()
-  id: number;
+  @PrimaryKey({ type: 'uuid' })
+  id: string = v4();
 
   @ManyToOne(() => UserEntity)
-  participant: string;
+  participant: UserEntity;
 
   @ManyToOne(() => ChannelEntity)
-  channel: string;
+  channel: ChannelEntity;
 
   @Property({ length: 512 })
   content: string;
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }

@@ -3,7 +3,7 @@ import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { User } from './user';
 
 export interface UserRepository {
-  findOne(id: string): Promise<User>;
+  findOne(id: string): Promise<UserEntity>;
   save(createUserDto: CreateUserDto): Promise<User>;
 }
 

@@ -11,9 +11,9 @@ import { CreateUserDto } from '../presentation/dto/create-user.dto';
 export class UserRepositoryImpl implements UserRepository {
   constructor(private readonly em: EntityManager) {}
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<UserEntity> {
     const user = await this.em.findOne(UserEntity, { id });
-    return this.toDomain(user);
+    return user;
   }
 
   async save(createUserDto: CreateUserDto): Promise<User> {

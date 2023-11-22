@@ -1,4 +1,5 @@
 import {
+  DateTimeType,
   Entity,
   ManyToMany,
   ManyToOne,
@@ -14,11 +15,17 @@ export class FriendEntity {
   id: number;
 
   @ManyToOne(() => UserEntity)
-  my: string;
+  my: UserEntity;
 
   @ManyToOne(() => UserEntity)
-  friend: string;
+  friend: UserEntity;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
+
+  @Property({ type: DateTimeType })
+  createdAt: Date = new Date();
+
+  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
 }
