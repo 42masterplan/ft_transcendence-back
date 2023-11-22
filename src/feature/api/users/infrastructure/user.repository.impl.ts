@@ -1,11 +1,9 @@
-import { EntityAssigner, MikroORM } from '@mikro-orm/core';
-import { User } from '../domain/user';
-import { UserRepository } from '../domain/user.repository';
-import { UserEntity } from './user.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { DmEntity } from './dm.entity';
+import { User } from '../domain/user';
+import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
+import { UserEntity } from './user.entity';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {

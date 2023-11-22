@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { WebSocketGateway } from '@nestjs/websockets';
+import { UsersUseCases } from '../../users/application/use-case/users.use-case';
+import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelRepository } from '../domain/channel.repository';
-import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
-import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channelParticipant.entity';
-import { UserEntity } from 'src/feature/api/users/infrastructure/user.entity';
-import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
-import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
-import { EntityManager } from '@mikro-orm/postgresql';
-import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channelMessage.entity';
+import { ChannelEntity } from '../infrastructure/channel.entity';
+import { ChannelMessageEntity } from '../infrastructure/channelMessage.entity';
+import { ChannelParticipantEntity } from '../infrastructure/channelParticipant.entity';
 import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
+import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
+import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 
 @WebSocketGateway()
 @Injectable()
@@ -18,7 +17,6 @@ export class ChannelService {
     private readonly channelRepository: ChannelRepository,
     private readonly channelMessageRepository: ChannelMessageRepository,
     private readonly usersUseCase: UsersUseCases,
-    private readonly em: EntityManager,
   ) {}
 
   //   async findById(id: string): Promise<ChannelEntity> {

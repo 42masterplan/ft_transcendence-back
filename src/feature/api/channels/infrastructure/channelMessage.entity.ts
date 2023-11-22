@@ -5,9 +5,9 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
+import { v4 } from 'uuid';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelEntity } from './channel.entity';
-import { v4 } from 'uuid';
 
 @Entity({ tableName: 'channel_message' })
 export class ChannelMessageEntity {

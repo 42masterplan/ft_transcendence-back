@@ -1,6 +1,6 @@
-import { Logger } from '@nestjs/common';
 import { Options } from '@mikro-orm/core';
 import { SqlHighlighter } from '@mikro-orm/sql-highlighter';
+import { Logger } from '@nestjs/common';
 import custom_env from 'custom-env';
 
 custom_env.env('develop');

@@ -7,8 +7,8 @@ import {
   Property,
 } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { ChannelMessageEntity } from './channelMessage.entity';
 import { ChannelBannedUserEntity } from './channel-banned-user.entity';
+import { ChannelMessageEntity } from './channelMessage.entity';
 import { ChannelParticipantEntity } from './channelParticipant.entity';
 
 @Entity({ tableName: 'channel' })

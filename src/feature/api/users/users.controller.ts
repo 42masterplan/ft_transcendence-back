@@ -11,8 +11,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CreateUserDto } from './presentation/dto/create-user.dto';
 import { UsersUseCases } from './application/use-case/users.use-case';
+import { CreateUserDto } from './presentation/dto/create-user.dto';
 
 @Controller('users')
 export class UsersController {

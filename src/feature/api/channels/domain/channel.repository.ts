@@ -1,10 +1,10 @@
+import { QueryOrder } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
-import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channelParticipant.entity';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channelMessage.entity';
-import { QueryOrder } from '@mikro-orm/core';
+import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channelParticipant.entity';
+import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 
 @Injectable()
 export class ChannelRepository {
