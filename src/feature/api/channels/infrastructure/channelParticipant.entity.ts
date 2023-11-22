@@ -1,7 +1,6 @@
 import { DateTimeType, Entity, ManyToOne, Property } from '@mikro-orm/core';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelEntity } from './channel.entity';
-import { channel } from 'diagnostics_channel';
 
 @Entity({ tableName: 'channel_participant' })
 export class ChannelParticipantEntity {

@@ -5,13 +5,11 @@ import { DatabaseModule } from './feature/database/database.module';
 import { ApiModule } from './feature/api/api.module';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { GatewayModule } from './feature/gateway/gateway.module';
 
 @Module({
   imports: [
     DatabaseModule,
     ApiModule,
-    GatewayModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
