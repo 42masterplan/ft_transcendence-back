@@ -9,8 +9,8 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Socket } from 'dgram';
-import { CreateChannelDto } from './dto/createChannel.dto';
-import { ChannelService } from './channel.service';
+import { CreateChannelDto } from './dto/create-channel.dto';
+import { ChannelService } from '../../application/channel.service';
 import { UsePipes, ValidationPipe, ValidationError } from '@nestjs/common';
 
 @WebSocketGateway()

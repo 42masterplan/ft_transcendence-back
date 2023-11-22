@@ -5,7 +5,7 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UserEntity } from './user.entity';
 import { DmEntity } from './dm.entity';
 
 @Entity({ tableName: 'dm_message' })

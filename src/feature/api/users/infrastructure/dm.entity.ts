@@ -7,7 +7,7 @@ import {
   Property,
 } from '@mikro-orm/core';
 import { UserEntity } from './user.entity';
-import { DmMessageEntity } from './dmMessage.entity';
+import { DmMessageEntity } from './dm-message.entity';
 
 @Entity({ tableName: 'dm' })
 export class DmEntity {

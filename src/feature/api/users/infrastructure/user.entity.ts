@@ -1,21 +1,5 @@
-import {
-  Collection,
-  DateTimeType,
-  Entity,
-  OneToMany,
-  PrimaryKey,
-  Property,
-  serialize,
-} from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { FriendEntity } from './friend.entity';
-import { FriendRequestEntity } from './friendRequest.entity';
-import { BannedUserEntity } from './bannedUser.entity';
-import { DmEntity } from './dm.entity';
-import { DmMessageEntity } from './dmMessage.entity';
-import { ChannelMessageEntity } from '../../channel/infrastructure/channelMessage.entity';
-import { ChannelBannedUserEntity } from '../../channel/infrastructure/channelBannedUser.entity';
-import { ChannelParticipantEntity } from '../../channel/infrastructure/channelParticipant.entity';
 
 @Entity({ tableName: 'user' })
 export class UserEntity {
