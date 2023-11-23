@@ -22,7 +22,7 @@ export class ChannelEntity {
   @Property({ length: 32 })
   status: string;
 
-  @Property({ length: 32 })
+  @Property({ length: 32, nullable: true })
   password: string;
 
   @Property({ type: DateTimeType })

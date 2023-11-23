@@ -19,7 +19,7 @@ export class FriendRequestEntity {
   @Property({ type: 'uuid' })
   targetUserId!: string;
 
-  @Property({ type: bool, default: false })
+  @Property({ type: bool, default: false, nullable: true })
   isAccepted: boolean;
 
   @Property({ type: DateTimeType })
