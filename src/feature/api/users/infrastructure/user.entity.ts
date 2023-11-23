@@ -9,7 +9,7 @@ export class UserEntity {
   @Property({ length: 32 })
   intraId: string;
 
-  @Property({ length: 32 })
+  @Property({ length: 32, nullable: true })
   name: string;
 
   @Property({ length: 128 })
@@ -18,7 +18,7 @@ export class UserEntity {
   @Property()
   is2faEnabled: boolean;
 
-  @Property({ default: '', length: 128 })
+  @Property({ length: 128, nullable: true })
   email: string;
 
   @Property({ default: '', length: 32 })
