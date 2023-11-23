@@ -13,11 +13,11 @@ export class DmMessageEntity {
   @PrimaryKey()
   id: number;
 
-  @ManyToOne(() => UserEntity)
-  participant: UserEntity;
+  @Property({ type: 'uuid' })
+  participantId: string;
 
-  @ManyToOne(() => DmEntity)
-  dm: string;
+  @Property({ type: 'uuid' })
+  dmId: string;
 
   @Property({ length: 512 })
   content: string;
@@ -27,4 +27,10 @@ export class DmMessageEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  @ManyToOne(() => UserEntity)
+  participant: UserEntity;
+
+  @ManyToOne(() => DmEntity)
+  dm: string;
 }

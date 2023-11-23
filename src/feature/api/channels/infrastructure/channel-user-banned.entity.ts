@@ -8,19 +8,13 @@ import {
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { ChannelEntity } from './channel.entity';
 
-@Entity({ tableName: 'channel_participant' })
-export class ChannelParticipantEntity {
+@Entity({ tableName: 'channel_user_banned' })
+export class ChannelUserBannedEntity {
   @PrimaryKey({ type: 'uuid' })
-  participantId: string;
+  userId: string;
 
   @PrimaryKey({ type: 'uuid' })
-  cannelId: string;
-
-  @Property({ length: 64 })
-  role: string;
-
-  @Property()
-  chatableAt: string;
+  channelId: string;
 
   @Property({ type: DateTimeType })
   createdAt: Date = new Date();
@@ -28,9 +22,9 @@ export class ChannelParticipantEntity {
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  @ManyToOne(() => UserEntity, { primary: true })
-  participant: UserEntity;
+  @ManyToOne(() => UserEntity)
+  user: UserEntity;
 
-  @ManyToOne(() => ChannelEntity, { primary: true })
+  @ManyToOne(() => ChannelEntity)
   channel: ChannelEntity;
 }

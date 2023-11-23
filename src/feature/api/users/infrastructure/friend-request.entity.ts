@@ -13,11 +13,11 @@ export class FriendRequestEntity {
   @PrimaryKey()
   id: number;
 
-  @ManyToOne(() => UserEntity)
-  primaryUserId: UserEntity;
+  @Property({ type: 'uuid' })
+  primaryUserId: string;
 
-  @ManyToOne(() => UserEntity)
-  targetUserId: UserEntity;
+  @Property({ type: 'uuid' })
+  targetUserId: string;
 
   @Property({ type: bool, default: false })
   isAccepted: boolean;
@@ -27,4 +27,10 @@ export class FriendRequestEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  @ManyToOne(() => UserEntity)
+  primaryUser: UserEntity;
+
+  @ManyToOne(() => UserEntity)
+  targetUser: UserEntity;
 }

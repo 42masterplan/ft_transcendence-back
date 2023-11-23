@@ -14,11 +14,11 @@ export class ChannelMessageEntity {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @ManyToOne(() => UserEntity)
-  participant: UserEntity;
+  @Property({ type: 'uuid' })
+  participantId: string;
 
-  @ManyToOne(() => ChannelEntity)
-  channel: ChannelEntity;
+  @Property({ type: 'uuid' })
+  channelId: string;
 
   @Property({ length: 512 })
   content: string;
@@ -28,4 +28,10 @@ export class ChannelMessageEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  @ManyToOne(() => UserEntity)
+  participant: UserEntity;
+
+  @ManyToOne(() => ChannelEntity)
+  channel: ChannelEntity;
 }

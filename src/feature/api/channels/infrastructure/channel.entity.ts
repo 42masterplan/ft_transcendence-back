@@ -8,7 +8,7 @@ import {
 } from '@mikro-orm/core';
 import { v4 } from 'uuid';
 import { ChannelMessageEntity } from './channelMessage.entity';
-import { ChannelBannedUserEntity } from './channel-banned-user.entity';
+import { ChannelUserBannedEntity } from './channel-user-banned.entity';
 import { ChannelParticipantEntity } from './channelParticipant.entity';
 
 @Entity({ tableName: 'channel' })
@@ -32,13 +32,13 @@ export class ChannelEntity {
   updatedAt: Date = new Date();
 
   @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
-  channels = new Collection<ChannelMessageEntity>(this);
+  channelMessages = new Collection<ChannelMessageEntity>(this);
 
   @OneToMany(
-    () => ChannelBannedUserEntity,
-    (channelBannedUser) => channelBannedUser.channel,
+    () => ChannelUserBannedEntity,
+    (channelUserBanned) => channelUserBanned.channel,
   )
-  channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
+  channelUserBanneds = new Collection<ChannelUserBannedEntity>(this);
 
   @OneToMany(
     () => ChannelParticipantEntity,
