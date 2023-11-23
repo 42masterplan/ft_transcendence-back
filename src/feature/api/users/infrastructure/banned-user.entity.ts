@@ -14,10 +14,10 @@ export class BannedUserEntity {
   id: number;
 
   @Property({ type: 'uuid' })
-  primaryUserId: string;
+  primaryUserId!: string;
 
   @Property({ type: 'uuid' })
-  targetUserId: string;
+  targetUserId!: string;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
@@ -29,8 +29,8 @@ export class BannedUserEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity)
-  primaryUser: UserEntity;
+  primaryUser!: UserEntity;
 
   @ManyToOne(() => UserEntity)
-  targetUser: UserEntity;
+  targetUser!: UserEntity;
 }

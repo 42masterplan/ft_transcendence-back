@@ -11,10 +11,10 @@ import { ChannelEntity } from './channel.entity';
 @Entity({ tableName: 'channel_participant' })
 export class ChannelParticipantEntity {
   @PrimaryKey({ type: 'uuid' })
-  participantId: string;
+  participantId!: string;
 
   @PrimaryKey({ type: 'uuid' })
-  cannelId: string;
+  cannelId!: string;
 
   @Property({ length: 64 })
   role: string;
@@ -29,8 +29,8 @@ export class ChannelParticipantEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity, { primary: true })
-  participant: UserEntity;
+  participant!: UserEntity;
 
   @ManyToOne(() => ChannelEntity, { primary: true })
-  channel: ChannelEntity;
+  channel!: ChannelEntity;
 }

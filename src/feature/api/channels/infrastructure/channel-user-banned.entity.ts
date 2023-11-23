@@ -11,10 +11,10 @@ import { ChannelEntity } from './channel.entity';
 @Entity({ tableName: 'channel_user_banned' })
 export class ChannelUserBannedEntity {
   @PrimaryKey({ type: 'uuid' })
-  userId: string;
+  userId!: string;
 
   @PrimaryKey({ type: 'uuid' })
-  channelId: string;
+  channelId!: string;
 
   @Property({ type: DateTimeType })
   createdAt: Date = new Date();
@@ -23,8 +23,8 @@ export class ChannelUserBannedEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity)
-  user: UserEntity;
+  user!: UserEntity;
 
   @ManyToOne(() => ChannelEntity)
-  channel: ChannelEntity;
+  channel!: ChannelEntity;
 }

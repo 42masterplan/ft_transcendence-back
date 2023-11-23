@@ -29,8 +29,8 @@ export class DmMessageEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity)
-  participant: UserEntity;
+  participant!: UserEntity;
 
   @ManyToOne(() => DmEntity)
-  dm: string;
+  dm!: string;
 }

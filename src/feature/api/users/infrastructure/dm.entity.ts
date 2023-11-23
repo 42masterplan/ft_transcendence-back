@@ -15,19 +15,19 @@ export class DmEntity {
   createdAt: Date = new Date();
 
   @Property({ type: 'uuid' })
-  user1Id: string;
+  user1Id!: string;
 
   @Property({ type: 'uuid' })
-  user2Id: string;
+  user2Id!: string;
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity, { primary: true })
-  user1: UserEntity;
+  user1!: UserEntity;
 
   @ManyToOne(() => UserEntity, { primary: true })
-  user2: UserEntity;
+  user2!: UserEntity;
 
   // @OneToMany(() => DmMessageEntity, (message) => message.dm)
   // dmMessages = new Collection<DmMessageEntity>(this);
