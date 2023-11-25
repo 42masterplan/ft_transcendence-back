@@ -12,19 +12,15 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
-import { UsersUseCases } from './application/use-case/users.use-case';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly useCases: UsersUseCases) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post('')
   saveOne(@Body() createUserDto: CreateUserDto) {
-    console.log('name:' + createUserDto.name);
-    console.log('profileImage:' + createUserDto.profileImage);
-    console.log('introduction:' + createUserDto.introduction);
-    console.log('is2faEnabled:' + createUserDto.is2faEnabled);
-    return this.useCases.saveOne(createUserDto);
+    return this.usersService.saveOne(createUserDto);
   }
 
   @Delete('')
