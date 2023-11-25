@@ -41,14 +41,43 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 32,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
         }
       },
       "name": "channel",
       "schema": "public",
       "indexes": [
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "keyName": "channel_name_unique",
+          "primary": false,
+          "unique": true
+        },
         {
           "keyName": "channel_pkey",
           "columnNames": [
@@ -73,13 +102,23 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "intra_id": {
+          "name": "intra_id",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 32,
+          "mappedType": "string"
+        },
         "name": {
           "name": "name",
           "type": "varchar(32)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 32,
           "mappedType": "string"
         },
@@ -108,9 +147,8 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 128,
-          "default": "''",
           "mappedType": "string"
         },
         "current_status": {
@@ -133,13 +171,51 @@
           "nullable": false,
           "length": 128,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
         }
       },
-      "name": "user_entity",
+      "name": "user",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "user_entity_pkey",
+          "columnNames": [
+            "intra_id"
+          ],
+          "composite": false,
+          "keyName": "user_intra_id_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "keyName": "user_name_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "user_pkey",
           "columnNames": [
             "id"
           ],
@@ -162,6 +238,36 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "is_accepted": {
+          "name": "is_accepted",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
         "primary_user_id": {
           "name": "primary_user_id",
           "type": "uuid",
@@ -179,16 +285,6 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
-        },
-        "is_accepted": {
-          "name": "is_accepted",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
         }
       },
       "name": "friend_request",
@@ -215,7 +311,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
         "friend_request_target_user_id_foreign": {
@@ -227,7 +323,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         }
       }
@@ -242,6 +338,36 @@
           "primary": true,
           "nullable": false,
           "mappedType": "integer"
+        },
+        "is_deleted": {
+          "name": "is_deleted",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
         },
         "my_id": {
           "name": "my_id",
@@ -260,16 +386,6 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
-        },
-        "is_deleted": {
-          "name": "is_deleted",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
         }
       },
       "name": "friend",
@@ -296,7 +412,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
         "friend_friend_id_foreign": {
@@ -308,7 +424,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         }
       }
@@ -332,6 +448,26 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
         }
       },
       "name": "dm",
@@ -359,7 +495,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
         "dm_user2_id_foreign": {
@@ -371,7 +507,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         }
       }
@@ -386,6 +522,36 @@
           "primary": true,
           "nullable": false,
           "mappedType": "integer"
+        },
+        "content": {
+          "name": "content",
+          "type": "varchar(512)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 512,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
         },
         "participant_id": {
           "name": "participant_id",
@@ -413,23 +579,13 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
-        },
-        "content": {
-          "name": "content",
-          "type": "varchar(512)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 512,
-          "mappedType": "string"
         }
       },
-      "name": "message",
+      "name": "dm_message",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "message_pkey",
+          "keyName": "dm_message_pkey",
           "columnNames": [
             "id"
           ],
@@ -440,30 +596,113 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "message_participant_id_foreign": {
-          "constraintName": "message_participant_id_foreign",
+        "dm_message_participant_id_foreign": {
+          "constraintName": "dm_message_participant_id_foreign",
           "columnNames": [
             "participant_id"
           ],
-          "localTableName": "public.message",
+          "localTableName": "public.dm_message",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
-        "message_dm_user1_id_dm_user2_id_foreign": {
-          "constraintName": "message_dm_user1_id_dm_user2_id_foreign",
+        "dm_message_dm_user1_id_dm_user2_id_foreign": {
+          "constraintName": "dm_message_dm_user1_id_dm_user2_id_foreign",
           "columnNames": [
             "dm_user1_id",
             "dm_user2_id"
           ],
-          "localTableName": "public.message",
+          "localTableName": "public.dm_message",
           "referencedColumnNames": [
             "user1_id",
             "user2_id"
           ],
           "referencedTableName": "public.dm",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        }
+      },
+      "name": "channel_user_banned",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "channel_user_banned_pkey",
+          "columnNames": [
+            "user_id",
+            "channel_id"
+          ],
+          "composite": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "channel_user_banned_user_id_foreign": {
+          "constraintName": "channel_user_banned_user_id_foreign",
+          "columnNames": [
+            "user_id"
+          ],
+          "localTableName": "public.channel_user_banned",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
+          "updateRule": "cascade"
+        },
+        "channel_user_banned_channel_id_foreign": {
+          "constraintName": "channel_user_banned_channel_id_foreign",
+          "columnNames": [
+            "channel_id"
+          ],
+          "localTableName": "public.channel_user_banned",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.channel",
           "updateRule": "cascade"
         }
       }
@@ -506,6 +745,26 @@
           "primary": false,
           "nullable": false,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
         }
       },
       "name": "channel_participant",
@@ -533,7 +792,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
         "channel_participant_channel_id_foreign": {
@@ -561,6 +820,36 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "content": {
+          "name": "content",
+          "type": "varchar(512)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 512,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
         "participant_id": {
           "name": "participant_id",
           "type": "uuid",
@@ -578,16 +867,6 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
-        },
-        "content": {
-          "name": "content",
-          "type": "varchar(512)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 512,
-          "mappedType": "string"
         }
       },
       "name": "channel_message",
@@ -614,7 +893,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
         "channel_message_channel_id_foreign": {
@@ -623,69 +902,6 @@
             "channel_id"
           ],
           "localTableName": "public.channel_message",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.channel",
-          "updateRule": "cascade"
-        }
-      }
-    },
-    {
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "channel_banned_user",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "channel_banned_user_pkey",
-          "columnNames": [
-            "user_id",
-            "channel_id"
-          ],
-          "composite": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "channel_banned_user_user_id_foreign": {
-          "constraintName": "channel_banned_user_user_id_foreign",
-          "columnNames": [
-            "user_id"
-          ],
-          "localTableName": "public.channel_banned_user",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.user_entity",
-          "updateRule": "cascade"
-        },
-        "channel_banned_user_channel_id_foreign": {
-          "constraintName": "channel_banned_user_channel_id_foreign",
-          "columnNames": [
-            "channel_id"
-          ],
-          "localTableName": "public.channel_banned_user",
           "referencedColumnNames": [
             "id"
           ],
@@ -705,6 +921,36 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "is_deleted": {
+          "name": "is_deleted",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
         "primary_user_id": {
           "name": "primary_user_id",
           "type": "uuid",
@@ -722,16 +968,6 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
-        },
-        "is_deleted": {
-          "name": "is_deleted",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
         }
       },
       "name": "banned_user",
@@ -758,7 +994,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         },
         "banned_user_target_user_id_foreign": {
@@ -770,7 +1006,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user_entity",
+          "referencedTableName": "public.user",
           "updateRule": "cascade"
         }
       }

@@ -13,12 +13,6 @@ export class FriendEntity {
   @PrimaryKey()
   id: number;
 
-  @Property({ type: 'uuid' })
-  myId!: string;
-
-  @Property({ type: 'uuid' })
-  friendId!: string;
-
   @Property({ type: bool, default: false })
   isDeleted: boolean;
 
@@ -29,8 +23,8 @@ export class FriendEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity)
-  my!: UserEntity;
+  my!: string;
 
   @ManyToOne(() => UserEntity)
-  friend!: UserEntity;
+  friend!: string;
 }

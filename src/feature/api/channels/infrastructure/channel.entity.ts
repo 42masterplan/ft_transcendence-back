@@ -5,6 +5,7 @@ import {
   OneToMany,
   PrimaryKey,
   Property,
+  Unique,
 } from '@mikro-orm/core';
 import { v4 } from 'uuid';
 import { ChannelMessageEntity } from './channel-message.entity';
@@ -17,6 +18,7 @@ export class ChannelEntity {
   id: string = v4();
 
   @Property({ length: 64 })
+  @Unique()
   name: string;
 
   @Property({ length: 32 })
