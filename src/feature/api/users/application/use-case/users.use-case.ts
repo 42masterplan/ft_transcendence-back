@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/user.repository';
 import { User } from '../../domain/user';
-import { UserEntity } from '../../infrastructure/user.entity';
-import { use } from 'passport';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 
 @Injectable()
@@ -12,11 +10,17 @@ export class UsersUseCases {
     private readonly repository: UserRepository,
   ) {}
 
-  findOne(id: string): Promise<UserEntity> {
-    return this.repository.findOne(id);
+  findOne(id: string): Promise<User> {
+    return this.repository.findOneById(id);
   }
 
-  saveOne(createUserDto: CreateUserDto): Promise<User> {
-    return this.repository.save(createUserDto);
+  async saveOne(createUserDto: CreateUserDto): Promise<User> {
+    return await this.repository.saveOne(createUserDto);
+  }
+
+  async isTwoFactorEnabled(intraId: string): Promise<boolean> {
+    intraId;
+    return true;
+    // return await this.repository.isTw;
   }
 }

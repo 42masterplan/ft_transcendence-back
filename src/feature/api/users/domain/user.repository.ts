@@ -1,10 +1,12 @@
-import { UserEntity } from '../infrastructure/user.entity';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { User } from './user';
 
 export interface UserRepository {
-  findOne(id: string): Promise<UserEntity>;
-  save(createUserDto: CreateUserDto): Promise<User>;
+  findOneById(id: string): Promise<User>;
+  saveOne(createUserDto: CreateUserDto): Promise<User>;
+  findOneByName(name: string): Promise<User>;
+  isTwoFactorEnabledByIntraId(intraId: string): Promise<boolean>;
+  findOneByIntraId(intraId: string): Promise<User>;
 }
 
 export const UserRepository = Symbol('UserRepository');
