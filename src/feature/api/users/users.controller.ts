@@ -7,22 +7,29 @@ import {
   Post,
   Put,
   Query,
+  Request,
+  UnauthorizedException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CreateUserDto } from './presentation/dto/create-user.dto';
 import { UsersService } from './users.service';
 import path from 'node:path';
 import { diskStorage } from 'multer';
+import { UpdateUserDto } from './presentation/dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('')
-  saveOne(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.saveOne(createUserDto);
+  @UseGuards(AuthGuard('jwt'))
+  @Put('')
+  async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+    if (!req.user.sub)
+      throw new UnauthorizedException();
+    await this.usersService.updateOne(req.user.sub, updateUserDto);
   }
 
   @Delete('')

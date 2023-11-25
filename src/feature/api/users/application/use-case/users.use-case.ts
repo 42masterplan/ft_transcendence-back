@@ -2,6 +2,7 @@ import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
+import { UpdateUserDto } from '../../presentation/dto/update-user.dto';
 
 @Injectable()
 export class UsersUseCases {
@@ -22,13 +23,13 @@ export class UsersUseCases {
     return this.repository.findOneByIntraId(intraId);
   }
 
-  async saveOne(createUserDto: CreateUserDto): Promise<User> {
-    return await this.repository.saveOne(createUserDto);
+  async updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User> {
+    return await this.repository.updateOne(intraId, updateUserDto);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     try {
-      return await this.repository.saveOne(createUserDto);
+      return await this.repository.createOne(createUserDto);
     }
     catch (e) {
       throw new ConflictException(e, 'Create user failed.');

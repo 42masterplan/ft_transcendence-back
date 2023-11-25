@@ -4,6 +4,7 @@ import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UserEntity } from './user.entity';
+import { UpdateUserDto } from '../presentation/dto/update-user.dto';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
@@ -25,8 +26,16 @@ export class UserRepositoryImpl implements UserRepository {
       return this.toDomain(user);
   }
 
-  async saveOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.em.create(UserEntity, createUserDto);
+  async updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.em.findOne(UserEntity, { intraId });
+    if (updateUserDto.name !== null && updateUserDto.name !== undefined)
+      user.name = updateUserDto.name;
+    if (updateUserDto.profileImage !== null && updateUserDto.profileImage !== undefined)
+      user.profileImage = updateUserDto.profileImage;
+    if (updateUserDto.is2faEnabled !== null && updateUserDto.is2faEnabled !== undefined)
+      user.is2faEnabled = updateUserDto.is2faEnabled;
+    if (updateUserDto.introduction !== null && updateUserDto.introduction !== undefined)
+      user.introduction = updateUserDto.introduction;
     await this.em.flush();
     return this.toDomain(user);
   }

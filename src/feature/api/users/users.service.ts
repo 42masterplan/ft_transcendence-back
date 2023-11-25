@@ -3,17 +3,14 @@ import { UsersUseCases } from './application/use-case/users.use-case';
 import { User } from './domain/user';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
 import path from 'node:path';
+import { UpdateUserDto } from './presentation/dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly usersUseCases: UsersUseCases) {}
 
-  async saveOne(createUserDto: CreateUserDto): Promise<User> {
-    // console.log('name:' + createUserDto.name);
-    console.log('profileImage:' + createUserDto.profileImage);
-    console.log('introduction:' + createUserDto.introduction);
-    console.log('is2faEnabled:' + createUserDto.is2faEnabled);
-    return await this.usersUseCases.saveOne(createUserDto);
+  async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
+    return await this.usersUseCases.updateOne(intraId, updateUserDto);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {

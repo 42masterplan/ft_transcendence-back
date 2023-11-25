@@ -1,15 +1,19 @@
-import { IsBoolean, IsString, IsUrl } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @IsUrl()
-  profileImage: string;
+  @IsOptional()
+  profileImage?: string;
 
   @IsString()
-  introduction: string;
+  @IsOptional()
+  introduction?: string;
 
   @IsBoolean()
-  is2faEnabled: boolean;
+  @IsOptional()
+  is2faEnabled?: boolean;
 }
