@@ -13,12 +13,6 @@ export class FriendRequestEntity {
   @PrimaryKey()
   id: number;
 
-  @Property({ type: 'uuid' })
-  primaryUserId!: string;
-
-  @Property({ type: 'uuid' })
-  targetUserId!: string;
-
   @Property({ type: bool, default: false, nullable: true })
   isAccepted: boolean;
 
@@ -29,8 +23,8 @@ export class FriendRequestEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity)
-  primaryUser!: UserEntity;
+  primaryUser!: string;
 
   @ManyToOne(() => UserEntity)
-  targetUser!: UserEntity;
+  targetUser!: string;
 }

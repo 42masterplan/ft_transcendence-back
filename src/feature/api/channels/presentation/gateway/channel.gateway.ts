@@ -45,12 +45,12 @@ export class ChannelGateway
   async handleMessage(client: Socket, [message, roomId]) {
     console.log(message);
     const newMessage = await this.channelService.newMessage(message, roomId);
-    this.server.to(roomId).emit('newMessage', roomId, {
-      id: newMessage.participant.id,
-      name: newMessage.participant.name,
-      profileImage: newMessage.participant.profileImage,
-      content: newMessage.content,
-    });
+    // this.server.to(roomId).emit('newMessage', roomId, {
+    //   id: newMessage.participant,
+    //   name: newMessage.participant.name,
+    //   profileImage: newMessage.participant.profileImage,
+    //   content: newMessage.content,
+    // });
   }
 
   @SubscribeMessage('myChannels')

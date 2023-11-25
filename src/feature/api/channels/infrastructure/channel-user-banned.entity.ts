@@ -10,21 +10,15 @@ import { ChannelEntity } from './channel.entity';
 
 @Entity({ tableName: 'channel_user_banned' })
 export class ChannelUserBannedEntity {
-  @PrimaryKey({ type: 'uuid' })
-  userId!: string;
-
-  @PrimaryKey({ type: 'uuid' })
-  channelId!: string;
-
   @Property({ type: DateTimeType })
   createdAt: Date = new Date();
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  @ManyToOne(() => UserEntity)
-  user!: UserEntity;
+  @ManyToOne(() => UserEntity, { primary : true })
+  user!: string;
 
-  @ManyToOne(() => ChannelEntity)
-  channel!: ChannelEntity;
+  @ManyToOne(() => ChannelEntity, { primary : true })
+  channel!: string;
 }

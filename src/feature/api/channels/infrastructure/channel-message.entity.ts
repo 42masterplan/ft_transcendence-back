@@ -14,12 +14,6 @@ export class ChannelMessageEntity {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @Property({ type: 'uuid' })
-  participantId!: string;
-
-  @Property({ type: 'uuid' })
-  channelId!: string;
-
   @Property({ length: 512 })
   content: string;
 
@@ -30,8 +24,8 @@ export class ChannelMessageEntity {
   updatedAt: Date = new Date();
 
   @ManyToOne(() => UserEntity)
-  participant!: UserEntity;
+  participant!: string;
 
   @ManyToOne(() => ChannelEntity)
-  channel!: ChannelEntity;
+  channel!: string;
 }

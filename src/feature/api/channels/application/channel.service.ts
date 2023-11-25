@@ -34,9 +34,9 @@ export class ChannelService {
     );
     return await Promise.all(
       myChannelList.map(async (list) => ({
-        id: list.channel.id,
-        name: (await this.channelRepository.findOneById(list.channel.id)).name,
-        userCount: await this.channelRepository.countUser(list.channel),
+        id: list.channel,
+        name: (await this.channelRepository.findOneById(list.channel)).name,
+        // userCount: await this.channelRepository.countUser(list.channel),
         isUnread: true,
       })),
     );
@@ -44,7 +44,7 @@ export class ChannelService {
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
     const participant = await this.channelRepository.getPublicChannels(
-      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
+      '72a90435-2e9b-4376-aacb-d679cc1be18f',
     );
     console.log(participant);
     const publicChannelDto =
@@ -86,14 +86,14 @@ export class ChannelService {
     const history = [];
 
     for (const data of list) {
-      history.push({
-        id: data.participant.id,
-        name: data.participant.name,
-        profileImage: data.participant.profileImage,
-        content: data.content,
-        createdAt: '2021-06-01T14:48:00.000Z',
-        isBlocked: false, //차단 여부
-      });
+      // history.push({
+      //   id: data.participant,
+      //   name: data.participant.name,
+      //   profileImage: data.participant.profileImage,
+      //   content: data.content,
+      //   createdAt: '2021-06-01T14:48:00.000Z',
+      //   isBlocked: false, //차단 여부
+      // });
     }
     return history;
   }
@@ -124,13 +124,13 @@ export class ChannelService {
     for (const participant of participants) {
       const publicChannelDto = new PublicChannelDto();
       publicChannelDto.name = (
-        await this.channelRepository.findOneById(participant.channel.id)
+        await this.channelRepository.findOneById(participant.channel)
       ).name;
-      publicChannelDto.isPassword = participant.channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
-      publicChannelDto.id = participant.channel.id;
-      publicChannelDto.userCount = await this.channelRepository.countUser(
-        participant.channel,
-      );
+      // publicChannelDto.isPassword = participant.channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
+      publicChannelDto.id = participant.channel;
+      // publicChannelDto.userCount = await this.channelRepository.countUser(
+      //   participant.channel,
+      // );
 
       publicChannels.push(publicChannelDto);
     }
@@ -143,7 +143,7 @@ export class ChannelService {
     console.log('service');
     console.log(createChannelDto);
     const user = await this.usersUseCase.findOne(
-      '72e6bc5e-c1f8-4953-a0fe-0c962325eecb',
+      '72a90435-2e9b-4376-aacb-d679cc1be18f',
     ); // User
     const channel = await this.channelRepository.saveChannel(createChannelDto);
     await this.createChannelParticipant('owner', user, channel);
@@ -159,8 +159,8 @@ export class ChannelService {
     console.log(channel);
     const channelParticipant = new ChannelParticipantEntity();
     channelParticipant.role = role;
-    channelParticipant.participant = UserEntity.from(user);
-    channelParticipant.channel = channel;
+    channelParticipant.participant = user.id;
+    channelParticipant.channel = channel.id;
     channelParticipant.chatableAt = '';
     await this.channelRepository.saveChannelParticipant(channelParticipant);
     return channelParticipant;
