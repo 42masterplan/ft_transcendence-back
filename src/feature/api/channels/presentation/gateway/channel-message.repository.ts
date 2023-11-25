@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channelMessage.entity';
+import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 
 @Injectable()
 export class ChannelMessageRepository {

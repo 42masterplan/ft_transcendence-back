@@ -1,5 +1,6 @@
 import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
+import { User } from '../domain/user';
 
 @Entity({ tableName: 'user' })
 export class UserEntity {
@@ -9,7 +10,7 @@ export class UserEntity {
   @Property({ length: 32 })
   intraId: string;
 
-  @Property({ length: 32 })
+  @Property({ length: 32, nullable: true })
   name: string;
 
   @Property({ length: 128 })
@@ -18,7 +19,7 @@ export class UserEntity {
   @Property()
   is2faEnabled: boolean;
 
-  @Property({ default: '', length: 128 })
+  @Property({ length: 128, nullable: true })
   email: string;
 
   @Property({ default: '', length: 32 })
@@ -50,10 +51,10 @@ export class UserEntity {
   // channelMessages = new Collection<ChannelMessageEntity>(this);
 
   // @OneToMany(
-  //   () => ChannelBannedUserEntity,
-  //   (channelBannedUser) => channelBannedUser.user,
+  //   () => ChannelUserBannedEntity,
+  //   (channelUserBanned) => channelUserBanned.user,
   // )
-  // channelBannedUsers = new Collection<ChannelBannedUserEntity>(this);
+  // channelUserBanneds = new Collection<ChannelUserBannedEntity>(this);
 
   // @OneToMany(
   //   () => ChannelParticipantEntity,
@@ -65,4 +66,15 @@ export class UserEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  static from(user: User): UserEntity {
+    const userEntity = new UserEntity();
+    userEntity.id = user.id;
+    userEntity.intraId = user.intraId;
+    userEntity.name = user.name;
+    userEntity.is2faEnabled = user.is2faEnabled;
+    userEntity.email = user.email;
+
+    return userEntity;
+  }
 }
