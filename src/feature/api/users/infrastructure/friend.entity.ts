@@ -1,7 +1,6 @@
 import {
   DateTimeType,
   Entity,
-  ManyToMany,
   ManyToOne,
   PrimaryKey,
   Property,
@@ -14,11 +13,11 @@ export class FriendEntity {
   @PrimaryKey()
   id: number;
 
-  @ManyToOne(() => UserEntity)
-  my: UserEntity;
+  @Property({ type: 'uuid' })
+  myId!: string;
 
-  @ManyToOne(() => UserEntity)
-  friend: UserEntity;
+  @Property({ type: 'uuid' })
+  friendId!: string;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
@@ -28,4 +27,10 @@ export class FriendEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  @ManyToOne(() => UserEntity)
+  my!: UserEntity;
+
+  @ManyToOne(() => UserEntity)
+  friend!: UserEntity;
 }

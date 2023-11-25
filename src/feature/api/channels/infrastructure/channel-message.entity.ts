@@ -5,19 +5,20 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { UserEntity } from './user.entity';
-import { DmEntity } from './dm.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { ChannelEntity } from './channel.entity';
+import { v4 } from 'uuid';
 
-@Entity({ tableName: 'dm_message' })
-export class DmMessageEntity {
-  @PrimaryKey()
-  id: number;
-
-  @Property({ type: 'uuid' })
-  participantId: string;
+@Entity({ tableName: 'channel_message' })
+export class ChannelMessageEntity {
+  @PrimaryKey({ type: 'uuid' })
+  id: string = v4();
 
   @Property({ type: 'uuid' })
-  dmId: string;
+  participantId!: string;
+
+  @Property({ type: 'uuid' })
+  channelId!: string;
 
   @Property({ length: 512 })
   content: string;
@@ -31,6 +32,6 @@ export class DmMessageEntity {
   @ManyToOne(() => UserEntity)
   participant!: UserEntity;
 
-  @ManyToOne(() => DmEntity)
-  dm!: string;
+  @ManyToOne(() => ChannelEntity)
+  channel!: ChannelEntity;
 }
