@@ -1,8 +1,8 @@
+import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { DatabaseService } from './database.service';
-import { MikroOrmModule, logger } from '@mikro-orm/nestjs';
+import { ConfigModule } from '@nestjs/config';
 import MikroORMConfig from 'src/configuration/mikro-orm.config';
+import { DatabaseService } from './database.service';
 
 @Module({
   imports: [ConfigModule, MikroOrmModule.forRoot(MikroORMConfig)],

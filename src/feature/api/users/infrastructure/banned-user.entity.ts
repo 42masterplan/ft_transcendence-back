@@ -5,8 +5,8 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { UserEntity } from './user.entity';
 import { bool } from 'joi';
+import { UserEntity } from './user.entity';
 
 @Entity({ tableName: 'banned_user' })
 export class BannedUserEntity {

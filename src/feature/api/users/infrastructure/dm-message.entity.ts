@@ -5,8 +5,8 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { UserEntity } from './user.entity';
 import { DmEntity } from './dm.entity';
+import { UserEntity } from './user.entity';
 
 @Entity({ tableName: 'dm_message' })
 export class DmMessageEntity {

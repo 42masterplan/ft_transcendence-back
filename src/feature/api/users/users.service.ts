@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UsersUseCases } from './application/use-case/users.use-case';
-import { CreateUserDto } from './presentation/dto/create-user.dto';
 import { User } from './domain/user';
+import { CreateUserDto } from './presentation/dto/create-user.dto';
 
 @Injectable()
 export class UsersService {

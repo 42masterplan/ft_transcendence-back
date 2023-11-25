@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { DatabaseModule } from './feature/database/database.module';
-import { ApiModule } from './feature/api/api.module';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { AppController } from '@/src/app.controller';
+import { AppService } from '@/src/app.service';
+import { ApiModule } from '@/src/feature/api/api.module';
+import { DatabaseModule } from '@/src/feature/database/database.module';
 
 @Module({
   imports: [

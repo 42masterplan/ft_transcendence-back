@@ -1,13 +1,5 @@
-import {
-  Collection,
-  DateTimeType,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  Property,
-} from '@mikro-orm/core';
+import { DateTimeType, Entity, ManyToOne, Property } from '@mikro-orm/core';
 import { UserEntity } from './user.entity';
-import { DmMessageEntity } from './dm-message.entity';
 
 @Entity({ tableName: 'dm' })
 export class DmEntity {

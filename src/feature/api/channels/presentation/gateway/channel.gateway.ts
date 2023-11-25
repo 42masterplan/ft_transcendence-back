@@ -1,6 +1,6 @@
+import { Socket } from 'dgram';
+import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
-  ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -8,10 +8,8 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Socket } from 'dgram';
-import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelService } from '../../application/channel.service';
-import { UsePipes, ValidationPipe, ValidationError } from '@nestjs/common';
+import { CreateChannelDto } from '@/src/feature/api/channels/presentation/gateway/dto/create-channel.dto';
 
 @WebSocketGateway()
 @UsePipes(

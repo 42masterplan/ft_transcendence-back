@@ -3,8 +3,8 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtPayload } from './presentation/jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from './presentation/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {

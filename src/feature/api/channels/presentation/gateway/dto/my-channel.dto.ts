@@ -1,4 +1,4 @@
-import { IsBoolean, IsNumber, IsString, IsUrl } from 'class-validator';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
 
 export class MyChannelDto {
   @IsString()
