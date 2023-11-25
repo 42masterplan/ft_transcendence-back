@@ -21,10 +21,17 @@ export class UserRepositoryImpl implements UserRepository {
 
   async findOneByIntraId(intraId: string): Promise<User> {
     const user = await this.em.findOne(UserEntity, { intraId });
-    return this.toDomain(user);
+    if (user)
+      return this.toDomain(user);
   }
 
   async saveOne(createUserDto: CreateUserDto): Promise<User> {
+    const user = await this.em.create(UserEntity, createUserDto);
+    await this.em.flush();
+    return this.toDomain(user);
+  }
+
+  async createOne(createUserDto: CreateUserDto): Promise<User> {
     const user = await this.em.create(UserEntity, createUserDto);
     await this.em.flush();
     return this.toDomain(user);

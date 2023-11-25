@@ -8,20 +8,18 @@ export class UsersService {
   constructor(private readonly usersUseCases: UsersUseCases) {}
 
   async saveOne(createUserDto: CreateUserDto): Promise<User> {
-    console.log('name:' + createUserDto.name);
+    // console.log('name:' + createUserDto.name);
     console.log('profileImage:' + createUserDto.profileImage);
     console.log('introduction:' + createUserDto.introduction);
     console.log('is2faEnabled:' + createUserDto.is2faEnabled);
     return await this.usersUseCases.saveOne(createUserDto);
   }
 
-  async isExist({ name }: { name?: string }): Promise<boolean> {
-    // if (name) return await this.usersUseCases.isExistByName(name); TODO: save, try-catch
-    return false;
+  async createOne(createUserDto: CreateUserDto): Promise<User> {
+    return await this.usersUseCases.createOne(createUserDto);
   }
-
-  async isTwoFactorEnabled({ name }: { name?: string }): Promise<boolean> {
-    // if (name) return await this.usersUseCases.
-    return true;
+  
+  async findOneByIntraId(intraId: string): Promise<User> {
+    return this.usersUseCases.findOneByIntraId(intraId);
   }
 }
