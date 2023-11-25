@@ -1,13 +1,9 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Get('callback')
   async getAccessTokenFromFT(@Query('code') code: string) {

@@ -10,6 +10,7 @@ import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
+import { User } from '../../users/domain/user';
 
 @WebSocketGateway()
 @Injectable()
@@ -153,14 +154,14 @@ export class ChannelService {
 
   async createChannelParticipant(
     role: string,
-    user: UserEntity,
+    user: User,
     channel: ChannelEntity,
   ): Promise<ChannelParticipantEntity> {
     console.log(user);
     console.log(channel);
     const channelParticipant = new ChannelParticipantEntity();
     channelParticipant.role = role;
-    channelParticipant.participant = user;
+    channelParticipant.participant = UserEntity.from(user);
     channelParticipant.channel = channel;
     channelParticipant.chatableAt = '';
     await this.channelRepository.saveChannelParticipant(channelParticipant);

@@ -1,5 +1,6 @@
 import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
+import { User } from '../domain/user';
 
 @Entity({ tableName: 'user' })
 export class UserEntity {
@@ -65,4 +66,15 @@ export class UserEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  static from(user: User): UserEntity {
+    const userEntity = new UserEntity();
+    userEntity.id = user.id;
+    userEntity.intraId = user.intraId;
+    userEntity.name = user.name;
+    userEntity.is2faEnabled = user.is2faEnabled;
+    userEntity.email = user.email;
+
+    return userEntity;
+  }
 }

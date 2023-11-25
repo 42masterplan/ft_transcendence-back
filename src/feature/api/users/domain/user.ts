@@ -27,4 +27,16 @@ export class User {
   get name(): string {
     return this._email;
   }
+
+  get intraId(): string {
+    return this._intraId;
+  }
+
+  get is2faEnabled(): boolean {
+    return this._is2faEnabled;
+  }
+
+  get email(): string {
+    return this._email;
+  }
 }
