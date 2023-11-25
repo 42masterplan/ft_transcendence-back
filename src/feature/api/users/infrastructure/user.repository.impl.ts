@@ -37,12 +37,6 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
-  async isTwoFactorEnabledByIntraId(intraId: string): Promise<boolean> {
-    const user = await this.findOneByIntraId(intraId);
-    if (user === null) return false;
-    // if (user.intraId)
-  }
-
   private toDomain(userEntity: UserEntity): User {
     return new User({
       _id: userEntity.id,

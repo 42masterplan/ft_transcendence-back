@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UsersUseCases } from './application/use-case/users.use-case';
 import { User } from './domain/user';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
+import path from 'node:path';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,13 @@ export class UsersService {
   }
   
   async findOneByIntraId(intraId: string): Promise<User> {
-    return this.usersUseCases.findOneByIntraId(intraId);
+    return await this.usersUseCases.findOneByIntraId(intraId);
+  }
+
+  async isDuplicatedName(name: string): Promise<boolean> {
+    const user = await this.usersUseCases.findOneByName(name);
+    if (user)
+      return true;
+    return false;
   }
 }

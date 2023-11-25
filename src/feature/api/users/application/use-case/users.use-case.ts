@@ -14,8 +14,12 @@ export class UsersUseCases {
     return this.repository.findOneById(id);
   }
 
-  async findOneByIntraId(id: string): Promise<User> {
-    return this.repository.findOneByIntraId(id);
+  async findOneByName(name: string): Promise<User> {
+    return this.repository.findOneByName(name);
+  }
+
+  async findOneByIntraId(intraId: string): Promise<User> {
+    return this.repository.findOneByIntraId(intraId);
   }
 
   async saveOne(createUserDto: CreateUserDto): Promise<User> {

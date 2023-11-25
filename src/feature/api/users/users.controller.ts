@@ -13,6 +13,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
 import { UsersService } from './users.service';
+import path from 'node:path';
+import { diskStorage } from 'multer';
 
 @Controller('users')
 export class UsersController {
@@ -28,29 +30,32 @@ export class UsersController {
     return true;
   }
 
-  @Get('auth-callback')
-  getAuthCode(@Query('code') code: string) {
-    code;
-    return {
-      hasAccount: true,
-      isTwoFactorEnabled: true,
-    };
-  }
-
   @Get('is-duplicated-name')
-  hasDuplicateName(@Query('name') name: string) {
-    console.log(name);
+  async isDuplicatedName(@Query('name') name: string) {
+    const isDuplicated = await this.usersService.isDuplicatedName(name);
     return {
-      isDuplicated: true,
+      isDuplicated: isDuplicated,
     };
   }
 
   @Post('profile-image')
-  @UseInterceptors(FileInterceptor('profileImage'))
-  updateProfile(@UploadedFile() profileImage: Express.Multer.File) {
-    console.log(profileImage);
+  @UseInterceptors(FileInterceptor('image', {
+    storage: diskStorage({
+      destination: 'resources/',
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileExtension = path.extname(file.originalname);
+        const newFileName = `image-${uniqueSuffix}${fileExtension}`;
+        callback(null, newFileName);
+      },
+    }),
+    limits: {
+      fileSize: 1024 * 1024,
+    }
+  }))
+  updateProfileImage(@UploadedFile() image: Express.Multer.File) {
     return {
-      profileImage: 'https://localhost:8080/resources/test.jpg',
+      profileImage: image.path,
     };
   }
 
