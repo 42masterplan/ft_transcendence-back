@@ -11,10 +11,10 @@ export class DmMessageEntity {
   id: number;
 
   @Property()
-  participant_id: string;
+  participantId: string;
 
   @Property()
-  dm_id: string;
+  dmId: string;
 
   @Property({ length: 512 })
   content: string;

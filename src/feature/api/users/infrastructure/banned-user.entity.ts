@@ -12,10 +12,10 @@ export class BannedUserEntity {
   id: number;
 
   @Property()
-  primaryUser_id: string;
+  primaryUserId: string;
 
   @Property()
-  targetUser_id: string;
+  targetUserId: string;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;

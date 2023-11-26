@@ -12,10 +12,10 @@ export class FriendRequestEntity {
   id: number;
 
   @Property()
-  primaryUser_id: string;
+  primaryUserId: string;
 
   @Property()
-  targetUser_id: string;
+  targetUserId: string;
 
   @Property({ type: bool, default: false, nullable: true })
   isAccepted: boolean;

@@ -8,10 +8,10 @@ import {
 @Entity({ tableName: 'channel_user_banned' })
 export class ChannelUserBannedEntity {
   @PrimaryKey()
-  user_id: string;
+  userId: string;
 
   @PrimaryKey()
-  channel_id: string;
+  channelId: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();

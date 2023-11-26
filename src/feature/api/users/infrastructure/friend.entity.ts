@@ -12,10 +12,10 @@ export class FriendEntity {
   id: number;
 
   @Property()
-  my_id: string;
+  myId: string;
 
   @Property()
-  friend_id: string;
+  friendId: string;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
