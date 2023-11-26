@@ -14,11 +14,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UsersService } from './users.service';
 import path from 'node:path';
 import { diskStorage } from 'multer';
-import { UpdateUserDto } from './presentation/dto/update-user.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { UsersService } from '../../users.service';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -123,62 +123,6 @@ export class UsersController {
         player2Score: 4,
       },
     ];
-  }
-
-  /* FRIENDS */
-  @Get('friends/request')
-  getFriendsRequest() {
-    return [
-      {
-        id: 'randomUuid',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        introduction: 'Hello world!',
-      },
-      {
-        id: 'randomUuid2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        introduction: 'Bye world!',
-      },
-    ];
-  }
-
-  @Post('friends/request')
-  acceptFriendsRequest(@Param(':friend-id') friendId: string) {
-    console.log(friendId);
-    return true;
-  }
-
-  @Delete('friends/request')
-  rejectFriendsRequest(@Param(':friend-id') friendId: string) {
-    console.log(friendId);
-    return true;
-  }
-
-  @Get('friends')
-  getFriends(@Param(':id') id: string) {
-    console.log(id);
-    return [
-      {
-        id: 'randomUuid',
-        name: 'test1',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'on-line',
-        introduction: 'Hello world!',
-      },
-      {
-        id: 'randomUuid2',
-        name: 'test2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'off-line',
-        introduction: 'Bye world!',
-      },
-    ];
-  }
-
-  @Delete('friends')
-  deleteFriends(@Param(':id') id: string) {
-    console.log(id);
-    return true;
   }
 
   /* BLOCK */
