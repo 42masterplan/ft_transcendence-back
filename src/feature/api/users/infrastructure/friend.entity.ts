@@ -11,10 +11,10 @@ export class FriendEntity {
   @PrimaryKey()
   id: number;
 
-  @Property()
+  @Property({ type: 'uuid' })
   myId: string;
 
-  @Property()
+  @Property({ type: 'uuid' })
   friendId: string;
 
   @Property({ type: bool, default: false })

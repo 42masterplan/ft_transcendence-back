@@ -11,10 +11,10 @@ export class ChannelMessageEntity {
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
   id: string = v4();
 
-  @Property()
+  @Property({ type: 'uuid' })
   participantId: string;
 
-  @Property()
+  @Property({ type: 'uuid' })
   channelId: string;
 
   @Property({ length: 512 })

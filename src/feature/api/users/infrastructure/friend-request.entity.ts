@@ -11,10 +11,10 @@ export class FriendRequestEntity {
   @PrimaryKey()
   id: number;
 
-  @Property()
+  @Property({ type: 'uuid' })
   primaryUserId: string;
 
-  @Property()
+  @Property({ type: 'uuid' })
   targetUserId: string;
 
   @Property({ type: bool, default: false, nullable: true })

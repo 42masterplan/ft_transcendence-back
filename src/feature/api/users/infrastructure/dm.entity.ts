@@ -2,10 +2,10 @@ import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 
 @Entity({ tableName: 'dm' })
 export class DmEntity {
-  @PrimaryKey()
+  @PrimaryKey({ type: 'uuid' })
   user1Id: string;
 
-  @PrimaryKey()
+  @PrimaryKey({ type: 'uuid' })
   user2Id: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
