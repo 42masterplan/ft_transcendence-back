@@ -29,40 +29,7 @@ export class UserEntity {
 
   @Property({ length: 128 })
   introduction: string;
-
-  // @OneToMany(() => FriendEntity, (friend) => friend.friend)
-  // @OneToMany(() => FriendEntity, (friend) => friend.my)
-  // friends = new Collection<FriendEntity>(this);
-
-  // @OneToMany(() => FriendRequestEntity, (request) => request.primaryUser)
-  // @OneToMany(() => FriendRequestEntity, (request) => request.targetUser)
-  // friendRequests = new Collection<FriendRequestEntity>(this);
-
-  // @OneToMany(() => BannedUserEntity, (bannedUser) => bannedUser.primaryUser)
-  // @OneToMany(() => BannedUserEntity, (bannedUser) => bannedUser.targetUser)
-  // bannedUsers = new Collection<BannedUserEntity>(this);
-
-  // @OneToMany(() => DmEntity, (dm) => dm.user1)
-  // @OneToMany(() => DmEntity, (dm) => dm.user2)
-  // dms = new Collection<DmEntity>(this);
-
-  // @OneToMany(() => DmMessageEntity, (message) => message.participant)
-  // dmMessages = new Collection<DmMessageEntity>(this);
-
-  // @OneToMany(() => ChannelMessageEntity, (message) => message.participant)
-  // channelMessages = new Collection<ChannelMessageEntity>(this);
-
-  // @OneToMany(
-  //   () => ChannelUserBannedEntity,
-  //   (channelUserBanned) => channelUserBanned.user,
-  // )
-  // channelUserBanneds = new Collection<ChannelUserBannedEntity>(this);
-
-  // @OneToMany(
-  //   () => ChannelParticipantEntity,
-  //   (channelParticipant) => channelParticipant.participant,)
-  // channelParticipants = new Collection<ChannelParticipantEntity>(this);
-
+  
   @Property({ type: DateTimeType })
   createdAt: Date = new Date();
 

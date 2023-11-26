@@ -1,16 +1,11 @@
 import {
-  Collection,
   DateTimeType,
   Entity,
-  OneToMany,
   PrimaryKey,
   Property,
   Unique,
 } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { ChannelMessageEntity } from './channel-message.entity';
-import { ChannelParticipantEntity } from './channel-participant.entity';
-import { ChannelUserBannedEntity } from './channel-user-banned.entity';
 
 @Entity({ tableName: 'channel' })
 export class ChannelEntity {
@@ -32,19 +27,4 @@ export class ChannelEntity {
 
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
-
-  @OneToMany(() => ChannelMessageEntity, (message) => message.channel)
-  channelMessages = new Collection<ChannelMessageEntity>(this);
-
-  @OneToMany(
-    () => ChannelUserBannedEntity,
-    (channelUserBanned) => channelUserBanned.channel,
-  )
-  channelUserBanneds = new Collection<ChannelUserBannedEntity>(this);
-
-  @OneToMany(
-    () => ChannelParticipantEntity,
-    (channelParticipant) => channelParticipant.channel,
-  )
-  channelParticipants = new Collection<ChannelParticipantEntity>(this);
 }
