@@ -22,8 +22,8 @@ export class FriendEntity {
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  @ManyToOne(() => UserEntity)
-  my!: string;
+  @ManyToOne(() => UserEntity, { fieldName: 'my_id' })
+  myId!: string;
 
   @ManyToOne(() => UserEntity)
   friend!: string;
