@@ -1,26 +1,13 @@
 import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 
 @Controller('users/friends')
 export class FriendsController {
+  constructor(private readonly findUseCase: FindFriendsUseCase) {}
+
   @Get('')
   getFriends(@Param(':id') id: string) {
-    console.log(id);
-    return [
-      {
-        id: 'randomUuid',
-        name: 'test1',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'on-line',
-        introduction: 'Hello world!',
-      },
-      {
-        id: 'randomUuid2',
-        name: 'test2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'off-line',
-        introduction: 'Bye world!',
-      },
-    ];
+    return this.findUseCase.execute(id);
   }
 
   @Delete('')
