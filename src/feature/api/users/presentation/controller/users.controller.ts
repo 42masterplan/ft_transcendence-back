@@ -19,10 +19,12 @@ import { diskStorage } from 'multer';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { MailService } from '../../../mail/mail.service';
+import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly mailService: MailService) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Put('')
@@ -67,8 +69,10 @@ export class UsersController {
   }
 
   @Put('two-factor-auth')
-  update2fa(@Body('email') twoFactorAuthEmail: string) {
-    console.log(twoFactorAuthEmail);
+  update2fa(@Body() twoFactorAuthEmail: TwoFactorAuthEmailDto) {
+    const randomCode = Math.floor(Math.random() * 899999) + 100000;
+    //TODO: AuthGuard, Use cache to manage time
+    this.mailService.sendMail(twoFactorAuthEmail.email, randomCode);
     return true;
   }
 

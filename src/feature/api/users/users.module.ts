@@ -5,6 +5,7 @@ import { UserRepositoryImpl } from './infrastructure/user.repository.impl';
 import { FriendsController } from './presentation/controller/friends.controller';
 import { UsersController } from './presentation/controller/users.controller';
 import { UsersService } from './users.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   controllers: [UsersController, FriendsController],
@@ -16,6 +17,7 @@ import { UsersService } from './users.service';
       useClass: UserRepositoryImpl,
     },
   ],
+  imports: [MailModule],
   exports: [UsersUseCases, UsersService],
 })
 export class UsersModule {}
