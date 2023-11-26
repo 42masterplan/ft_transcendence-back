@@ -70,9 +70,9 @@ export class ChannelGateway
   }
 
   @SubscribeMessage('joinChannel')
-  async joinChannel(client: Socket, { id, password }) {
+  async joinChannel(client: Socket, { channelId, password }) {
     console.log('socket: joinChannel');
-    return await this.channelService.joinChannel({ id, password });
+    return await this.channelService.joinChannel({ channelId, password });
   }
 
   @SubscribeMessage('myRole')

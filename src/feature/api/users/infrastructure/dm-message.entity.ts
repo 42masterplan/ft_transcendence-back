@@ -1,17 +1,20 @@
 import {
   DateTimeType,
   Entity,
-  ManyToOne,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { DmEntity } from './dm.entity';
-import { UserEntity } from './user.entity';
 
 @Entity({ tableName: 'dm_message' })
 export class DmMessageEntity {
   @PrimaryKey()
   id: number;
+
+  @Property()
+  participant_id: string;
+
+  @Property()
+  dm_id: string;
 
   @Property({ length: 512 })
   content: string;
@@ -22,9 +25,4 @@ export class DmMessageEntity {
   @Property({ type: DateTimeType, onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  @ManyToOne(() => UserEntity)
-  participant!: string;
-
-  @ManyToOne(() => DmEntity)
-  dm!: string;
 }
