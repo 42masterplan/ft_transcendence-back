@@ -20,9 +20,9 @@ export class FriendRequestEntity {
   @Property({ type: bool, default: false, nullable: true })
   isAccepted: boolean;
 
-  @Property({ type: DateTimeType })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 }

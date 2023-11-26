@@ -4,7 +4,7 @@ import { User } from '../domain/user';
 
 @Entity({ tableName: 'user' })
 export class UserEntity {
-  @PrimaryKey({ type: 'uuid' })
+  @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
   id: string = v4();
 
   @Property({ length: 32 })
@@ -30,10 +30,10 @@ export class UserEntity {
   @Property({ length: 128 })
   introduction: string;
   
-  @Property({ type: DateTimeType })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
   static from(user: User): UserEntity {

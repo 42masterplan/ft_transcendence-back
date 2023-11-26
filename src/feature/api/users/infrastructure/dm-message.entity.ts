@@ -19,10 +19,10 @@ export class DmMessageEntity {
   @Property({ length: 512 })
   content: string;
 
-  @Property({ type: DateTimeType })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
 }

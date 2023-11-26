@@ -8,21 +8,21 @@ import { v4 } from 'uuid';
 
 @Entity({ tableName: 'channel_message' })
 export class ChannelMessageEntity {
-  @PrimaryKey({ type: 'uuid' })
+  @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
   id: string = v4();
 
   @Property()
-  participant_id: string;
+  participantId: string;
 
   @Property()
-  channel_id: string;
+  channelId: string;
 
   @Property({ length: 512 })
   content: string;
 
-  @Property({ type: DateTimeType })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 }
