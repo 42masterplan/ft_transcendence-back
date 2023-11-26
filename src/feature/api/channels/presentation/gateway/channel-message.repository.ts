@@ -15,7 +15,7 @@ export class ChannelMessageRepository {
 
   async findAllByChannelId(channelId): Promise<ChannelMessageEntity[]> {
     const messages = await this.em.find(ChannelMessageEntity, {
-      channel: channelId,
+      channelId: channelId,
     });
 
     return messages;
