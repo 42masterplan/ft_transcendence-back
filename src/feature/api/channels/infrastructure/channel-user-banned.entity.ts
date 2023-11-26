@@ -7,11 +7,11 @@ import {
 
 @Entity({ tableName: 'channel_user_banned' })
 export class ChannelUserBannedEntity {
-  @PrimaryKey()
-  user_id: string;
+  @PrimaryKey({ type: 'uuid' })
+  userId: string;
 
-  @PrimaryKey()
-  channel_id: string;
+  @PrimaryKey({ type: 'uuid' })
+  channelId: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();

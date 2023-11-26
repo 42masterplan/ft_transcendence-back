@@ -10,11 +10,11 @@ export class DmMessageEntity {
   @PrimaryKey()
   id: number;
 
-  @Property()
-  participant_id: string;
+  @Property({ type: 'uuid' })
+  participantId: string;
 
-  @Property()
-  dm_id: string;
+  @Property({ type: 'uuid' })
+  dmId: string;
 
   @Property({ length: 512 })
   content: string;

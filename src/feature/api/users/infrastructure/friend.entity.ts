@@ -11,11 +11,11 @@ export class FriendEntity {
   @PrimaryKey()
   id: number;
 
-  @Property()
-  my_id: string;
+  @Property({ type: 'uuid' })
+  myId: string;
 
-  @Property()
-  friend_id: string;
+  @Property({ type: 'uuid' })
+  friendId: string;
 
   @Property({ type: bool, default: false })
   isDeleted: boolean;
