@@ -1,24 +1,21 @@
 import {
   DateTimeType,
   Entity,
-  ManyToOne,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { ChannelEntity } from './channel.entity';
 
 @Entity({ tableName: 'channel_user_banned' })
 export class ChannelUserBannedEntity {
-  @Property({ type: DateTimeType })
+  @PrimaryKey()
+  user_id: string;
+
+  @PrimaryKey()
+  channel_id: string;
+
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
   updatedAt: Date = new Date();
-
-  @ManyToOne(() => UserEntity, { primary : true })
-  user!: string;
-
-  @ManyToOne(() => ChannelEntity, { primary : true })
-  channel!: string;
 }
