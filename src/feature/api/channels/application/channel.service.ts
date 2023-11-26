@@ -11,7 +11,9 @@ import { ChannelMessageRepository } from '../presentation/gateway/channel-messag
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 
-@WebSocketGateway()
+const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
+const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
+
 @Injectable()
 export class ChannelService {
   constructor(
@@ -29,14 +31,15 @@ export class ChannelService {
     // const user = await this.usersUseCase.findOne(
     //   '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
     // );
+    console.log('channel myChannels');
     const myChannelList = await this.channelRepository.getMyChannels(
-      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
+      joushin,
     );
     return await Promise.all(
-      myChannelList.map(async (list) => ({
-        id: list.channel,
-        name: (await this.channelRepository.findOneById(list.channel)).name,
-        // userCount: await this.channelRepository.countUser(list.channel),
+      myChannelList.map(async (participants) => ({
+        id: participants.channelId,
+        name: (await this.channelRepository.findOneById(participants.channelId)).name,
+        userCount: await this.channelRepository.countUser(await this.channelRepository.findOneById(participants.channelId)),
         isUnread: true,
       })),
     );

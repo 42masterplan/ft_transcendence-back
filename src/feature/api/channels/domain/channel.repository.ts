@@ -25,7 +25,7 @@ export class ChannelRepository {
     const list = await this.em.find(
       ChannelParticipantEntity,
       {
-        participant: userId,
+        participantId: userId,
       },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
@@ -55,7 +55,7 @@ export class ChannelRepository {
     const channelHistory = await this.em.find(
       ChannelMessageEntity,
       {
-        channel: channelId,
+        channelId: channelId,
       },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
