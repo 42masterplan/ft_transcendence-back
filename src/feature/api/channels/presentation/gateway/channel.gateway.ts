@@ -42,9 +42,9 @@ export class ChannelGateway
   handleDisconnect(client: any) {}
 
   @SubscribeMessage('newMessage')
-  async handleMessage(client: Socket, [message, roomId]) {
-    console.log(message);
-    const newMessage = await this.channelService.newMessage(message, roomId);
+  async handleMessage(client: Socket, {message, channelId}) {
+    console.log('socket newMessage');
+    const newMessage = await this.channelService.newMessage(message, channelId);
     // this.server.to(roomId).emit('newMessage', roomId, {
     //   id: newMessage.participant,
     //   name: newMessage.participant.name,
@@ -70,9 +70,18 @@ export class ChannelGateway
   }
 
   @SubscribeMessage('joinChannel')
-  async joinChannel(client: Socket, { channelId, password }) {
+  async joinChannel(client: Socket, { id, password }) {
     console.log('socket: joinChannel');
-    return await this.channelService.joinChannel({ channelId, password });
+    try {
+      const ret = await this.channelService.joinChannel({ id, password });
+    client.emit('myChannels', await this.channelService.getMyChannels());
+    return ret;
+    }catch (e)
+    {
+      console.log("join err");
+      throw e;
+    }
+    
   }
 
   @SubscribeMessage('myRole')
