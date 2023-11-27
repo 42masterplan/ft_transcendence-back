@@ -70,7 +70,7 @@ export class ChannelRepository {
   async saveChannel(
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelEntity> {
-    const channel = await this.em.create(ChannelEntity, createChannelDto);
+    const channel = this.em.create(ChannelEntity, createChannelDto);
     await this.em.flush();
     console.log('save!');
     return channel;
@@ -79,11 +79,11 @@ export class ChannelRepository {
   async saveChannelParticipant(
     channelParticipant: ChannelParticipantEntity,
   ): Promise<ChannelParticipantEntity> {
-    const savedChannelParticipant = await this.em.create(
+    const savedChannelParticipant = this.em.create(
       ChannelParticipantEntity,
       channelParticipant,
     );
-    this.em.flush();
+    await this.em.flush();
     return savedChannelParticipant;
   }
 }
