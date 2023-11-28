@@ -21,7 +21,7 @@ export class UsersController {
 
   @Get('')
   getAll(@Query('state') state: string) {
-    if (state !== 'on-line' && state !== 'off-line' && state !== 'in-game')
+    if (state !== undefined && state !== 'on-line' && state !== 'off-line' && state !== 'in-game')
       return new BadRequestException();
     return [
       {
