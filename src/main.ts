@@ -15,7 +15,6 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
-  app.use('/resources', express.static(join(__dirname, '..', 'resources')));
   await app.listen(8080);
 }
 bootstrap();
