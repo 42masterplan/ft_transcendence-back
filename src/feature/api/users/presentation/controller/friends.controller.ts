@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 
 @Controller('users/friends')
@@ -8,6 +8,12 @@ export class FriendsController {
   @Get('')
   getFriends(@Param(':id') id: string) {
     return this.findUseCase.execute(id);
+  }
+  
+  @Post('')
+  createFriendRequest(@Body('id') id: string) {
+    console.log(id);
+    return true;
   }
 
   @Delete('')
@@ -33,7 +39,7 @@ export class FriendsController {
   }
 
   @Post('request')
-  acceptFriendsRequest(@Param(':friend-id') friendId: string) {
+  acceptFriendsRequest(@Body('id') friendId: string) {
     console.log(friendId);
     return true;
   }

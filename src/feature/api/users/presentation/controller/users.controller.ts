@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -18,7 +19,99 @@ import { CreateUserDto } from '../dto/create-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('')
+  @Get('')
+  getAll(@Query('state') state: string) {
+    if (state !== 'on-line' && state !== 'off-line' && state !== 'in-game')
+      return new BadRequestException();
+    return [
+      {
+        id: '1',
+        profileImage: 'http://localhost:8080/resources/cat_kickBoard.svg',
+        name: 'OnlineUser1',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User1. Nice to meet you!"
+      },
+      {
+        id: '2',
+        profileImage: 'http://localhost:8080/resources/sloth_health.svg',
+        name: 'OfflineUser1',
+        currentState: 'off-line',
+        introduction: "Hello, I'm User2. Nice to meet you!"
+      },
+      {
+        id: '3',
+        profileImage: 'http://localhost:8080/resources/crocodile_health.svg',
+        name: 'InGameUser3',
+        currentState: 'in-game',
+        introduction: "Hello, I'm User3. Nice to meet you!"
+      },
+      {
+        id: '4',
+        profileImage: 'http://localhost:8080/resources/dog_body.svg',
+        name: 'OnlineUser4',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User4. Nice to meet you!"
+      },
+      {
+        id: '5',
+        profileImage: 'http://localhost:8080/resources/dog_boxing.svg',
+        name: 'User5',
+        currentState: 'off-line',
+        introduction: "Hello, I'm User5. Nice to meet you!"
+      },
+      {
+        id: '6',
+        profileImage: 'http://localhost:8080/resources/dog_stateBoard.svg',
+        name: 'User6',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User6. Nice to meet you!"
+      },
+      {
+        id: '7',
+        profileImage: 'http://localhost:8080/resources/gorilla_baseBall.svg',
+        name: 'User7',
+        currentState: 'in-game',
+        introduction: "Hello, I'm User7. Nice to meet you!"
+      },
+      {
+        id: '8',
+        profileImage: 'http://localhost:8080/resources/kangaroo_boxing.svg',
+        name: 'User8',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User8. Nice to meet you!"
+      },
+      {
+        id: '9',
+        profileImage: 'http://localhost:8080/resources/koala_health.svg',
+        name: 'User9',
+        currentState: 'off-line',
+        introduction: "Hello, I'm User9. Nice to meet you!"
+      },
+      {
+        id: '10',
+        profileImage: 'http://localhost:8080/resources/polarbear_ski.svg',
+        name: 'User10',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User10. Nice to meet you!"
+      },
+      {
+        id: '11',
+        profileImage: 'http://localhost:8080/resources/rhino_health.svg',
+        name: 'User11',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User11. Nice to meet you!"
+      },
+      {
+        id: '12',
+        profileImage: 'http://localhost:8080/resources/shark_health.svg',
+        name: 'User12',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User12. Nice to meet you!"
+      }
+    ].filter(user => (state === undefined || state === null ? true : user.currentState === state));
+  }
+
+  @Put('')
   saveOne(@Body() createUserDto: CreateUserDto) {
     return this.usersService.saveOne(createUserDto);
   }
@@ -118,24 +211,44 @@ export class UsersController {
   getBlockedUser() {
     return [
       {
-        id: 'randomUuid',
-        name: 'test1',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'on-line',
-        introduction: 'Hello world!',
+        id: '9',
+        profileImage: 'http://localhost:8080/resources/koala_health.svg',
+        name: 'User9',
+        currentState: 'off-line',
+        introduction: "Hello, I'm User9. Nice to meet you!"
       },
       {
-        id: 'randomUuid2',
-        name: 'test2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'off-line',
-        introduction: 'Bye world!',
+        id: '10',
+        profileImage: 'http://localhost:8080/resources/polarbear_ski.svg',
+        name: 'User10',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User10. Nice to meet you!"
       },
+      {
+        id: '11',
+        profileImage: 'http://localhost:8080/resources/rhino_health.svg',
+        name: 'User11',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User11. Nice to meet you!"
+      },
+      {
+        id: '12',
+        profileImage: 'http://localhost:8080/resources/shark_health.svg',
+        name: 'User12',
+        currentState: 'on-line',
+        introduction: "Hello, I'm User12. Nice to meet you!"
+      }
     ];
   }
 
   @Post('block')
-  block(@Param(':id') id: string) {
+  block(@Body('id') id: string) {
+    console.log(id);
+    return true;
+  }
+
+  @Delete('block')
+  unblock(@Param(':id') id: string) {
     console.log(id);
     return true;
   }
