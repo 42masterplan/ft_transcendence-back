@@ -29,9 +29,7 @@ export class ChannelService {
     //   '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
     // );
     console.log('channel myChannels');
-    console.log('channel myChannels');
     const myChannelList = await this.channelRepository.getMyChannels(
-      joushin,
       joushin,
     );
     return await Promise.all(
@@ -47,22 +45,16 @@ export class ChannelService {
   async getPublicChannels(): Promise<PublicChannelDto[]> {
     const participant = await this.channelRepository.getPublicChannels(
       joushin,
-      joushin,
     );
-    console.log('channel getPublicChannels');
     console.log('channel getPublicChannels');
     const publicChannelDto =
       await this.participantToPublicChannelDto(participant);
-    // console.log('list :');
-    // console.log(publicChannelDto);
     // console.log('list :');
     // console.log(publicChannelDto);
     return publicChannelDto;
   }
 
   async joinChannel({ id, password }): Promise<string> {
-    console.log('service joinChannel');
-
     console.log('service joinChannel');
 
     const channel = await this.channelRepository.findOneById(id);
@@ -75,31 +67,19 @@ export class ChannelService {
     return 'success';
   }
 
-  async newMessage(content, channelId): Promise<any> {
-    const userId = joushin;
-    const user = await this.usersUseCase.findOne(userId);
+  async newMessage(message, channelId): Promise<ChannelMessageEntity> {
+    const user = await this.usersUseCase.findOne(
+      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
+    );
     const channel = await this.channelRepository.findOneById(channelId);
     const newMessage = new ChannelMessageEntity();
-    newMessage.channelId = channelId;
-    newMessage.participantId = userId;
-    newMessage.content = content;
-    await this.channelMessageRepository.saveOne(newMessage);
-    console.log(user.name)
-    return {
-      channelId: channelId,
-      userId: userId,
-      userName: user.name, 
-      profileImage: 'profileImage',
-      content: content};
+    return await this.channelMessageRepository.saveOne(newMessage);
   }
 
   async getChannelHistory(channelId) {    
     console.log('service channelHistory');
-  async getChannelHistory(channelId) {    
-    console.log('service channelHistory');
     const message = await this.channelRepository.getChannelHistory(channelId);
     const history = await this.messageToHistory(message);
-
 
     return history;
   }
@@ -109,11 +89,10 @@ export class ChannelService {
 
     for (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
-      console.log(user.name);
       history.push({
         id: data.participantId,
         name: user.name,
-        profileImage: "profileImage",
+        // profileImage: user;
         content: data.content,
       });
     }
@@ -175,17 +154,12 @@ export class ChannelService {
     role: string,
     userId: string,
     channelId: string,
-    userId: string,
-    channelId: string,
   ): Promise<ChannelParticipantEntity> {
     const channelParticipant = new ChannelParticipantEntity();
     channelParticipant.role = role;
     channelParticipant.participantId = userId;
     channelParticipant.channelId = channelId;
-    channelParticipant.participantId = userId;
-    channelParticipant.channelId = channelId;
     channelParticipant.chatableAt = '';
-
 
     await this.channelRepository.saveChannelParticipant(channelParticipant);
     return channelParticipant;
