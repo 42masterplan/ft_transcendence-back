@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { WebSocketGateway } from '@nestjs/websockets';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
+import { UserEntity } from 'src/feature/api/users/infrastructure/user.entity';
+import { User } from '../../users/domain/user';
 import { ChannelRepository } from '../domain/channel.repository';
 import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
@@ -67,13 +70,22 @@ export class ChannelService {
     return 'success';
   }
 
-  async newMessage(message, channelId): Promise<ChannelMessageEntity> {
-    const user = await this.usersUseCase.findOne(
-      '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
-    );
+  async newMessage(content, channelId): Promise<any> {
+    const userId = joushin;
+    const user = await this.usersUseCase.findOne(userId);
     const channel = await this.channelRepository.findOneById(channelId);
     const newMessage = new ChannelMessageEntity();
-    return await this.channelMessageRepository.saveOne(newMessage);
+    newMessage.channelId = channelId;
+    newMessage.participantId = userId;
+    newMessage.content = content;
+    await this.channelMessageRepository.saveOne(newMessage);
+    console.log(user.name)
+    return {
+      channelId: channelId,
+      userId: userId,
+      userName: user.name, 
+      profileImage: 'profileImage',
+      content: content};
   }
 
   async getChannelHistory(channelId) {    
@@ -89,10 +101,11 @@ export class ChannelService {
 
     for (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
+      console.log(user.name);
       history.push({
         id: data.participantId,
         name: user.name,
-        // profileImage: user;
+        profileImage: "profileImage",
         content: data.content,
       });
     }
