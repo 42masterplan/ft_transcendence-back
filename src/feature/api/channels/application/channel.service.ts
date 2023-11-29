@@ -1,19 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { WebSocketGateway } from '@nestjs/websockets';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
-import { UserEntity } from 'src/feature/api/users/infrastructure/user.entity';
-import { User } from '../../users/domain/user';
 import { ChannelRepository } from '../domain/channel.repository';
 import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 
-const hkong = '6df1c752-654e-4d40-b8b2-b842e0e85169';
+const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
 const yejinam = '6df1c752-654e-4d40-b8b2-b842e0e85169';
+const userId = joushin;
 @Injectable()
 export class ChannelService {
   constructor(
@@ -22,18 +20,10 @@ export class ChannelService {
     private readonly usersUseCase: UsersUseCases,
   ) {}
 
-  //   async findById(id: string): Promise<ChannelEntity> {
-  //     cons room = await this.channelRepository.find(id);
-  //     if (!room)
-  //   }
-
   async getMyChannels() {
-    // const user = await this.usersUseCase.findOne(
-    //   '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
-    // );
     console.log('channel myChannels');
     const myChannelList = await this.channelRepository.getMyChannels(
-      joushin,
+      userId,
     );
     return await Promise.all(
       myChannelList.map(async (participants) => ({
@@ -46,40 +36,33 @@ export class ChannelService {
   }
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
+    console.log('service publicChannels');
     const participant = await this.channelRepository.getPublicChannels(
-      joushin,
+      userId,
     );
-    console.log('channel getPublicChannels');
     const publicChannelDto =
       await this.participantToPublicChannelDto(participant);
-    // console.log('list :');
-    // console.log(publicChannelDto);
     return publicChannelDto;
   }
 
   async joinChannel({ id, password }): Promise<string> {
     console.log('service joinChannel');
-
     const channel = await this.channelRepository.findOneById(id);
     if (!channel) return 'fail';
     if (channel.status == 'private') return 'Unacceptable';
     if (channel.password != password) return 'Wrong password!';
     
-    const userId = hkong;
     await this.createChannelParticipant('user', userId, channel.id);
     return 'success';
   }
 
   async newMessage(content, channelId): Promise<any> {
-    const userId = joushin;
     const user = await this.usersUseCase.findOne(userId);
-    const channel = await this.channelRepository.findOneById(channelId);
     const newMessage = new ChannelMessageEntity();
     newMessage.channelId = channelId;
     newMessage.participantId = userId;
     newMessage.content = content;
     await this.channelMessageRepository.saveOne(newMessage);
-    console.log(user.name)
     return {
       channelId: channelId,
       userId: userId,
@@ -92,13 +75,21 @@ export class ChannelService {
     console.log('service channelHistory');
     const message = await this.channelRepository.getChannelHistory(channelId);
     const history = await this.messageToHistory(message);
-
     return history;
+  }
+
+
+  async createChannel(client, createChannelDto: CreateChannelDto) {
+    console.log('service createChannel');
+    if (createChannelDto.name == '')
+      client.emit('error_exist', '방 이름을 입력해주세요.');
+    const channel = await this.channelRepository.saveChannel(createChannelDto);
+    await this.createChannelParticipant('owner', userId, channel.id);
+    return 'create Success';
   }
 
   async messageToHistory(list: ChannelMessageEntity[]) {
     const history = [];
-
     for (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
       console.log(user.name);
@@ -149,18 +140,6 @@ export class ChannelService {
         publicChannels.push(publicChannelDto);
     }
     return await publicChannels;
-  }
-
-  async createChannel(client, createChannelDto: CreateChannelDto) {
-    if (createChannelDto.name == '')
-      client.emit('error_exist', '방 이름을 입력해주세요.');
-    console.log('service createChannel');
-    const userId = yejinam;
-   
-    const channel = await this.channelRepository.saveChannel(createChannelDto);
-    await this.createChannelParticipant('owner', userId, channel.id);
-    
-    return 'create Success';
   }
 
   async createChannelParticipant(
