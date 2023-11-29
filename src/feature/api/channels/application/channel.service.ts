@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { WebSocketGateway } from '@nestjs/websockets';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
-import { UserEntity } from 'src/feature/api/users/infrastructure/user.entity';
-import { User } from '../../users/domain/user';
 import { ChannelRepository } from '../domain/channel.repository';
 import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
@@ -32,6 +29,7 @@ export class ChannelService {
     //   '28cb2d3e-5108-46ca-b2ba-46e71d257ad7',
     // );
     console.log('channel myChannels');
+    console.log('channel myChannels');
     const myChannelList = await this.channelRepository.getMyChannels(
       joushin,
     );
@@ -50,14 +48,19 @@ export class ChannelService {
       joushin,
     );
     console.log('channel getPublicChannels');
+    console.log('channel getPublicChannels');
     const publicChannelDto =
       await this.participantToPublicChannelDto(participant);
+    // console.log('list :');
+    // console.log(publicChannelDto);
     // console.log('list :');
     // console.log(publicChannelDto);
     return publicChannelDto;
   }
 
   async joinChannel({ id, password }): Promise<string> {
+    console.log('service joinChannel');
+
     console.log('service joinChannel');
 
     const channel = await this.channelRepository.findOneById(id);
@@ -92,6 +95,7 @@ export class ChannelService {
     console.log('service channelHistory');
     const message = await this.channelRepository.getChannelHistory(channelId);
     const history = await this.messageToHistory(message);
+
 
     return history;
   }
@@ -172,7 +176,10 @@ export class ChannelService {
     channelParticipant.role = role;
     channelParticipant.participantId = userId;
     channelParticipant.channelId = channelId;
+    channelParticipant.participantId = userId;
+    channelParticipant.channelId = channelId;
     channelParticipant.chatableAt = '';
+
 
     await this.channelRepository.saveChannelParticipant(channelParticipant);
     return channelParticipant;

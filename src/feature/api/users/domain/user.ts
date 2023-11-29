@@ -25,7 +25,7 @@ export class User {
   }
 
   get name(): string {
-    return this._email;
+    return this._name;
   }
 
   get intraId(): string {
