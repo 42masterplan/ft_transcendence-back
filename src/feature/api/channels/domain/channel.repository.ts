@@ -63,8 +63,8 @@ export class ChannelRepository {
     return channelHistory;
   }
 
-  async countUser(channel: ChannelEntity): Promise<number> {
-    return await this.em.count(ChannelEntity, channel);
+  async countUser(channelId: string): Promise<number> {
+    return await this.em.count(ChannelParticipantEntity, {channelId: channelId});
   }
 
   async saveChannel(
