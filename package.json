@@ -19,8 +19,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "mikro-orm:create": "npx mikro-orm migration:create",
-    "mikro-orm:seed": "npx mikro-orm migration:up"
+    "migration:create": "npx mikro-orm migration:create",
+    "migration:up": "npx mikro-orm migration:up",
+    "migration:seed": "npx mikro-orm seeder:run"
   },
   "dependencies": {
     "@mikro-orm/cli": "^5.9.4",
@@ -28,6 +29,7 @@
     "@mikro-orm/migrations": "^5.9.4",
     "@mikro-orm/nestjs": "^5.2.2",
     "@mikro-orm/postgresql": "^5.9.4",
+    "@mikro-orm/seeder": "^5.9.4",
     "@mikro-orm/sql-highlighter": "^1.0.1",
     "@nestjs/common": "^10.2.10",
     "@nestjs/config": "^3.1.1",

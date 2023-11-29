@@ -1,4 +1,10 @@
-import { DateTimeType, Entity, PrimaryKey, Property, Unique } from '@mikro-orm/core';
+import {
+  DateTimeType,
+  Entity,
+  PrimaryKey,
+  Property,
+  Unique,
+} from '@mikro-orm/core';
 import { v4 } from 'uuid';
 import { User } from '../domain/user';
 
@@ -10,7 +16,7 @@ export class UserEntity {
   @Property({ length: 32 })
   @Unique()
   intraId: string;
-  
+
   @Property({ length: 32, nullable: true })
   @Unique()
   name: string;
@@ -29,11 +35,15 @@ export class UserEntity {
 
   @Property({ length: 128 })
   introduction: string;
-  
+
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
   updatedAt: Date = new Date();
 
   static from(user: User): UserEntity {
