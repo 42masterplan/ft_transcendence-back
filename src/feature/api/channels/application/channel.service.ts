@@ -32,6 +32,7 @@ export class ChannelService {
     console.log('channel myChannels');
     const myChannelList = await this.channelRepository.getMyChannels(
       joushin,
+      joushin,
     );
     return await Promise.all(
       myChannelList.map(async (participants) => ({
@@ -45,6 +46,7 @@ export class ChannelService {
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
     const participant = await this.channelRepository.getPublicChannels(
+      joushin,
       joushin,
     );
     console.log('channel getPublicChannels');
@@ -91,6 +93,8 @@ export class ChannelService {
       content: content};
   }
 
+  async getChannelHistory(channelId) {    
+    console.log('service channelHistory');
   async getChannelHistory(channelId) {    
     console.log('service channelHistory');
     const message = await this.channelRepository.getChannelHistory(channelId);
@@ -169,6 +173,8 @@ export class ChannelService {
 
   async createChannelParticipant(
     role: string,
+    userId: string,
+    channelId: string,
     userId: string,
     channelId: string,
   ): Promise<ChannelParticipantEntity> {
