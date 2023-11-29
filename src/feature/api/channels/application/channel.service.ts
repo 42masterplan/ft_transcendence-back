@@ -11,9 +11,9 @@ import { ChannelMessageRepository } from '../presentation/gateway/channel-messag
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 
-const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
+const hkong = '6df1c752-654e-4d40-b8b2-b842e0e85169';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
-
+const yejinam = '6df1c752-654e-4d40-b8b2-b842e0e85169';
 @Injectable()
 export class ChannelService {
   constructor(
@@ -39,7 +39,7 @@ export class ChannelService {
       myChannelList.map(async (participants) => ({
         id: participants.channelId,
         name: (await this.channelRepository.findOneById(participants.channelId)).name,
-        userCount: await this.channelRepository.countUser(await this.channelRepository.findOneById(participants.channelId)),
+        userCount: await this.channelRepository.countUser(participants.channelId),
         isUnread: true,
       })),
     );
@@ -65,9 +65,8 @@ export class ChannelService {
     if (channel.status == 'private') return 'Unacceptable';
     if (channel.password != password) return 'Wrong password!';
     
-    const userId = joushin;
+    const userId = hkong;
     await this.createChannelParticipant('user', userId, channel.id);
-    console.log("?");
     return 'success';
   }
 
@@ -114,7 +113,7 @@ export class ChannelService {
       publicChannelDto.isPassword = channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
       publicChannelDto.id = channel.id;
       publicChannelDto.userCount =
-        await this.channelRepository.countUser(channel);
+        await this.channelRepository.countUser(channel.id);
 
       publicChannels.push(publicChannelDto);
     }
@@ -133,7 +132,7 @@ export class ChannelService {
       publicChannelDto.isPassword = channel.password == '' ? false : true; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
       publicChannelDto.id = participant.channelId;
       publicChannelDto.userCount = await this.channelRepository.countUser(
-        channel
+        participant.channelId
       );
 
       if (!publicChannels.some((channel) => channel.id === participant.channelId))
@@ -146,11 +145,12 @@ export class ChannelService {
     if (createChannelDto.name == '')
       client.emit('error_exist', '방 이름을 입력해주세요.');
     console.log('service createChannel');
-    const userId = hkong;
+    const userId = yejinam;
+   
     const channel = await this.channelRepository.saveChannel(createChannelDto);
     await this.createChannelParticipant('owner', userId, channel.id);
-
-    return 'hi';
+    
+    return 'create Success';
   }
 
   async createChannelParticipant(
