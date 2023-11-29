@@ -11,7 +11,11 @@ import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
 const yejinam = '6df1c752-654e-4d40-b8b2-b842e0e85169';
+const hkong_image = 'http://localhost:8080/resources/kangaroo_boxing.svg';
+const joushin_image = 'http://localhost:8080/resources/koala_health.svg';
+const yejinam_image = 'http://localhost:8080/resources/mouse_health.svg';
 const userId = joushin;
+const image = joushin_image;
 @Injectable()
 export class ChannelService {
   constructor(
@@ -67,7 +71,7 @@ export class ChannelService {
       channelId: channelId,
       userId: userId,
       userName: user.name, 
-      profileImage: 'profileImage',
+      profileImage: image,
       content: content};
   }
 
@@ -96,7 +100,7 @@ export class ChannelService {
       history.push({
         id: data.participantId,
         name: user.name,
-        profileImage: "profileImage",
+        profileImage: image,
         content: data.content,
       });
     }
