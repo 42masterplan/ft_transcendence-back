@@ -72,7 +72,7 @@ export class ChannelService {
     await this.channelMessageRepository.saveOne(newMessage);
     return {
       channelId: channelId,
-      userId: userId,
+      userId: userId, 
       userName: user.name, 
       profileImage: image,
       content: content};
@@ -103,7 +103,7 @@ export class ChannelService {
       history.push({
         id: data.participantId,
         name: user.name,
-        profileImage: "profileImage",
+        profileImage: image,
         content: data.content,
       });
     }
