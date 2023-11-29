@@ -74,12 +74,12 @@ export class ChannelGateway
     console.log('socket: joinChannel');
     try {
       const ret = await this.channelService.joinChannel({ id, password });
-    client.emit('myChannels', await this.channelService.getMyChannels());
-    return ret;
-    }catch (e)
+      client.emit('myChannels', await this.channelService.getMyChannels());
+      return ret;
+    }
+    catch (e)
     {
-      console.log("join err");
-      throw e;
+      return '채널 참가에 실패했습니다. 사유 : 모름.';
     }
     
   }
@@ -103,12 +103,17 @@ export class ChannelGateway
   @SubscribeMessage('createChannel')
   async createChannel(
     client: Socket,
-    createChannelDto: CreateChannelDto,
-    done,
+    createChannelDto: CreateChannelDto
   ) {
     console.log('socket: createChannel');
-    await this.channelService.createChannel(client, createChannelDto);
-    await this.getMyChannels(client);
+    try
+    {
+      await this.channelService.createChannel(client, createChannelDto);
+    }
+    catch(e) {
+      return '이미 존재하는 방입니다.';
+    }
+    client.emit('myChannels', await this.channelService.getMyChannels());
     return 'create Success!';
   }
 }
