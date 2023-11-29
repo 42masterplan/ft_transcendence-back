@@ -42,15 +42,12 @@ export class ChannelGateway
   handleDisconnect(client: any) {}
 
   @SubscribeMessage('newMessage')
-  async handleMessage(client: Socket, {message, channelId}) {
+  async handleMessage(client: Socket, {content, channelId}) {
     console.log('socket newMessage');
-    const newMessage = await this.channelService.newMessage(message, channelId);
-    // this.server.to(roomId).emit('newMessage', roomId, {
-    //   id: newMessage.participant,
-    //   name: newMessage.participant.name,
-    //   profileImage: newMessage.participant.profileImage,
-    //   content: newMessage.content,
-    // });
+    const newMessage = await this.channelService.newMessage(content, channelId);
+    this.server.to(channelId).
+    emit('newMessage', newMessage);
+    return 'success';
   }
 
   @SubscribeMessage('myChannels')
