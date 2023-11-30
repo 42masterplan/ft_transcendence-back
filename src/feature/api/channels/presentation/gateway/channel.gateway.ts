@@ -37,6 +37,7 @@ export class ChannelGateway
     // 유저가 가지고있는 모든 채널에 조인하기
     const channels = await this.channelService.getMyChannels();
     client.join(channels.map((channel) => channel.id));
+    client.emit('myChannels', channels);
   }
 
   handleDisconnect(client: any) {}
@@ -54,7 +55,6 @@ export class ChannelGateway
   async getMyChannels(client: Socket) {
     console.log('socket: myChannels');
     const list = await this.channelService.getMyChannels();
-    // console.log(list);
     client.emit('myChannels', list);
   }
 
@@ -78,13 +78,12 @@ export class ChannelGateway
     {
       return '채널 참가에 실패했습니다. 사유 : 모름.';
     }
-    
   }
 
   @SubscribeMessage('myRole')
   async getMyRole(client: Socket, [roomId]) {
     console.log('myRole');
-    // console.log(client);
+		// return (await this.channelService.getMyRole(roomId));
     client.emit('myRole', { role: 'owner' }); // 테이블에 roomId랑 userId검색하기
   }
 
@@ -94,7 +93,7 @@ export class ChannelGateway
     console.log('socket: channelHistory');
     const history = await this.channelService.getChannelHistory(roomId.roomid);
     console.log(history);
-    client.emit('channelHistory', history);
+		return (history);
   }
 
   @SubscribeMessage('createChannel')
