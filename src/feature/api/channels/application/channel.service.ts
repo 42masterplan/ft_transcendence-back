@@ -97,7 +97,7 @@ export class ChannelService {
 
   async messageToHistory(list: ChannelMessageEntity[]) {
     const history = [];
-    for (const data of list) {
+    for await (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
       console.log(user.name);
       history.push({
