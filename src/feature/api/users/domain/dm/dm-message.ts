@@ -6,10 +6,10 @@ export class DmMessage {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: number,
-		_content: string,
-		_participantId: string,
-		_dmId: string,
+		_id: number;
+		_content: string;
+		_participantId: string;
+		_dmId: string;
 	}) {
 		this._id = props._id;
 		this._content = props._content;
