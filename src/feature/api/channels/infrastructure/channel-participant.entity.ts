@@ -1,12 +1,9 @@
 import {
   DateTimeType,
   Entity,
-  ManyToOne,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { ChannelEntity } from './channel.entity';
 
 @Entity({ tableName: 'channel_participant' })
 export class ChannelParticipantEntity {
@@ -16,15 +13,15 @@ export class ChannelParticipantEntity {
   @Property()
   chatableAt: string;
 
-  @Property({ type: DateTimeType })
+  @PrimaryKey({ type: 'uuid' })
+  participantId: string;
+
+  @PrimaryKey({ type: 'uuid' })
+  channelId: string;
+
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
   updatedAt: Date = new Date();
-
-  @ManyToOne(() => UserEntity, { primary: true })
-  participant!: string;
-
-  @ManyToOne(() => ChannelEntity, { primary: true })
-  channel!: string;
 }
