@@ -1,6 +1,7 @@
 import { Socket } from 'dgram';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
+  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -11,7 +12,7 @@ import {
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from '@/src/feature/api/channels/presentation/gateway/dto/create-channel.dto';
 
-@WebSocketGateway()
+@WebSocketGateway({namespace: 'channel'})
 @UsePipes(
   new ValidationPipe({
     exceptionFactory(validationErrors: ValidationError[] = []) {
@@ -43,7 +44,7 @@ export class ChannelGateway
   handleDisconnect(client: any) {}
 
   @SubscribeMessage('newMessage')
-  async handleMessage(client: Socket, {content, channelId}) {
+  async handleMessage(client, {content, channelId}) {
     console.log('socket newMessage');
     const newMessage = await this.channelService.newMessage(content, channelId);
     this.server.to(channelId).
@@ -67,10 +68,11 @@ export class ChannelGateway
   }
 
   @SubscribeMessage('joinChannel')
-  async joinChannel(client: Socket, { id, password }) {
+  async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
     try {
       const ret = await this.channelService.joinChannel({ id, password });
+      client.join(id);
       client.emit('myChannels', await this.channelService.getMyChannels());
       return ret;
     }
