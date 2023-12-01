@@ -29,7 +29,7 @@ export class ChannelService {
 
   async getMyChannels() {
     console.log('channel myChannels');
-    const myChannelList = await this.channelRepository.getMyChannels(
+    const myChannelList = await this.channelRepository.findAllByUserId(
       userId,
     );
     return await Promise.all(
@@ -44,11 +44,11 @@ export class ChannelService {
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
     console.log('service publicChannels');
-    const participant = await this.channelRepository.getPublicChannels(
+    const participant = await this.channelRepository.findPublicChannels(
       userId,
     );
     const publicChannelDto =
-      await this.participantToPublicChannelDto(participant);
+      await this.channelToPublicChannelDto(participant);
     return publicChannelDto;
   }
 
@@ -63,7 +63,7 @@ export class ChannelService {
     return 'success';
   }
 
-  async newMessage(content, channelId): Promise<any> {
+  async newMessage(content: string, channelId: string): Promise<any> {
     const user = await this.usersUseCase.findOne(userId);
     const newMessage = new ChannelMessageEntity();
     newMessage.channelId = channelId;
@@ -78,7 +78,7 @@ export class ChannelService {
       content: content};
   }
 
-  async getChannelHistory(channelId) {    
+  async getChannelHistory(channelId: string) {    
     console.log('service channelHistory');
     const message = await this.channelRepository.getChannelHistory(channelId);
     const history = await this.messageToHistory(message);
@@ -99,7 +99,6 @@ export class ChannelService {
     const history = [];
     for await (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
-      console.log(user.name);
       history.push({
         id: data.participantId,
         name: user.name,
@@ -116,6 +115,8 @@ export class ChannelService {
     const publicChannels = (PublicChannelDto[channels.length] = []);
 
     for (const channel of channels) {
+      if (channel.status !== 'Public')
+        continue;
       const publicChannelDto = new PublicChannelDto();
       publicChannelDto.name = channel.name;
       publicChannelDto.isPassword = channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
@@ -125,7 +126,7 @@ export class ChannelService {
 
       publicChannels.push(publicChannelDto);
     }
-    return await publicChannels;
+    return publicChannels;
   }
 
   async participantToPublicChannelDto(
@@ -134,8 +135,13 @@ export class ChannelService {
     const publicChannels = (PublicChannelDto[participants.length] = []);
 
     for (const participant of participants) {
-      const publicChannelDto = new PublicChannelDto();
       const channel = await this.channelRepository.findOneById(participant.channelId);
+      if(channel.status !== 'Public')
+        continue;
+      if (publicChannels.some((channel) => channel.id === participant.channelId))
+        continue;
+      const publicChannelDto = new PublicChannelDto();
+      console.log(channel.status);
       publicChannelDto.name = channel.name;
       publicChannelDto.isPassword = channel.password == '' ? false : true; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
       publicChannelDto.id = participant.channelId;
@@ -143,10 +149,9 @@ export class ChannelService {
         participant.channelId
       );
 
-      if (!publicChannels.some((channel) => channel.id === participant.channelId))
-        publicChannels.push(publicChannelDto);
+      publicChannels.push(publicChannelDto);
     }
-    return await publicChannels;
+    return publicChannels;
   }
 
   async createChannelParticipant(
@@ -158,7 +163,6 @@ export class ChannelService {
     channelParticipant.role = role;
     channelParticipant.participantId = userId;
     channelParticipant.channelId = channelId;
-    channelParticipant.chatableAt = '';
 
     await this.channelRepository.saveChannelParticipant(channelParticipant);
     return channelParticipant;
