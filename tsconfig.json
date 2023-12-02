@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./*"]
     },
     "typeRoots": ["./@types/node", "./node_modules/@types"]
   }

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
 import { FriendRepository } from '../../domain/friend/interface/friend.repository';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
+import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class FindFriendsUseCase {
