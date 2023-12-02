@@ -38,17 +38,27 @@ export class UserRepositoryImpl implements UserRepository {
 
   private toDomain(userEntity: UserEntity): User {
     return new User({
-      _id: userEntity.id,
-      _intraId: userEntity.intraId,
-      _name: userEntity.name,
-      _is2faEnabled: userEntity.is2faEnabled,
-      _email: userEntity.email,
+      id: userEntity.id,
+      intraId: userEntity.intraId,
+      name: userEntity.name,
+      profileImage: userEntity.profileImage,
+      is2faEnabled: userEntity.is2faEnabled,
+      email: userEntity.email,
+      currentStatus: userEntity.currentStatus,
+      introduction: userEntity.introduction,
     });
   }
 
   private toEntity(user: User): UserEntity {
     const userEntity = new UserEntity();
     userEntity.id = user.id;
+    userEntity.intraId = user.intraId;
+    userEntity.name = user.name;
+    userEntity.profileImage = user.profileImage;
+    userEntity.is2faEnabled = user.is2faEnabled;
+    userEntity.email = user.email;
+    userEntity.currentStatus = user.currentStatus;
+    userEntity.introduction = user.introduction;
 
     return userEntity;
   }
