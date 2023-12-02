@@ -1,33 +1,46 @@
 export class Friend {
-	private readonly _id: number;
-	private readonly _isDeleted: boolean;
-	private readonly _myId: string;
-	private readonly _friendId: string;
+  private readonly _id: number;
+  private readonly _createdAt: Date;
+  private readonly _updatedAt: Date;
 
-  // TODO: implement validation
-	constructor(props: {
-		id: number;
-		isDeleted: boolean;
-		myId: string;
-		friendId: string;
-	}) {
-		this._id = props.id;
-		this._isDeleted = props.isDeleted;
-		this._myId = props.myId;
-		this._friendId = props.friendId;
-	}
+  private readonly _myId: string;
+  private readonly _friendId: string;
+  private readonly _isDeleted: boolean;
 
-	get id(): number {
-		return this._id;
-	}
+  constructor(param: {
+    id: number;
+    createdAt: Date;
+    updatedAt: Date;
+    myId: string;
+    friendId: string;
+    isDeleted: boolean;
+  }) {
+    this._id = param.id;
+    this._createdAt = param.createdAt;
+    this._updatedAt = param.updatedAt;
 
-	get isDeleted(): boolean {
-		return this._isDeleted;
-	}
-	get myId(): string {
-		return this._myId;
-	}
-	get friendId(): string {
-		return this._friendId;
-	}
+    this._myId = param.myId;
+    this._friendId = param.friendId;
+    this._isDeleted = param.isDeleted;
+  }
+
+  get id(): number {
+    return this._id;
+  }
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
+
+  get myId(): string {
+    return this._myId;
+  }
+  get friendId(): string {
+    return this._friendId;
+  }
+  get isDeleted(): boolean {
+    return this._isDeleted;
+  }
 }
