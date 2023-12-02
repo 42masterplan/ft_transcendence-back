@@ -6,15 +6,15 @@ export class DmMessage {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: number;
-		_content: string;
-		_participantId: string;
-		_dmId: string;
+		id: number;
+		content: string;
+		participantId: string;
+		dmId: string;
 	}) {
-		this._id = props._id;
-		this._content = props._content;
-		this._participantId = props._participantId;
-		this._dmId = props._dmId;
+		this._id = props.id;
+		this._content = props.content;
+		this._participantId = props.participantId;
+		this._dmId = props.dmId;
 	}
 
 	get id(): number {
