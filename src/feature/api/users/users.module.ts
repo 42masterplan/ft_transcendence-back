@@ -13,7 +13,7 @@ import { UsersService } from './users.service';
 import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [MikroOrmModule.forFeature([FriendEntity])],
+  imports: [MikroOrmModule.forFeature([FriendEntity]), MailModule],
   controllers: [UsersController, FriendsController],
   providers: [
     /** application */
@@ -32,7 +32,6 @@ import { MailModule } from '../mail/mail.module';
       useClass: FriendRepositoryImpl,
     },
   ],
-  imports: [MailModule],
   exports: [UsersUseCases, UsersService],
 })
 export class UsersModule {}
