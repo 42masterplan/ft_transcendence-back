@@ -1,6 +1,7 @@
 import { Socket } from 'dgram';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
+  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -11,7 +12,7 @@ import {
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from '@/src/feature/api/channels/presentation/gateway/dto/create-channel.dto';
 
-@WebSocketGateway()
+@WebSocketGateway({namespace: 'channel'})
 @UsePipes(
   new ValidationPipe({
     exceptionFactory(validationErrors: ValidationError[] = []) {
@@ -37,27 +38,24 @@ export class ChannelGateway
     // 유저가 가지고있는 모든 채널에 조인하기
     const channels = await this.channelService.getMyChannels();
     client.join(channels.map((channel) => channel.id));
+    client.emit('myChannels', channels);
   }
 
   handleDisconnect(client: any) {}
 
   @SubscribeMessage('newMessage')
-  async handleMessage(client: Socket, {message, channelId}) {
+  async handleMessage(client, {content, channelId}) {
     console.log('socket newMessage');
-    const newMessage = await this.channelService.newMessage(message, channelId);
-    // this.server.to(roomId).emit('newMessage', roomId, {
-    //   id: newMessage.participant,
-    //   name: newMessage.participant.name,
-    //   profileImage: newMessage.participant.profileImage,
-    //   content: newMessage.content,
-    // });
+    const newMessage = await this.channelService.newMessage(content, channelId);
+    this.server.to(channelId).
+    emit('newMessage', newMessage);
+    return 'success';
   }
 
   @SubscribeMessage('myChannels')
   async getMyChannels(client: Socket) {
     console.log('socket: myChannels');
     const list = await this.channelService.getMyChannels();
-    // console.log(list);
     client.emit('myChannels', list);
   }
 
@@ -70,24 +68,24 @@ export class ChannelGateway
   }
 
   @SubscribeMessage('joinChannel')
-  async joinChannel(client: Socket, { id, password }) {
+  async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
     try {
       const ret = await this.channelService.joinChannel({ id, password });
-    client.emit('myChannels', await this.channelService.getMyChannels());
-    return ret;
-    }catch (e)
-    {
-      console.log("join err");
-      throw e;
+      client.join(id);
+      client.emit('myChannels', await this.channelService.getMyChannels());
+      return ret;
     }
-    
+    catch (e)
+    {
+      return '채널 참가에 실패했습니다. 사유 : 모름.';
+    }
   }
 
   @SubscribeMessage('myRole')
-  async getMyRole(client: Socket, [roomId]) {
+  async getMyRole(client: Socket, roomId) {
     console.log('myRole');
-    // console.log(client);
+		// return (await this.channelService.getMyRole(roomId));
     client.emit('myRole', { role: 'owner' }); // 테이블에 roomId랑 userId검색하기
   }
 
@@ -97,18 +95,23 @@ export class ChannelGateway
     console.log('socket: channelHistory');
     const history = await this.channelService.getChannelHistory(roomId.roomid);
     console.log(history);
-    client.emit('channelHistory', history);
+		return (history);
   }
 
   @SubscribeMessage('createChannel')
   async createChannel(
     client: Socket,
-    createChannelDto: CreateChannelDto,
-    done,
+    createChannelDto: CreateChannelDto
   ) {
     console.log('socket: createChannel');
-    await this.channelService.createChannel(client, createChannelDto);
-    await this.getMyChannels(client);
+    try
+    {
+      await this.channelService.createChannel(client, createChannelDto);
+    }
+    catch(e) {
+      return '이미 존재하는 방입니다.';
+    }
+    client.emit('myChannels', await this.channelService.getMyChannels());
     return 'create Success!';
   }
 }

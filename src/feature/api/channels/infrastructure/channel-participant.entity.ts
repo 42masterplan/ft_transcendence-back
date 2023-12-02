@@ -7,17 +7,17 @@ import {
 
 @Entity({ tableName: 'channel_participant' })
 export class ChannelParticipantEntity {
-  @Property({ length: 64 })
-  role: string;
-
-  @Property()
-  chatableAt: string;
-
   @PrimaryKey({ type: 'uuid' })
   participantId: string;
 
   @PrimaryKey({ type: 'uuid' })
   channelId: string;
+
+  @Property({ length: 64 })
+  role: string;
+
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
+  chatableAt: Date = new Date();
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();

@@ -283,12 +283,14 @@
         },
         "chatable_at": {
           "name": "chatable_at",
-          "type": "varchar(255)",
+          "type": "timestamptz(0)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "string"
+          "length": 0,
+          "default": "current_timestamp",
+          "mappedType": "datetime"
         },
         "created_at": {
           "name": "created_at",
