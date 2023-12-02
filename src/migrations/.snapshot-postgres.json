@@ -644,7 +644,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "default": "false",
+          "default": "null",
           "mappedType": "boolean"
         },
         "created_at": {
@@ -673,6 +673,16 @@
       "name": "friend_request",
       "schema": "public",
       "indexes": [
+        {
+          "keyName": "friend_request_primary_user_id_target_user_id_index",
+          "columnNames": [
+            "primary_user_id",
+            "target_user_id"
+          ],
+          "composite": true,
+          "primary": false,
+          "unique": false
+        },
         {
           "keyName": "friend_request_pkey",
           "columnNames": [
