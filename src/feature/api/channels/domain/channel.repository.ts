@@ -11,79 +11,77 @@ export class ChannelRepository {
   constructor(private readonly em: EntityManager) {}
 
   async findOneById(id: string): Promise<ChannelEntity> {
+    console.log('repository: findOneById');
     return await this.em.findOne(ChannelEntity, { id: id });
   }
 
-  async getAllByStatus(status: string): Promise<ChannelEntity[]> {
-    const publicChannels = await this.em.find(ChannelEntity, {
+  async findAllByStatus(status: string): Promise<ChannelEntity[]> {
+    console.log('repository: getAllByStatus');
+    const Channels = await this.em.find(ChannelEntity, {
       status: status,
     });
-    return publicChannels;
+    return Channels;
   }
 
-  async getMyChannels(userId): Promise<ChannelParticipantEntity[]> {
+  async findAllByUserId(userId: string): Promise<ChannelParticipantEntity[]> {
+    console.log('repository: getMyChannels');
     const list = await this.em.find(
       ChannelParticipantEntity,
-      {
-        participant: userId,
-      },
+      { participantId: userId },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
+
     return list;
   }
 
-  async getPublicChannels(userId): Promise<ChannelParticipantEntity[]> {
-    console.log(`user: ${userId}`);
-    const channels = await this.em
-      .createQueryBuilder(ChannelParticipantEntity, 'participant')
-      .select('*')
-      .where('participant.participant_id != ?', [userId])
-      .getResultList();
-
-    // const channels = await this.em
-    //   .createQueryBuilder(ChannelParticipantEntity, 'participant')
-    //   .select('*')
-    //   .leftJoin('participant.channel_id', 'channel')
-    //   .where({ status: 'Public' })
-    //   .getResultList();
+  async findPublicChannels(userId: string): Promise<ChannelEntity[]> {
+    const myChannels = (await this.findAllByUserId(userId)).map(
+      (channel) => channel.channelId,
+    );
+    const channels = await this.em.find(ChannelEntity, {
+      id: { $nin: myChannels },
+    });
 
     return channels;
   }
 
-  async getChannelHistory(channelId): Promise<ChannelMessageEntity[]> {
-    console.log(channelId);
+  async getChannelHistory(channelId: string): Promise<ChannelMessageEntity[]> {
+    console.log('repository: getChannelHistory');
     const channelHistory = await this.em.find(
       ChannelMessageEntity,
       {
-        channel: channelId,
+        channelId: channelId,
       },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
-    console.log(`channelId : ${channelId}`);
     return channelHistory;
   }
 
-  async countUser(channel: ChannelEntity): Promise<number> {
-    return await this.em.count(ChannelEntity, channel);
+  async countUser(channelId: string): Promise<number> {
+    console.log('repository: countUser');
+    return await this.em.count(ChannelParticipantEntity, {
+      channelId: channelId,
+    });
   }
 
   async saveChannel(
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelEntity> {
-    const channel = await this.em.create(ChannelEntity, createChannelDto);
+    console.log('repository: saveChannel');
+    const channel = this.em.create(ChannelEntity, createChannelDto);
     await this.em.flush();
-    console.log('save!');
     return channel;
   }
 
   async saveChannelParticipant(
     channelParticipant: ChannelParticipantEntity,
   ): Promise<ChannelParticipantEntity> {
-    const savedChannelParticipant = await this.em.create(
+    console.log('repository: saveChannelParticipant');
+    const savedChannelParticipant = this.em.create(
       ChannelParticipantEntity,
       channelParticipant,
     );
-    this.em.flush();
+    await this.em.flush();
     return savedChannelParticipant;
   }
 }

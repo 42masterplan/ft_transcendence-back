@@ -1,30 +1,26 @@
-import {
-  DateTimeType,
-  Entity,
-  ManyToOne,
-  PrimaryKey,
-  Property,
-} from '@mikro-orm/core';
-import { DmEntity } from './dm.entity';
-import { UserEntity } from './user.entity';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 
 @Entity({ tableName: 'dm_message' })
 export class DmMessageEntity {
   @PrimaryKey()
   id: number;
 
+  @Property({ type: 'uuid' })
+  participantId: string;
+
+  @Property({ type: 'uuid' })
+  dmId: string;
+
   @Property({ length: 512 })
   content: string;
 
-  @Property({ type: DateTimeType })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
   updatedAt: Date = new Date();
-
-  @ManyToOne(() => UserEntity)
-  participant!: string;
-
-  @ManyToOne(() => DmEntity)
-  dm!: string;
 }

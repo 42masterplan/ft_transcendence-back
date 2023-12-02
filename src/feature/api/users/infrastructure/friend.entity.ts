@@ -1,30 +1,27 @@
-import {
-  DateTimeType,
-  Entity,
-  ManyToOne,
-  PrimaryKey,
-  Property,
-} from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { bool } from 'joi';
-import { UserEntity } from './user.entity';
 
 @Entity({ tableName: 'friend' })
 export class FriendEntity {
   @PrimaryKey()
   id: number;
 
+  @Property({ type: 'uuid' })
+  myId: string;
+
+  @Property({ type: 'uuid' })
+  friendId: string;
+
   @Property({ type: bool, default: false })
   isDeleted: boolean;
 
-  @Property({ type: DateTimeType })
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, onUpdate: () => new Date() })
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
   updatedAt: Date = new Date();
-
-  @ManyToOne(() => UserEntity)
-  my!: string;
-
-  @ManyToOne(() => UserEntity)
-  friend!: string;
 }

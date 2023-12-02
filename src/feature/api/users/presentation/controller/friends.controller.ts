@@ -1,26 +1,22 @@
-import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
+import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 
 @Controller('users/friends')
 export class FriendsController {
+  constructor(private readonly findUseCase: FindFriendsUseCase) {}
+
   @Get('')
-  getFriends(@Param(':id') id: string) {
+  async getFriends(@Param(':id') id: string) {
+    const friends = await this.findUseCase.execute(id);
+
+    return friends.map((friend) => new FindFriendViewModel(friend));
+  }
+
+  @Post('')
+  createFriendRequest(@Body('id') id: string) {
     console.log(id);
-    return [
-      {
-        id: 'randomUuid',
-        name: 'test1',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'on-line',
-        introduction: 'Hello world!',
-      },
-      {
-        id: 'randomUuid2',
-        name: 'test2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        currentState: 'off-line',
-        introduction: 'Bye world!',
-      },
-    ];
+    return true;
   }
 
   @Delete('')
@@ -46,7 +42,7 @@ export class FriendsController {
   }
 
   @Post('request')
-  acceptFriendsRequest(@Param(':friend-id') friendId: string) {
+  acceptFriendsRequest(@Body('id') friendId: string) {
     console.log(friendId);
     return true;
   }

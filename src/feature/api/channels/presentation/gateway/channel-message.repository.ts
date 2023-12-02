@@ -7,15 +7,15 @@ export class ChannelMessageRepository {
   constructor(private readonly em: EntityManager) {}
 
   async saveOne(message: ChannelMessageEntity): Promise<ChannelMessageEntity> {
-    const newMessage = await this.em.create(ChannelMessageEntity, message);
-    this.em.flush();
+    const newMessage = this.em.create(ChannelMessageEntity, message);
+    await this.em.flush();
 
     return newMessage;
   }
 
-  async findAllByChannelId(channelId): Promise<ChannelMessageEntity[]> {
+  async findAllByChannelId(channelId: string): Promise<ChannelMessageEntity[]> {
     const messages = await this.em.find(ChannelMessageEntity, {
-      channel: channelId,
+      channelId: channelId,
     });
 
     return messages;
