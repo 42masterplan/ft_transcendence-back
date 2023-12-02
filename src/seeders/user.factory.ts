@@ -1,6 +1,6 @@
+import { UserEntity } from '../feature/api/users/infrastructure/user.entity';
 import { EntityData } from '@mikro-orm/core';
 import { Factory, Faker } from '@mikro-orm/seeder';
-import { UserEntity } from '../feature/api/users/infrastructure/user.entity';
 
 export class UserFactory extends Factory<UserEntity> {
   model = UserEntity;

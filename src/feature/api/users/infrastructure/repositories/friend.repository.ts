@@ -1,9 +1,9 @@
-import { EntityRepository } from '@mikro-orm/core';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable } from '@nestjs/common';
 import { Friend } from '../../domain/friend/friend';
 import { FriendRepository } from '../../domain/friend/interface/friend.repository';
 import { FriendEntity } from '../friend.entity';
+import { EntityRepository } from '@mikro-orm/core';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class FriendRepositoryImpl implements FriendRepository {

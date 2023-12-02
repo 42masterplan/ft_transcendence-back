@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 
 @Controller('users/friends')
 export class FriendsController {

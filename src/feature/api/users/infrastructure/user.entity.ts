@@ -1,3 +1,4 @@
+import { User } from '../domain/user';
 import {
   DateTimeType,
   Entity,
@@ -6,7 +7,6 @@ import {
   Unique,
 } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { User } from '../domain/user';
 
 @Entity({ tableName: 'user' })
 export class UserEntity {

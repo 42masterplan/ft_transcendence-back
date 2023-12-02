@@ -3,16 +3,19 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'prettier',
+    'plugin:import/typescript',
   ],
-  plugins: ['import', 'prettier', 'unused-imports'],
+  plugins: ['import', 'prettier', 'unused-imports', '@typescript-eslint'],
   ignorePatterns: ['.eslintrc.js', 'node_modules/'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'tsconfig.json',
+    project: './tsconfig.json',
     tsconfigRootDir: '.',
     sourceType: 'module',
+    tsconfigRootDir: __dirname,
   },
   rules: {
+    'import/no-unresolved': 'error',
     'no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
@@ -27,7 +30,7 @@ module.exports = {
     'import/order': [
       'error',
       {
-        groups: ['builtin', 'external', 'parent', 'sibling', 'index'],
+        groups: ['builtin', 'parent', 'sibling', 'index'],
         alphabetize: {
           order: 'asc',
         },
@@ -45,8 +48,15 @@ module.exports = {
       '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
     'import/resolver': {
-      alias: {
-        map: [['@src/', './src/']],
+      typescript: {
+        directory: './tsconfig.json',
+
+        alwaysTryTypes: true,
+
+        project: './tsconfig.json',
+
+        resolveToModule: true,
+        project: ['./tsconfig.json'],
       },
     },
   },

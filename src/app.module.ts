@@ -1,12 +1,12 @@
 import { join } from 'node:path';
+import { DatabaseModule } from './feature/database/database.module';
+import { AppController } from '@/src/app.controller';
+import { AppService } from '@/src/app.service';
+import { ApiModule } from '@/src/feature/api/api.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import * as Joi from 'joi';
-import { AppController } from '@/src/app.controller';
-import { AppService } from '@/src/app.service';
-import { ApiModule } from '@/src/feature/api/api.module';
-import { DatabaseModule } from '@/src/feature/database/database.module';
 
 @Module({
   imports: [
