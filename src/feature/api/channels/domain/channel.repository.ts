@@ -26,7 +26,8 @@ export class ChannelRepository {
   async findAllByUserId(userId: string): Promise<ChannelParticipantEntity[]> {
     console.log('repository: getMyChannels');
     const list = await this.em.find(
-      ChannelParticipantEntity, { participantId: userId },
+      ChannelParticipantEntity,
+      { participantId: userId },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
 
@@ -34,9 +35,13 @@ export class ChannelRepository {
   }
 
   async findPublicChannels(userId: string): Promise<ChannelEntity[]> {
-    const myChannels = (await this.findAllByUserId(userId)).map(channel => (channel.channelId));
-    const channels = await this.em.find(ChannelEntity, {id : {$nin: myChannels }});
-    
+    const myChannels = (await this.findAllByUserId(userId)).map(
+      (channel) => channel.channelId,
+    );
+    const channels = await this.em.find(ChannelEntity, {
+      id: { $nin: myChannels },
+    });
+
     return channels;
   }
 
@@ -54,7 +59,9 @@ export class ChannelRepository {
 
   async countUser(channelId: string): Promise<number> {
     console.log('repository: countUser');
-    return await this.em.count(ChannelParticipantEntity, {channelId: channelId});
+    return await this.em.count(ChannelParticipantEntity, {
+      channelId: channelId,
+    });
   }
 
   async saveChannel(

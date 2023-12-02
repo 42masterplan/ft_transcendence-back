@@ -1,18 +1,18 @@
+import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import * as Joi from 'joi';
 import { AppController } from '@/src/app.controller';
 import { AppService } from '@/src/app.service';
 import { ApiModule } from '@/src/feature/api/api.module';
 import { DatabaseModule } from '@/src/feature/database/database.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'node:path';
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'resources'),
-      serveRoot: '/resources'
+      serveRoot: '/resources',
     }),
     DatabaseModule,
     ApiModule,

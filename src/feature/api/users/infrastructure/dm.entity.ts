@@ -11,6 +11,10 @@ export class DmEntity {
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
   updatedAt: Date = new Date();
 }

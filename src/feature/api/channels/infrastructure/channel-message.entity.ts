@@ -1,9 +1,4 @@
-import {
-  DateTimeType,
-  Entity,
-  PrimaryKey,
-  Property,
-} from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
 
 @Entity({ tableName: 'channel_message' })
@@ -23,6 +18,10 @@ export class ChannelMessageEntity {
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
-  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' , onUpdate: () => new Date() })
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
   updatedAt: Date = new Date();
 }

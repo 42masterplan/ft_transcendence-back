@@ -52,7 +52,7 @@ export class User {
   get email(): string {
     return this._email;
   }
-  
+
   get currentStatus(): string {
     return this._currentStatus;
   }

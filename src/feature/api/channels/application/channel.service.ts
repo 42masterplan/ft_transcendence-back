@@ -29,14 +29,15 @@ export class ChannelService {
 
   async getMyChannels() {
     console.log('channel myChannels');
-    const myChannelList = await this.channelRepository.findAllByUserId(
-      userId,
-    );
+    const myChannelList = await this.channelRepository.findAllByUserId(userId);
     return await Promise.all(
       myChannelList.map(async (participants) => ({
         id: participants.channelId,
-        name: (await this.channelRepository.findOneById(participants.channelId)).name,
-        userCount: await this.channelRepository.countUser(participants.channelId),
+        name: (await this.channelRepository.findOneById(participants.channelId))
+          .name,
+        userCount: await this.channelRepository.countUser(
+          participants.channelId,
+        ),
         isUnread: true,
       })),
     );
@@ -44,11 +45,8 @@ export class ChannelService {
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
     console.log('service publicChannels');
-    const participant = await this.channelRepository.findPublicChannels(
-      userId,
-    );
-    const publicChannelDto =
-      await this.channelToPublicChannelDto(participant);
+    const participant = await this.channelRepository.findPublicChannels(userId);
+    const publicChannelDto = await this.channelToPublicChannelDto(participant);
     return publicChannelDto;
   }
 
@@ -58,7 +56,7 @@ export class ChannelService {
     if (!channel) return 'fail';
     if (channel.status == 'private') return 'Unacceptable';
     if (channel.password != password) return 'Wrong password!';
-    
+
     await this.createChannelParticipant('user', userId, channel.id);
     return 'success';
   }
@@ -72,19 +70,19 @@ export class ChannelService {
     await this.channelMessageRepository.saveOne(newMessage);
     return {
       channelId: channelId,
-      userId: userId, 
-      userName: user.name, 
+      userId: userId,
+      userName: user.name,
       profileImage: image,
-      content: content};
+      content: content,
+    };
   }
 
-  async getChannelHistory(channelId: string) {    
+  async getChannelHistory(channelId: string) {
     console.log('service channelHistory');
     const message = await this.channelRepository.getChannelHistory(channelId);
     const history = await this.messageToHistory(message);
     return history;
   }
-
 
   async createChannel(client, createChannelDto: CreateChannelDto) {
     console.log('service createChannel');
@@ -115,14 +113,14 @@ export class ChannelService {
     const publicChannels = (PublicChannelDto[channels.length] = []);
 
     for (const channel of channels) {
-      if (channel.status !== 'Public')
-        continue;
+      if (channel.status !== 'Public') continue;
       const publicChannelDto = new PublicChannelDto();
       publicChannelDto.name = channel.name;
       publicChannelDto.isPassword = channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
       publicChannelDto.id = channel.id;
-      publicChannelDto.userCount =
-        await this.channelRepository.countUser(channel.id);
+      publicChannelDto.userCount = await this.channelRepository.countUser(
+        channel.id,
+      );
 
       publicChannels.push(publicChannelDto);
     }
@@ -135,10 +133,13 @@ export class ChannelService {
     const publicChannels = (PublicChannelDto[participants.length] = []);
 
     for (const participant of participants) {
-      const channel = await this.channelRepository.findOneById(participant.channelId);
-      if(channel.status !== 'Public')
-        continue;
-      if (publicChannels.some((channel) => channel.id === participant.channelId))
+      const channel = await this.channelRepository.findOneById(
+        participant.channelId,
+      );
+      if (channel.status !== 'Public') continue;
+      if (
+        publicChannels.some((channel) => channel.id === participant.channelId)
+      )
         continue;
       const publicChannelDto = new PublicChannelDto();
       console.log(channel.status);
@@ -146,7 +147,7 @@ export class ChannelService {
       publicChannelDto.isPassword = channel.password == '' ? false : true; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
       publicChannelDto.id = participant.channelId;
       publicChannelDto.userCount = await this.channelRepository.countUser(
-        participant.channelId
+        participant.channelId,
       );
 
       publicChannels.push(publicChannelDto);
