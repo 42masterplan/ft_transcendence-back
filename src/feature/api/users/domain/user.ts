@@ -39,4 +39,16 @@ export class User {
   get email(): string {
     return this._email;
   }
+
+  get profileImage(): string {
+    return 'this._profileImage';
+  }
+
+  get currentStatus(): string {
+    return 'this._currentStatus';
+  }
+
+  get introduction(): string {
+    return 'this._introduction';
+  }
 }

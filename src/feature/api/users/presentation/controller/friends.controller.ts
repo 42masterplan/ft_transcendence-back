@@ -1,15 +1,18 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
+import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 
 @Controller('users/friends')
 export class FriendsController {
   constructor(private readonly findUseCase: FindFriendsUseCase) {}
 
   @Get('')
-  getFriends(@Param(':id') id: string) {
-    return this.findUseCase.execute(id);
+  async getFriends(@Param(':id') id: string) {
+    const friends = await this.findUseCase.execute(id);
+
+    return friends.map((friend) => new FindFriendViewModel(friend));
   }
-  
+
   @Post('')
   createFriendRequest(@Body('id') id: string) {
     console.log(id);
