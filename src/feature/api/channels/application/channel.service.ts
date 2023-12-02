@@ -90,7 +90,7 @@ export class ChannelService {
       client.emit('error_exist', '방 이름을 입력해주세요.');
     const channel = await this.channelRepository.saveChannel(createChannelDto);
     await this.createChannelParticipant('owner', userId, channel.id);
-    return 'create Success';
+    return channel.id;
   }
 
   async messageToHistory(list: ChannelMessageEntity[]) {
