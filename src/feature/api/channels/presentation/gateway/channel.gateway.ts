@@ -1,7 +1,6 @@
 import { Socket } from 'dgram';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
-  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -12,7 +11,7 @@ import {
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from '@/src/feature/api/channels/presentation/gateway/dto/create-channel.dto';
 
-@WebSocketGateway({namespace: 'channel'})
+@WebSocketGateway({ namespace: 'channel' })
 @UsePipes(
   new ValidationPipe({
     exceptionFactory(validationErrors: ValidationError[] = []) {
@@ -44,11 +43,10 @@ export class ChannelGateway
   handleDisconnect(client: any) {}
 
   @SubscribeMessage('newMessage')
-  async handleMessage(client, {content, channelId}) {
+  async handleMessage(client, { content, channelId }) {
     console.log('socket newMessage');
     const newMessage = await this.channelService.newMessage(content, channelId);
-    this.server.to(channelId).
-    emit('newMessage', newMessage);
+    this.server.to(channelId).emit('newMessage', newMessage);
     return 'success';
   }
 
@@ -75,9 +73,7 @@ export class ChannelGateway
       client.join(id);
       client.emit('myChannels', await this.channelService.getMyChannels());
       return ret;
-    }
-    catch (e)
-    {
+    } catch (e) {
       return '채널 참가에 실패했습니다. 사유 : 모름.';
     }
   }
@@ -85,7 +81,7 @@ export class ChannelGateway
   @SubscribeMessage('myRole')
   async getMyRole(client: Socket, roomId) {
     console.log('myRole');
-		// return (await this.channelService.getMyRole(roomId));
+    // return (await this.channelService.getMyRole(roomId));
     client.emit('myRole', { role: 'owner' }); // 테이블에 roomId랑 userId검색하기
   }
 
@@ -95,20 +91,15 @@ export class ChannelGateway
     console.log('socket: channelHistory');
     const history = await this.channelService.getChannelHistory(roomId.roomid);
     console.log(history);
-		return (history);
+    return history;
   }
 
   @SubscribeMessage('createChannel')
-  async createChannel(
-    client: Socket,
-    createChannelDto: CreateChannelDto
-  ) {
+  async createChannel(client: Socket, createChannelDto: CreateChannelDto) {
     console.log('socket: createChannel');
-    try
-    {
+    try {
       await this.channelService.createChannel(client, createChannelDto);
-    }
-    catch(e) {
+    } catch (e) {
       return '이미 존재하는 방입니다.';
     }
     client.emit('myChannels', await this.channelService.getMyChannels());
