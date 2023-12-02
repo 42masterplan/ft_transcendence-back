@@ -17,6 +17,14 @@ export class FriendRequest {
     this._targetUserId = props.targetUserId;
   }
 
+  isAcceptedNull(): boolean {
+    if ((this, this.isAccepted === null)) {
+      return true;
+    }
+
+    return false;
+  }
+
   get id(): number {
     return this._id;
   }

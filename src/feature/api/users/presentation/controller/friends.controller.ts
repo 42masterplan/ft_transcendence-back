@@ -1,10 +1,14 @@
+import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 
 @Controller('users/friends')
 export class FriendsController {
-  constructor(private readonly findUseCase: FindFriendsUseCase) {}
+  constructor(
+    private readonly findUseCase: FindFriendsUseCase,
+    private readonly createRequestUseCase: CreateFriendRequestUseCase,
+  ) {}
 
   @Get('')
   async getFriends(@Param(':id') id: string) {
@@ -13,9 +17,16 @@ export class FriendsController {
     return friends.map((friend) => new FindFriendViewModel(friend));
   }
 
-  @Post('')
-  createFriendRequest(@Body('id') id: string) {
-    console.log(id);
+  @Post('/request')
+  async createFriendRequest(@Body('id') id: string) {
+    //TODO: change to user decorator
+    const userId = 'b233ba54-50be-4dcc-9c84-a2ce366936a9';
+
+    await this.createRequestUseCase.execute({
+      primaryUserId: userId,
+      targetUserId: id,
+    });
+
     return true;
   }
 

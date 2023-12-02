@@ -1,9 +1,13 @@
+import { CreateFriendRequestUseCase } from './application/friends/create-friend-request.use-case';
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
 import { UsersUseCases } from './application/use-case/users.use-case';
+import { FriendRequestRepository } from './domain/friend/interface/friend-request.repository';
 import { FriendRepository } from './domain/friend/interface/friend.repository';
 import { UserRepository } from './domain/user.repository';
+import { FriendRequestEntity } from './infrastructure/friend-request.entity';
 import { FriendEntity } from './infrastructure/friend.entity';
-import { FriendRepositoryImpl } from './infrastructure/repositories/friend.repository';
+import { FriendRequestRepositoryImpl } from './infrastructure/repositories/friend-request.repository';
+import { FriendRepositoryImpl } from './infrastructure/repositories/friend.repository.impl';
 import { UserRepositoryImpl } from './infrastructure/user.repository.impl';
 import { FriendsController } from './presentation/controller/friends.controller';
 import { UsersController } from './presentation/controller/users.controller';
@@ -12,13 +16,15 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 
 @Module({
-  imports: [MikroOrmModule.forFeature([FriendEntity])],
+  imports: [MikroOrmModule.forFeature([FriendEntity, FriendRequestEntity])],
   controllers: [UsersController, FriendsController],
   providers: [
     /** application */
     UsersUseCases,
-    FindFriendsUseCase,
     UsersService,
+
+    FindFriendsUseCase,
+    CreateFriendRequestUseCase,
 
     {
       provide: UserRepository,
@@ -29,6 +35,10 @@ import { Module } from '@nestjs/common';
     {
       provide: FriendRepository,
       useClass: FriendRepositoryImpl,
+    },
+    {
+      provide: FriendRequestRepository,
+      useClass: FriendRequestRepositoryImpl,
     },
   ],
   exports: [UsersUseCases],
