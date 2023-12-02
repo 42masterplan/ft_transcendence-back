@@ -25,7 +25,7 @@ import { MailService } from './mail.service';
             strict: true,
           },
         },
-      })
+      }),
     }),
   ],
   exports: [MailService],

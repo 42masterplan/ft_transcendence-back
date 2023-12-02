@@ -1,15 +1,19 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/presentation/dto/create-user.dto';
+import { UsersService } from '../users/users.service';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService, private readonly usersService: UsersService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get('callback')
   async getAccessTokenFromFT(@Query('code') code: string) {
-    const accessToken: string = await this.authService.getAccessTokenFromFT(code);
+    const accessToken: string =
+      await this.authService.getAccessTokenFromFT(code);
     const intraId: string = await this.authService.getUserIntraId(accessToken);
     const jwtToken: string = await this.authService.getJwtToken(intraId);
     const user = await this.usersService.findOneByIntraId(intraId);
@@ -18,7 +22,7 @@ export class AuthController {
 
     if (!user) {
       isExist = false;
-      let createUserDto = new CreateUserDto(intraId);
+      const createUserDto = new CreateUserDto(intraId);
       await this.usersService.createOne(createUserDto);
     } else {
       is2faEnabled = user.is2faEnabled;

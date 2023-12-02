@@ -23,15 +23,17 @@ export class UsersUseCases {
     return this.repository.findOneByIntraId(intraId);
   }
 
-  async updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateOne(
+    intraId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     return await this.repository.updateOne(intraId, updateUserDto);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     try {
       return await this.repository.createOne(createUserDto);
-    }
-    catch (e) {
+    } catch (e) {
       throw new ConflictException(e, 'Create user failed.');
     }
   }

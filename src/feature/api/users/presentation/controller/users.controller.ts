@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
   BadRequestException,
   Body,
@@ -14,18 +15,20 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import path from 'node:path';
-import { diskStorage } from 'multer';
 import { AuthGuard } from '@nestjs/passport';
-import { UsersService } from '../../users.service';
-import { UpdateUserDto } from '../dto/update-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import { MailService } from '../../../mail/mail.service';
+import { UsersService } from '../../users.service';
 import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService, private readonly mailService: MailService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly mailService: MailService,
+  ) {}
 
   @Get('')
   getAll(@Query('status') status: string) {
@@ -127,12 +130,11 @@ export class UsersController {
         : user.currentStatus === status,
     );
   }
-  
+
   @UseGuards(AuthGuard('jwt'))
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    if (!req.user.sub)
-      throw new UnauthorizedException();
+    if (!req.user.sub) throw new UnauthorizedException();
     await this.usersService.updateOne(req.user.sub, updateUserDto);
   }
 
@@ -150,20 +152,23 @@ export class UsersController {
   }
 
   @Post('profile-image')
-  @UseInterceptors(FileInterceptor('image', {
-    storage: diskStorage({
-      destination: 'resources/',
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const fileExtension = path.extname(file.originalname);
-        const newFileName = `image-${uniqueSuffix}${fileExtension}`;
-        callback(null, newFileName);
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: 'resources/',
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const fileExtension = path.extname(file.originalname);
+          const newFileName = `image-${uniqueSuffix}${fileExtension}`;
+          callback(null, newFileName);
+        },
+      }),
+      limits: {
+        fileSize: 1024 * 1024,
       },
     }),
-    limits: {
-      fileSize: 1024 * 1024,
-    }
-  }))
+  )
   updateProfileImage(@UploadedFile() image: Express.Multer.File) {
     return {
       profileImage: image.path,

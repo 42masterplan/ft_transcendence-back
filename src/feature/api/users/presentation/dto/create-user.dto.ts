@@ -13,9 +13,7 @@ export class CreateUserDto {
   @IsBoolean()
   is2faEnabled: boolean = false;
 
-  constructor(
-    intraId: string
-  ){
+  constructor(intraId: string) {
     this.intraId = intraId;
   }
 }

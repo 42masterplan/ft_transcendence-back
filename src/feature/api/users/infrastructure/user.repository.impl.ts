@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
-import { UserEntity } from './user.entity';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
+import { UserEntity } from './user.entity';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
@@ -22,19 +22,30 @@ export class UserRepositoryImpl implements UserRepository {
 
   async findOneByIntraId(intraId: string): Promise<User> {
     const user = await this.em.findOne(UserEntity, { intraId });
-    if (user)
-      return this.toDomain(user);
+    if (user) return this.toDomain(user);
   }
 
-  async updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateOne(
+    intraId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     const user = await this.em.findOne(UserEntity, { intraId });
     if (updateUserDto.name !== null && updateUserDto.name !== undefined)
       user.name = updateUserDto.name;
-    if (updateUserDto.profileImage !== null && updateUserDto.profileImage !== undefined)
+    if (
+      updateUserDto.profileImage !== null &&
+      updateUserDto.profileImage !== undefined
+    )
       user.profileImage = updateUserDto.profileImage;
-    if (updateUserDto.is2faEnabled !== null && updateUserDto.is2faEnabled !== undefined)
+    if (
+      updateUserDto.is2faEnabled !== null &&
+      updateUserDto.is2faEnabled !== undefined
+    )
       user.is2faEnabled = updateUserDto.is2faEnabled;
-    if (updateUserDto.introduction !== null && updateUserDto.introduction !== undefined)
+    if (
+      updateUserDto.introduction !== null &&
+      updateUserDto.introduction !== undefined
+    )
       user.introduction = updateUserDto.introduction;
     await this.em.flush();
     return this.toDomain(user);
