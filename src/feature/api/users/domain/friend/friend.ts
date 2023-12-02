@@ -6,15 +6,15 @@ export class Friend {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: number;
-		_isDeleted: boolean;
-		_myId: string;
-		_friendId: string;
+		id: number;
+		isDeleted: boolean;
+		myId: string;
+		friendId: string;
 	}) {
-		this._id = props._id;
-		this._isDeleted = props._isDeleted;
-		this._myId = props._myId;
-		this._friendId = props._friendId;
+		this._id = props.id;
+		this._isDeleted = props.isDeleted;
+		this._myId = props.myId;
+		this._friendId = props.friendId;
 	}
 
 	get id(): number {

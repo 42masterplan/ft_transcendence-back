@@ -6,15 +6,15 @@ export class ChannelParticipant {
 
   // TODO: implement validation
 	constructor(props: {
-		_role: string;
-		_chatableAt: string;
-		_participantId: string;
-		_channelId: string;
+		role: string;
+		chatableAt: string;
+		participantId: string;
+		channelId: string;
 	}) {
-		this._role = props._role;
-		this._chatableAt = props._chatableAt;
-		this._participantId = props._participantId;
-		this._channelId = props._channelId;
+		this._role = props.role;
+		this._chatableAt = props.chatableAt;
+		this._participantId = props.participantId;
+		this._channelId = props.channelId;
 	}
 
 	get role(): string {

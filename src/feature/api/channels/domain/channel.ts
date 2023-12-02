@@ -6,15 +6,15 @@ export class Channel {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: string;
-		_name: string;
-		_status: string;
-		_password: string;
+		id: string;
+		name: string;
+		status: string;
+		password: string;
 	}) {
-		this._id = props._id;
-		this._name = props._name;
-		this._status = props._status;
-		this._password = props._password;
+		this._id = props.id;
+		this._name = props.name;
+		this._status = props.status;
+		this._password = props.password;
 	}
 
 	get id(): string {

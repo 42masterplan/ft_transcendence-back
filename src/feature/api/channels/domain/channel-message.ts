@@ -6,15 +6,15 @@ export class ChannelMessage {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: string;
-		_participantId: string;
-		_channelId: string;
-		_content: string;
+		id: string;
+		participantId: string;
+		channelId: string;
+		content: string;
 	}) {
-		this._id = props._id;
-		this._participantId = props._participantId;
-		this._channelId = props._channelId;
-		this._content = props._content;
+		this._id = props.id;
+		this._participantId = props.participantId;
+		this._channelId = props.channelId;
+		this._content = props.content;
 	}
 
 	get id(): string {

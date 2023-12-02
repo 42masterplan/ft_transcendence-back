@@ -6,15 +6,15 @@ export class BannedUser {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: number;
-		_isDeleted: boolean;
-		_primaryUserId: string;
-		_targetUserId: string;
+		id: number;
+		isDeleted: boolean;
+		primaryUserId: string;
+		targetUserId: string;
 	}) {
-		this._id = props._id;
-		this._isDeleted = props._isDeleted;
-		this._primaryUserId = props._primaryUserId;
-		this._targetUserId = props._targetUserId;
+		this._id = props.id;
+		this._isDeleted = props.isDeleted;
+		this._primaryUserId = props.primaryUserId;
+		this._targetUserId = props.targetUserId;
 	}
 
 	get id(): number {

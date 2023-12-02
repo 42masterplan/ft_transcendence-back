@@ -6,15 +6,15 @@ export class FriendRequest {
 
   // TODO: implement validation
 	constructor(props: {
-		_id: number;
-		_isAccepted: boolean;
-		_primaryUserId: string;
-		_targetUserId: string;
+		id: number;
+		isAccepted: boolean;
+		primaryUserId: string;
+		targetUserId: string;
 	}) {
-		this._id = props._id;
-		this._isAccepted = props._isAccepted;
-		this._primaryUserId = props._primaryUserId;
-		this._targetUserId = props._targetUserId;
+		this._id = props.id;
+		this._isAccepted = props.isAccepted;
+		this._primaryUserId = props.primaryUserId;
+		this._targetUserId = props.targetUserId;
 	}
 
 	get id(): number {

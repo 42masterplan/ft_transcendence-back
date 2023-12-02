@@ -4,11 +4,11 @@ export class ChannelUserBanned {
 
   // TODO: implement validation
 	constructor(props: {
-		_userId: string;
-		_channelId: string;
+		userId: string;
+		channelId: string;
 	}) {
-		this._userId = props._userId;
-		this._channelId = props._channelId;
+		this._userId = props.userId;
+		this._channelId = props.channelId;
 	}
 
 	get userId(): string {

@@ -10,23 +10,23 @@ export class User {
 
   // TODO: implement validation
   constructor(props: {
-    _id: string;
-    _intraId: string;
-    _name: string;
-    _profileImage: string;
-    _is2faEnabled: boolean;
-    _email: string;
-    _currentStatus: string;
-    _introduction: string;
+    id: string;
+    intraId: string;
+    name: string;
+    profileImage: string;
+    is2faEnabled: boolean;
+    email: string;
+    currentStatus: string;
+    introduction: string;
   }) {
-    this._id = props._id;
-    this._intraId = props._intraId;
-    this._name = props._name;
-    this._profileImage = props._profileImage;
-    this._is2faEnabled = props._is2faEnabled;
-    this._email = props._email;
-    this._currentStatus = props._currentStatus;
-    this._introduction = props._introduction;
+    this._id = props.id;
+    this._intraId = props.intraId;
+    this._name = props.name;
+    this._profileImage = props.profileImage;
+    this._is2faEnabled = props.is2faEnabled;
+    this._email = props.email;
+    this._currentStatus = props.currentStatus;
+    this._introduction = props.introduction;
   }
 
   get id(): string {
