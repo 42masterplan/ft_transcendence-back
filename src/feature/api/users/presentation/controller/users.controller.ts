@@ -27,8 +27,6 @@ import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService, private readonly mailService: MailService) {}
 
-<<<<<<< HEAD
-=======
   @Get('')
   getAll(@Query('status') status: string) {
     if (
@@ -129,13 +127,13 @@ export class UsersController {
         : user.currentStatus === status,
     );
   }
+  
   @UseGuards(AuthGuard('jwt'))
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     if (!req.user.sub)
       throw new UnauthorizedException();
     await this.usersService.updateOne(req.user.sub, updateUserDto);
->>>>>>> c493c53261c81df0716d9234910aef7d771834ea
   }
 
   @Delete('')
