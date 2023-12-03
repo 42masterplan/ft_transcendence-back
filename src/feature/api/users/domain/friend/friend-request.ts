@@ -1,6 +1,6 @@
 export class FriendRequest {
   private readonly _id: number;
-  private readonly _isAccepted: boolean;
+  private _isAccepted: boolean;
   private readonly _primaryUserId: string;
   private readonly _targetUserId: string;
 
@@ -23,6 +23,10 @@ export class FriendRequest {
     }
 
     return false;
+  }
+
+  updateIsAccepted(isAccepted: boolean): void {
+    this._isAccepted = isAccepted;
   }
 
   get id(): number {

@@ -46,6 +46,14 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
 
+  async update(friendRequest: FriendRequest): Promise<FriendRequest> {
+    const entity = this.repository.assign(this.toEntity(friendRequest), {
+      isAccepted: friendRequest.isAccepted,
+    });
+
+    return this.toDomain(entity);
+  }
+
   private toDomain(entity: FriendRequestEntity): FriendRequest {
     return new FriendRequest({
       id: entity.id,
@@ -53,5 +61,16 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
       targetUserId: entity.targetUserId,
       isAccepted: entity.isAccepted,
     });
+  }
+
+  private toEntity(friendRequest: FriendRequest): FriendRequestEntity {
+    const friendRequestEntity = new FriendRequestEntity();
+
+    friendRequest.id;
+    friendRequest.primaryUserId;
+    friendRequest.targetUserId;
+    friendRequest.isAccepted;
+
+    return friendRequestEntity;
   }
 }

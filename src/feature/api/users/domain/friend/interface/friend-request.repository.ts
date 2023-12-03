@@ -6,6 +6,7 @@ export interface FriendRequestRepository {
     primaryUserId,
     targetUserId,
   }): Promise<FriendRequest[]>;
+  update(friendRequest: FriendRequest): Promise<FriendRequest>;
 }
 
 export const FriendRequestRepository = Symbol('FRIEND_REQUEST_REPOSITORY');

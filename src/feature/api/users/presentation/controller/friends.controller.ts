@@ -1,3 +1,4 @@
+import { FriendRequestUseCase } from '../../application/friends/accept-friend-request.use-case';
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
@@ -18,6 +19,7 @@ export class FriendsController {
   constructor(
     private readonly findUseCase: FindFriendsUseCase,
     private readonly createRequestUseCase: CreateFriendRequestUseCase,
+    private readonly friendRequestUseCase: FriendRequestUseCase,
   ) {}
 
   @Get('')
@@ -29,19 +31,6 @@ export class FriendsController {
     );
 
     return friends.map((friend) => new FindFriendViewModel(friend));
-  }
-
-  @Post('/request')
-  async createFriendRequest(@Body('id') id: string) {
-    //TODO: change to user decorator
-    const userId = 'b233ba54-50be-4dcc-9c84-a2ce366936a9';
-
-    await this.createRequestUseCase.execute({
-      primaryUserId: userId,
-      targetUserId: id,
-    });
-
-    return true;
   }
 
   @Delete('')
@@ -66,15 +55,39 @@ export class FriendsController {
     ];
   }
 
+  @Post('/request')
+  async createFriendRequest(@Body('friend-id') friendId: string) {
+    //TODO: change to user decorator
+    const userId = 'b233ba54-50be-4dcc-9c84-a2ce366936a9';
+
+    await this.createRequestUseCase.execute({
+      primaryUserId: userId,
+      targetUserId: friendId,
+    });
+
+    return true;
+  }
+
   @Post('request')
-  acceptFriendsRequest(@Body('id') friendId: string) {
-    console.log(friendId);
+  async acceptFriendRequest(@Body('friend-id') friendId: string) {
+    //TODO: change to user decorator
+
+    await this.friendRequestUseCase.acceptFriendRequest({
+      primaryUserId: 'b233ba54-50be-4dcc-9c84-a2ce366936a9',
+      targetUserId: friendId,
+    });
     return true;
   }
 
   @Delete('request')
-  rejectFriendsRequest(@Param(':friend-id') friendId: string) {
-    console.log(friendId);
+  async rejectFriendRequest(@Param(':friend-id') friendId: string) {
+    //TODO: change to user decorator
+
+    await this.friendRequestUseCase.rejectFriendRequest({
+      primaryUserId: 'b233ba54-50be-4dcc-9c84-a2ce366936a9',
+      targetUserId: friendId,
+    });
+
     return true;
   }
 }
