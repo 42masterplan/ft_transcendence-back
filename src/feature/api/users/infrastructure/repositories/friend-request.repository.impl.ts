@@ -66,10 +66,10 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   private toEntity(friendRequest: FriendRequest): FriendRequestEntity {
     const friendRequestEntity = new FriendRequestEntity();
 
-    friendRequest.id;
-    friendRequest.primaryUserId;
-    friendRequest.targetUserId;
-    friendRequest.isAccepted;
+    friendRequestEntity.id = friendRequest.id;
+    friendRequestEntity.primaryUserId = friendRequest.primaryUserId;
+    friendRequestEntity.targetUserId = friendRequest.targetUserId;
+    friendRequestEntity.isAccepted = friendRequest.isAccepted;
 
     return friendRequestEntity;
   }

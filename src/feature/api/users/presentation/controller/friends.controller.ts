@@ -1,6 +1,6 @@
-import { FriendRequestUseCase } from '../../application/friends/accept-friend-request.use-case';
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
+import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 import {
   Body,
@@ -10,6 +10,7 @@ import {
   Logger,
   Param,
   Post,
+  Put,
 } from '@nestjs/common';
 
 @Controller('users/friends')
@@ -68,7 +69,7 @@ export class FriendsController {
     return true;
   }
 
-  @Post('request')
+  @Put('request')
   async acceptFriendRequest(@Body('friend-id') friendId: string) {
     //TODO: change to user decorator
 
@@ -76,6 +77,7 @@ export class FriendsController {
       primaryUserId: 'b233ba54-50be-4dcc-9c84-a2ce366936a9',
       targetUserId: friendId,
     });
+
     return true;
   }
 
