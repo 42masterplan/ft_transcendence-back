@@ -102,17 +102,12 @@ export class ChannelGateway
   async createChannel(client: any, createChannelDto: CreateChannelDto) {
     console.log('socket: createChannel');
     try {
-<<<<<<< HEAD
       const channelId = await this.channelService.createChannel(
         client,
         createChannelDto,
       );
       client.join(channelId);
       client.emit('myRole', { role: 'owner', channelId: channelId });
-=======
-      const channelId = await this.channelService.createChannel(client, createChannelDto);
-      client.join(channelId);
->>>>>>> ca3c261634c713598d660ec048d349571648e8e4
     } catch (e) {
       return '이미 존재하는 방입니다.';
     }
