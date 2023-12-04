@@ -1,5 +1,5 @@
 import { ChannelRepository } from '../domain/channel.repository';
-import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
+import { ChannelMessageRepository } from '../domain/channel-message.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { Injectable } from '@nestjs/common';
@@ -11,14 +11,7 @@ import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
 const yejinam = '6df1c752-654e-4d40-b8b2-b842e0e85169';
-// const hkong_image = 'http://localhost:8080/resources/kangaroo_boxing.svg';
-// const joushin_image = 'http://localhost:8080/resources/koala_health.svg';
-// const yejinam_image = 'http://localhost:8080/resources/mouse_health.svg';
-const hkong_image = 'http://10.19.233.133:8080/resources/kangaroo_boxing.svg';
-const joushin_image = 'http://10.19.233.133:8080/resources/koala_health.svg';
-const yejinam_image = 'http://10.19.233.133:8080/resources/mouse_health.svg';
 const userId = joushin;
-const image = joushin_image;
 @Injectable()
 export class ChannelService {
   constructor(
@@ -35,9 +28,9 @@ export class ChannelService {
         id: participants.channelId,
         name: (await this.channelRepository.findOneById(participants.channelId))
           .name,
-        userCount: await this.channelRepository.countUser(
+        userCount: await (this.channelRepository.countUser(
           participants.channelId,
-        ),
+        )),
         isUnread: true,
       })),
     );
@@ -72,7 +65,7 @@ export class ChannelService {
       channelId: channelId,
       userId: userId,
       userName: user.name,
-      profileImage: image,
+      profileImage: user.profileImage,
       content: content,
     };
   }
@@ -93,6 +86,57 @@ export class ChannelService {
     return channel.id;
   }
 
+  async createChannelParticipant(
+    role: string,
+    userId: string,
+    channelId: string,
+  ): Promise<ChannelParticipantEntity> {
+    const channelParticipant = new ChannelParticipantEntity();
+    channelParticipant.role = role;
+    channelParticipant.participantId = userId;
+    channelParticipant.channelId = channelId;
+
+    await this.channelRepository.saveChannelParticipant(channelParticipant);
+    return channelParticipant;
+  }
+
+  async getParticipants(channelId: string): Promise<any[]> {
+    const channelParticipant = await this.channelRepository.findAllByChannelId(channelId);
+    const participants = [];
+    for await (const participant of channelParticipant){
+      const user = await this.usersUseCase.findOne(participant.participantId);
+      participants.push({
+        channelId: participant.channelId,
+        userId: user.id,
+        userName: user.name,
+        profileImage: user.profileImage,
+      });
+    }
+    console.log(participants);
+    return participants;
+  }
+
+  async getBannedUsers(channelId: string): Promise<any[]> {
+    const channelBannedUsers = await this.channelRepository.findBannedUserByChannelId(channelId);
+    const bannedUsers = [];
+    for await (const bannedUser of channelBannedUsers){
+      const user = await this.usersUseCase.findOne(bannedUser.userId);
+      bannedUsers.push({
+        channelId: bannedUser.channelId,
+        userId: user.id,
+        userName: user.name,
+        profileImage: user.profileImage,
+      });
+    }
+    return bannedUsers;
+  }
+
+  async leaveChannel(channelId: string) {
+    const user = joushin;
+    const channel = this.channelRepository.findOneByUserIdAndChannelId(user, channelId);
+
+  }
+
   async messageToHistory(list: ChannelMessageEntity[]) {
     const history = [];
     for await (const data of list) {
@@ -100,7 +144,7 @@ export class ChannelService {
       history.push({
         id: data.participantId,
         name: user.name,
-        profileImage: image,
+        profileImage: user.profileImage,
         content: data.content,
       });
     }
@@ -153,19 +197,5 @@ export class ChannelService {
       publicChannels.push(publicChannelDto);
     }
     return publicChannels;
-  }
-
-  async createChannelParticipant(
-    role: string,
-    userId: string,
-    channelId: string,
-  ): Promise<ChannelParticipantEntity> {
-    const channelParticipant = new ChannelParticipantEntity();
-    channelParticipant.role = role;
-    channelParticipant.participantId = userId;
-    channelParticipant.channelId = channelId;
-
-    await this.channelRepository.saveChannelParticipant(channelParticipant);
-    return channelParticipant;
   }
 }
