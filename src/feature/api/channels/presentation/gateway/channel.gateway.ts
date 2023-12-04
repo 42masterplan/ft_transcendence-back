@@ -109,7 +109,7 @@ export class ChannelGateway
       return '이미 존재하는 방입니다.';
     }
     client.emit('myChannels', await this.channelService.getMyChannels());
-    return 'create Success!';
+    return 'createChannel Success!';
   }
 
 	@SubscribeMessage('getParticipants')
@@ -133,7 +133,7 @@ export class ChannelGateway
 		//TODO: system message 추가해서 전체 유저한테 보내야함.
 			//ex) [system] user가 방을 나갔습니다.
 		client.emit('myChannels', await this.channelService.getMyChannels());
-		return 'leave Success!';
+		return 'leaveChannel Success!';
 	}
 
 	@SubscribeMessage('banUser')
@@ -143,8 +143,8 @@ export class ChannelGateway
 		//TODO: system message 추가해서 전체 유저한테 보내야함.
 			//ex) [system] user가 누구에 의해서 BAN되었습니다. 
 		//TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
-		return 'ban Success!';
-		return 'ban fail!';
+		return 'banUser Success!';
+		return 'banUser fail!';
 	}
 
 	@SubscribeMessage('kickUser')
@@ -154,8 +154,8 @@ export class ChannelGateway
 		//TODO: system message 추가해서 전체 유저한테 보내야함.
 			//ex) [system] user가 누구에 의해서 추방 되었습니다. 
 		//TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
-		return 'kick Success!';
-		return 'kick fail!';
+		return 'kickUser Success!';
+		return 'kickUser fail!';
 	}
 
 	@SubscribeMessage('muteUser')
@@ -165,8 +165,8 @@ export class ChannelGateway
 		//TODO: system message 추가해서 전체 유저한테 보내야함.
 			//ex) [system] user가 누구에 의해서 Mute되었습니다. 한동안 말을 할 수 없습니다. 
 		//TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
-		return 'mute Success!';
-		return 'mute fail!';
+		return 'muteUser Success!';
+		return 'muteUser fail!';
 	}
 
 
@@ -177,8 +177,8 @@ export class ChannelGateway
 		//TODO: 권환 확인해서 권한이 owner가 아니면 다 fail이다.
 		console.log('socket: unbanUser',channelId, userId);
 		// await this.channelService.unbanUser(client, channelId, userId);
-		return 'unban Success!';
-		return 'unban fail!';
+		return 'unbanUser Success!';
+		return 'unbanUser fail!';
 	}
 
 	@SubscribeMessage('changePassword')
