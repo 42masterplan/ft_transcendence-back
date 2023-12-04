@@ -84,6 +84,7 @@ export class ChannelService {
     const channel = await this.channelRepository.saveChannel(createChannelDto);
     await this.createChannelParticipant('owner', userId, channel.id);
     return channel.id;
+<<<<<<< HEAD
   }
 
   async createChannelParticipant(
@@ -135,6 +136,8 @@ export class ChannelService {
     const user = joushin;
     const channel = this.channelRepository.findOneByUserIdAndChannelId(user, channelId);
 
+=======
+>>>>>>> ca3c261634c713598d660ec048d349571648e8e4
   }
 
   async messageToHistory(list: ChannelMessageEntity[]) {

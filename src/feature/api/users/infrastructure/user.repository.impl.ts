@@ -9,8 +9,10 @@ import { Injectable } from '@nestjs/common';
 export class UserRepositoryImpl implements UserRepository {
   constructor(private readonly em: EntityManager) {}
 
-  async findOneById(id: string): Promise<User> {
+  async findOneById(id: string): Promise<User | null> {
     const user = await this.em.findOne(UserEntity, { id });
+    if (!user) return null;
+
     return this.toDomain(user);
   }
 
