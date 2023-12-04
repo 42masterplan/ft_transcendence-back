@@ -47,9 +47,11 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   }
 
   async update(friendRequest: FriendRequest): Promise<FriendRequest> {
-    const entity = this.repository.assign(this.toEntity(friendRequest), {
-      isAccepted: friendRequest.isAccepted,
-    });
+    const entity = await this.repository.findOneOrFail(friendRequest.id);
+
+    entity.isAccepted = friendRequest.isAccepted;
+
+    this.repository.getEntityManager().flush();
 
     return this.toDomain(entity);
   }

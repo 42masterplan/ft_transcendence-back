@@ -22,7 +22,8 @@ export class FriendRequestUseCase {
         targetUserId,
       });
 
-    const acceptedFriendRequest = this.getAcceptedFriendRequest(friendRequests);
+    const acceptedFriendRequest =
+      this.getAcceptableFriendRequest(friendRequests);
 
     if (!acceptedFriendRequest) {
       throw new Error('Friend request not found');
@@ -46,7 +47,8 @@ export class FriendRequestUseCase {
         targetUserId,
       });
 
-    const acceptedFriendRequest = this.getAcceptedFriendRequest(friendRequests);
+    const acceptedFriendRequest =
+      this.getAcceptableFriendRequest(friendRequests);
 
     if (!acceptedFriendRequest) {
       throw new Error('Friend request not found');
@@ -57,11 +59,11 @@ export class FriendRequestUseCase {
     return await this.repository.update(acceptedFriendRequest);
   }
 
-  getAcceptedFriendRequest(
+  getAcceptableFriendRequest(
     friendRequests: FriendRequest[],
   ): FriendRequest | null {
     const acceptedFriendRequest = friendRequests.filter(
-      (friendRequest) => friendRequest.isAccepted,
+      (friendRequest) => friendRequest.isAccepted === null,
     );
 
     if (acceptedFriendRequest.length > 0) {
