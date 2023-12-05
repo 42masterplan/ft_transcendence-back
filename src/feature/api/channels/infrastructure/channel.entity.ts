@@ -5,6 +5,7 @@ import {
   Property,
   Unique,
 } from '@mikro-orm/core';
+import { bool } from 'joi';
 import { v4 } from 'uuid';
 
 @Entity({ tableName: 'channel' })
@@ -31,4 +32,7 @@ export class ChannelEntity {
     onUpdate: () => new Date(),
   })
   updatedAt: Date = new Date();
+
+  @Property({ type: bool, default: false })
+  isDeleted: boolean;
 }
