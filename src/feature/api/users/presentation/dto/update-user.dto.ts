@@ -5,7 +5,11 @@ export class UpdateUserDto {
   @IsOptional()
   name?: string;
 
-  @IsUrl()
+  @IsUrl({
+    require_tld: false,
+    require_protocol: true,
+    require_port: true,
+  })
   @IsOptional()
   profileImage?: string;
 
