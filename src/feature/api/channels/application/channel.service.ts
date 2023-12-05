@@ -1,12 +1,12 @@
+import { ChannelRepository } from '../domain/channel.repository';
+import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
+import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
+import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { Injectable } from '@nestjs/common';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
-import { ChannelRepository } from '../domain/channel.repository';
-import { ChannelMessageRepository } from '../presentation/gateway/channel-message.repository';
-import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
-import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
@@ -90,7 +90,7 @@ export class ChannelService {
       client.emit('error_exist', '방 이름을 입력해주세요.');
     const channel = await this.channelRepository.saveChannel(createChannelDto);
     await this.createChannelParticipant('owner', userId, channel.id);
-    return 'create Success';
+    return channel.id;
   }
 
   async messageToHistory(list: ChannelMessageEntity[]) {

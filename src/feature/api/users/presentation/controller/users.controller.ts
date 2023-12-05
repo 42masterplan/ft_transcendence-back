@@ -1,4 +1,8 @@
 import path from 'node:path';
+import { MailService } from '../../../mail/mail.service';
+import { UsersService } from '../../users.service';
+import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 import {
   BadRequestException,
   Body,
@@ -18,10 +22,6 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { MailService } from '../../../mail/mail.service';
-import { UsersService } from '../../users.service';
-import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
-import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {

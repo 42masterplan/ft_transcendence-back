@@ -1,8 +1,8 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../../presentation/dto/update-user.dto';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UsersUseCases {

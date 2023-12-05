@@ -1,4 +1,6 @@
 import { Socket } from 'dgram';
+import { ChannelService } from '../../application/channel.service';
+import { CreateChannelDto } from './dto/create-channel.dto';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
@@ -8,8 +10,6 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { ChannelService } from '../../application/channel.service';
-import { CreateChannelDto } from '@/src/feature/api/channels/presentation/gateway/dto/create-channel.dto';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UsePipes(
@@ -95,10 +95,11 @@ export class ChannelGateway
   }
 
   @SubscribeMessage('createChannel')
-  async createChannel(client: Socket, createChannelDto: CreateChannelDto) {
+  async createChannel(client: any, createChannelDto: CreateChannelDto) {
     console.log('socket: createChannel');
     try {
-      await this.channelService.createChannel(client, createChannelDto);
+      const channelId = await this.channelService.createChannel(client, createChannelDto);
+      client.join(channelId);
     } catch (e) {
       return '이미 존재하는 방입니다.';
     }

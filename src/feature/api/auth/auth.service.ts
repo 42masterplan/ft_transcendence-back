@@ -1,10 +1,10 @@
+import { JwtPayload } from './presentation/jwt-payload.interface';
 import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './presentation/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {

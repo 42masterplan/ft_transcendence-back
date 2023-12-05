@@ -1,17 +1,19 @@
-import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
 import { UserEntity } from './user.entity';
+import { EntityManager } from '@mikro-orm/postgresql';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
   constructor(private readonly em: EntityManager) {}
 
-  async findOneById(id: string): Promise<User> {
+  async findOneById(id: string): Promise<User | null> {
     const user = await this.em.findOne(UserEntity, { id });
+    if (!user) return null;
+
     return this.toDomain(user);
   }
 
