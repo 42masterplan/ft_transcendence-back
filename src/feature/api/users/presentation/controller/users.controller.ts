@@ -154,7 +154,7 @@ export class UsersController {
 
   @Post('profile-image')
   @UseInterceptors(
-    FileInterceptor('image', {
+    FileInterceptor('profileImage', {
       storage: diskStorage({
         destination: 'resources/',
         filename: (req, file, callback) => {
