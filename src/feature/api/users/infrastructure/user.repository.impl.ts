@@ -17,8 +17,10 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
-  async findOneByName(name: string): Promise<User> {
+  async findOneByName(name: string): Promise<User | null> {
     const user = await this.em.findOne(UserEntity, { name });
+    if (!user) return null;
+
     return this.toDomain(user);
   }
 

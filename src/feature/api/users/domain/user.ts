@@ -1,10 +1,10 @@
 export class User {
   private readonly _id: string;
   private readonly _intraId: string;
-  private readonly _name: string;
+  private readonly _name: string | null;
   private readonly _profileImage: string;
   private readonly _is2faEnabled: boolean;
-  private readonly _email: string;
+  private readonly _email: string | null;
   private readonly _currentStatus: string;
   private readonly _introduction: string;
 
@@ -12,10 +12,10 @@ export class User {
   constructor(props: {
     id: string;
     intraId: string;
-    name: string;
+    name: string | null;
     profileImage: string;
     is2faEnabled: boolean;
-    email: string;
+    email: string | null;
     currentStatus: string;
     introduction: string;
   }) {

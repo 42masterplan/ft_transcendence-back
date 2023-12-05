@@ -1,7 +1,8 @@
 import path from 'node:path';
 import { MailService } from '../../../mail/mail.service';
 import { UsersService } from '../../users.service';
-import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
+import { TwoFactorEmailValidateDto } from '../dto/two-factor-email-validate.dto';
+import { TwoFactorEmailDto } from '../dto/two-factor-email.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import {
   BadRequestException,
@@ -176,10 +177,16 @@ export class UsersController {
   }
 
   @Put('two-factor-auth')
-  update2fa(@Body() twoFactorAuthEmail: TwoFactorAuthEmailDto) {
+  update2fa(@Body() twoFactorEmail: TwoFactorEmailDto) {
     const randomCode = Math.floor(Math.random() * 899999) + 100000;
     //TODO: AuthGuard, Use cache to manage time
-    this.mailService.sendMail(twoFactorAuthEmail.email, randomCode);
+    this.mailService.sendMail(twoFactorEmail.email, randomCode);
+    return true;
+  }
+
+  @Post('two-factor-auth/validate')
+  validate2fa(@Body() twoFactorEmailValidate: TwoFactorEmailValidateDto) {
+    console.log(twoFactorEmailValidate.code);
     return true;
   }
 
