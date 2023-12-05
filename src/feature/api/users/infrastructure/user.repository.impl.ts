@@ -1,3 +1,4 @@
+import { use } from 'passport';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
@@ -71,6 +72,7 @@ export class UserRepositoryImpl implements UserRepository {
       email: userEntity.email,
       currentStatus: userEntity.currentStatus,
       introduction: userEntity.introduction,
+      isDeleted: userEntity.isDeleted,
     });
   }
 
@@ -84,6 +86,7 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.email = user.email;
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
+    userEntity.isDeleted = user.isDeleted;
 
     return userEntity;
   }
