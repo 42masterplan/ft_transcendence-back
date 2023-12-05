@@ -132,7 +132,7 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('signIn'))
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     if (!req.user.sub) throw new UnauthorizedException();
