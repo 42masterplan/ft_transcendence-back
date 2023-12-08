@@ -20,7 +20,7 @@ export class ChannelParticipantRepository {
     const list = await this.em.find(
       ChannelParticipantEntity,
       { participantId: userId, isDeleted: false },
-      { orderBy: { createdAt: QueryOrder.ASC } },
+      { orderBy: { updatedAt: QueryOrder.DESC } },
     );
 
     return list;
