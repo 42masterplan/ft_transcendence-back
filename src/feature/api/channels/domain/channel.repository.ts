@@ -2,11 +2,7 @@ import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto
 import { QueryOrder } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { channel } from 'diagnostics_channel';
-import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
-import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
-import { ChannelUserBanned } from './channel-user-banned';
 import { ChannelUserBannedEntity } from '../infrastructure/channel-user-banned.entity';
 
 @Injectable()
@@ -26,74 +22,6 @@ export class ChannelRepository {
     return Channels;
   }
 
-  async findAllByUserId(userId: string): Promise<ChannelParticipantEntity[]> {
-    console.log('repository: getMyChannels');
-    const list = await this.em.find(
-      ChannelParticipantEntity,
-      { participantId: userId, isDeleted: false },
-      { orderBy: { createdAt: QueryOrder.ASC } },
-    );
-
-    return list;
-  }
-
-  async findAllByChannelId(
-    channelId: string,
-  ): Promise<ChannelParticipantEntity[]> {
-    console.log('repository: findAllByChannelId ', channelId);
-    const list = await this.em.find(
-      ChannelParticipantEntity,
-      { channelId: channelId },
-      { orderBy: { createdAt: QueryOrder.ASC } },
-    );
-    console.log(list);
-    return list;
-  }
-
-  async findBannedUserByChannelId(channelId: string): Promise<ChannelUserBannedEntity[]> {
-    console.log('repository findBannedUserByChannelId');
-    const list = await this.em.find(ChannelUserBannedEntity, {channelId: channelId}, {orderBy: {createdAt: QueryOrder.ASC}});
-
-    return list;
-  }
-
-  async findOneByUserIdAndChannelId(userId, channelId): Promise<ChannelParticipantEntity> {
-    console.log('repsitory findOneByUserIdAndChannelId');
-    const channelEntity = await this.em.findOne(ChannelParticipantEntity, {participantId: userId, channelId: channelId});
-
-    return channelEntity;
-  }
-
-  async findPublicChannels(userId: string): Promise<ChannelEntity[]> {
-    const myChannels = (await this.findAllByUserId(userId)).map(
-      (channel) => channel.channelId,
-    );
-    const channels = await this.em.find(ChannelEntity, {
-      id: { $nin: myChannels },
-    });
-
-    return channels;
-  }
-
-  async getChannelHistory(channelId: string): Promise<ChannelMessageEntity[]> {
-    console.log('repository: getChannelHistory');
-    const channelHistory = await this.em.find(
-      ChannelMessageEntity,
-      {
-        channelId: channelId,
-      },
-      { orderBy: { createdAt: QueryOrder.ASC } },
-    );
-    return channelHistory;
-  }
-
-  async countUser(channelId: string): Promise<number> {
-    console.log('repository: countUser');
-    return await this.em.count(ChannelParticipantEntity, {
-      channelId: channelId,
-    });
-  }
-
   async saveChannel(
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelEntity> {
@@ -103,15 +31,18 @@ export class ChannelRepository {
     return channel;
   }
 
-  async saveChannelParticipant(
-    channelParticipant: ChannelParticipantEntity,
-  ): Promise<ChannelParticipantEntity> {
-    console.log('repository: saveChannelParticipant');
-    const savedChannelParticipant = this.em.create(
-      ChannelParticipantEntity,
-      channelParticipant,
-    );
-    await this.em.flush();
-    return savedChannelParticipant;
+  async findBannedUserByChannelId(channelId: string): Promise<ChannelUserBannedEntity[]> {
+    console.log('repository findBannedUserByChannelId');
+    const list = await this.em.find(ChannelUserBannedEntity, {channelId: channelId}, {orderBy: {createdAt: QueryOrder.ASC}});
+
+    return list;
+  }
+
+  async findPublicChannels(userId: string, myChannels: string[]): Promise<ChannelEntity[]> {
+    const channels = await this.em.find(ChannelEntity, {
+      id: { $nin: myChannels },
+    });
+
+    return channels;
   }
 }

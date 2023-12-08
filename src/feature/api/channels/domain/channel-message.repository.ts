@@ -1,3 +1,4 @@
+import { QueryOrder } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
@@ -19,5 +20,17 @@ export class ChannelMessageRepository {
     });
 
     return messages;
+  }
+
+  async getChannelHistory(channelId: string): Promise<ChannelMessageEntity[]> {
+    console.log('repository: getChannelHistory');
+    const channelHistory = await this.em.find(
+      ChannelMessageEntity,
+      {
+        channelId: channelId,
+      },
+      { orderBy: { createdAt: QueryOrder.ASC } },
+    );
+    return channelHistory;
   }
 }
