@@ -52,7 +52,20 @@ export class ChannelService {
     if (channel.status == 'private') return 'Unacceptable';
     if (channel.password != password) return 'Wrong password!';
 
-    await this.createChannelParticipant('user', userId, channel.id);
+    const isBanned = await this.channelRepository.findBannedUserByChannelIdAndUserId(channel.id, userId);
+    if (isBanned && isBanned.isDeleted == false)
+      return 'Banned User';
+
+    const user = await this.channelParticipantRepository.findOneByUserIdAndChannelId(userId, channel.id);
+    if (!user)
+      await this.createChannelParticipant('user', userId, channel.id);
+    else if (user.isDeleted == true)
+    {
+      user.isDeleted = false;
+      await this.channelParticipantRepository.saveOne(user);
+    }
+    else
+      return 'Already joined';
     return 'success';
   }
 
@@ -134,7 +147,19 @@ export class ChannelService {
   }
 
   async leaveChannel(channelId: string) {
-    const channel = this.channelParticipantRepository.findOneByUserIdAndChannelId(userId, channelId);
+    const channel = this.channelRepository.findOneById(channelId);
+    if (!channel)
+      return 'There is no channel';
+    
+    const channelParticipant = await this.channelParticipantRepository.findOneByUserIdAndChannelId(userId, channelId);
+    if (!channelParticipant || channelParticipant.isDeleted == true)
+      return 'You are not in this channel';
+    else
+    {
+      channelParticipant.isDeleted = true;
+      await this.channelParticipantRepository.saveOne(channelParticipant);
+    }
+    return 'leaveChannel Success!';
     //구현중
   }
 

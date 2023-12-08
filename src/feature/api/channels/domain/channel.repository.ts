@@ -38,6 +38,13 @@ export class ChannelRepository {
     return list;
   }
 
+  async findBannedUserByChannelIdAndUserId(channelId: string, userId: string): Promise<ChannelUserBannedEntity> {
+    console.log('repository findBannedUserByChannelIdAndUserId');
+    const bannedUser = await this.em.findOne(ChannelUserBannedEntity, {channelId: channelId, userId: userId});
+
+    return bannedUser;
+  }
+
   async findPublicChannels(userId: string, myChannels: string[]): Promise<ChannelEntity[]> {
     const channels = await this.em.find(ChannelEntity, {
       id: { $nin: myChannels },

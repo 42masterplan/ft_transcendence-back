@@ -69,7 +69,6 @@ export class ChannelGateway
   async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
     try {
-      //TODO: 이미 BAN된 경우 return 해주기
       const ret = await this.channelService.joinChannel({ id, password });
       client.join(id);
       //TODO: system message 추가해서 전체 유저한테 보내야함.
@@ -142,11 +141,11 @@ export class ChannelGateway
   @SubscribeMessage('leaveChannel')
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
     console.log('socket: leaveChannel', channelId);
-    // await this.channelService.leaveChannel(client, channelId);
+    const result = await this.channelService.leaveChannel(channelId);
     //TODO: system message 추가해서 전체 유저한테 보내야함.
     //ex) [system] user가 방을 나갔습니다.
     client.emit('myChannels', await this.channelService.getMyChannels());
-    return 'leaveChannel Success!';
+    return result;
   }
 
   @SubscribeMessage('banUser')

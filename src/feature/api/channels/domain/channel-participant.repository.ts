@@ -2,6 +2,7 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ChannelParticipantEntity } from '../infrastructure/channel-participant.entity';
 import { QueryOrder } from '@mikro-orm/core';
+import { ChannelParticipant } from './channel-participant';
 
 @Injectable()
 export class ChannelParticipantRepository {
@@ -57,4 +58,33 @@ export class ChannelParticipantRepository {
     });
   }
 
+  async updateOne(userId: string, channelId: string): Promise<void> {
+    console.log('repository: updateIsDeleted');
+    await this.em.nativeUpdate(
+      ChannelParticipantEntity,
+      { participantId: userId, channelId: channelId },
+      { isDeleted: false },
+    );
+  }
+
+  private toDomain(channelParticipant: ChannelParticipantEntity): ChannelParticipant {
+    return new ChannelParticipant({
+      participantId: channelParticipant.participantId,
+      channelId: channelParticipant.channelId,
+      role: channelParticipant.role,
+      chatableAt: channelParticipant.chatableAt,
+      isDeleted: channelParticipant.isDeleted
+    });
+  }
+
+  private toEntity(channelParticipant: ChannelParticipant): ChannelParticipantEntity {
+    const channelParticipantEntity = new ChannelParticipantEntity();
+    channelParticipantEntity.participantId = channelParticipant.participantId;
+    channelParticipantEntity.channelId = channelParticipant.channelId;
+    channelParticipantEntity.role = channelParticipant.role;
+    channelParticipantEntity.chatableAt = channelParticipant.chatableAt;
+    channelParticipantEntity.isDeleted = channelParticipant.isDeleted;
+
+    return channelParticipantEntity;
+  }s
 }
