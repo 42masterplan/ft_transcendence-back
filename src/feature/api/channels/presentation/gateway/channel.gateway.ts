@@ -68,16 +68,14 @@ export class ChannelGateway
   @SubscribeMessage('joinChannel')
   async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
-    try {
-      const ret = await this.channelService.joinChannel({ id, password });
-      client.join(id);
-      //TODO: system message 추가해서 전체 유저한테 보내야함.
-      //ex) [system] user가 방에 들어왔습니다.
-      client.emit('myChannels', await this.channelService.getMyChannels());
+    const ret = await this.channelService.joinChannel({ id, password });
+    if (ret != 'joinChannel Success!')
       return ret;
-    } catch (e) {
-      return '채널 참가에 실패했습니다. 사유 : 모름.';
-    }
+    client.join(id);
+    const newMessage = await this.channelService.newMessage('[system] 참가함.' , id);
+    client.to(id).emit('newMessage', newMessage);
+    client.emit('myChannels', await this.channelService.getMyChannels());
+    return ret;
   }
 
   @SubscribeMessage('myRole')
@@ -142,8 +140,11 @@ export class ChannelGateway
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
     console.log('socket: leaveChannel', channelId);
     const result = await this.channelService.leaveChannel(channelId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 방을 나갔습니다.
+    if (result != 'leaveChannel Success!')
+      return result;
+    client.leave(channelId);
+    const newMessage = await this.channelService.newMessage('[system] 나감.' , channelId);
+    client.to(channelId).emit('newMessage', newMessage);
     client.emit('myChannels', await this.channelService.getMyChannels());
     return result;
   }

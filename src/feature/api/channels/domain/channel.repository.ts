@@ -1,55 +1,65 @@
+import { InjectRepository } from '@mikro-orm/nestjs';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { QueryOrder } from '@mikro-orm/core';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
-import { ChannelUserBannedEntity } from '../infrastructure/channel-user-banned.entity';
+import { Channel } from './channel';
 
 @Injectable()
 export class ChannelRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(private readonly em: EntityManager,
+    @InjectRepository(ChannelEntity)
+    private readonly channelRepository: EntityRepository<ChannelEntity>) {}
 
-  async findOneById(id: string): Promise<ChannelEntity> {
+  async findOneById(id: string): Promise<Channel> {
     console.log('repository: findOneById');
-    return await this.em.findOne(ChannelEntity, { id: id });
+    const channel = await this.channelRepository.findOne({ id: id });
+    return this.toDomain(channel);
   }
 
-  async findAllByStatus(status: string): Promise<ChannelEntity[]> {
+  async findAllByStatus(status: string): Promise<Channel[]> {
     console.log('repository: getAllByStatus');
-    const Channels = await this.em.find(ChannelEntity, {
+    const channels = await this.em.find(ChannelEntity, {
       status: status,
     });
-    return Channels;
+    return channels.map((channel) => this.toDomain(channel));
   }
 
   async saveChannel(
     createChannelDto: CreateChannelDto,
-  ): Promise<ChannelEntity> {
+  ): Promise<Channel> {
     console.log('repository: saveChannel');
     const channel = this.em.create(ChannelEntity, createChannelDto);
     await this.em.flush();
-    return channel;
+    return this.toDomain(channel);
   }
 
-  async findBannedUserByChannelId(channelId: string): Promise<ChannelUserBannedEntity[]> {
-    console.log('repository findBannedUserByChannelId');
-    const list = await this.em.find(ChannelUserBannedEntity, {channelId: channelId}, {orderBy: {createdAt: QueryOrder.ASC}});
-
-    return list;
-  }
-
-  async findBannedUserByChannelIdAndUserId(channelId: string, userId: string): Promise<ChannelUserBannedEntity> {
-    console.log('repository findBannedUserByChannelIdAndUserId');
-    const bannedUser = await this.em.findOne(ChannelUserBannedEntity, {channelId: channelId, userId: userId});
-
-    return bannedUser;
-  }
-
-  async findPublicChannels(userId: string, myChannels: string[]): Promise<ChannelEntity[]> {
+  async findPublicChannels(userId: string, myChannels: string[]): Promise<Channel[]> {
     const channels = await this.em.find(ChannelEntity, {
       id: { $nin: myChannels },
     });
 
-    return channels;
+    return channels.map((channel) => this.toDomain(channel));
+  }
+
+  private toDomain(entity: ChannelEntity): Channel { 
+    return new Channel({
+      id: entity.id,
+      name: entity.name,
+      status: entity.status,
+      password: entity.password,
+      isDeleted: entity.isDeleted,
+    });
+  }
+
+  private toEntity(domain: Channel): ChannelEntity {
+    const entity = new ChannelEntity();
+    entity.id = domain.id;
+    entity.name = domain.name;
+    entity.status = domain.status;
+    entity.password = domain.password;
+    entity.isDeleted = domain.isDeleted;
+    return entity;
   }
 }
