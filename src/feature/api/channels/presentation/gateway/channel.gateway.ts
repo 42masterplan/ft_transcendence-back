@@ -98,7 +98,10 @@ export class ChannelGateway
   async createChannel(client: any, createChannelDto: CreateChannelDto) {
     console.log('socket: createChannel');
     try {
-      const channelId = await this.channelService.createChannel(client, createChannelDto);
+      const channelId = await this.channelService.createChannel(
+        client,
+        createChannelDto,
+      );
       client.join(channelId);
     } catch (e) {
       return '이미 존재하는 방입니다.';

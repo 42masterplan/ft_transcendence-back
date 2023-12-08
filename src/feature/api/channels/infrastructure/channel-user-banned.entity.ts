@@ -1,4 +1,5 @@
 import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { bool } from 'joi';
 
 @Entity({ tableName: 'channel_user_banned' })
 export class ChannelUserBannedEntity {
@@ -17,4 +18,7 @@ export class ChannelUserBannedEntity {
     onUpdate: () => new Date(),
   })
   updatedAt: Date = new Date();
+
+  @Property({ type: bool, default: false })
+  isDeleted: boolean;
 }
