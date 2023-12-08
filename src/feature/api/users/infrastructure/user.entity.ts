@@ -6,6 +6,7 @@ import {
   Property,
   Unique,
 } from '@mikro-orm/core';
+import { bool } from 'joi';
 import { v4 } from 'uuid';
 
 @Entity({ tableName: 'user' })
@@ -46,6 +47,9 @@ export class UserEntity {
   })
   updatedAt: Date = new Date();
 
+  @Property({ type: bool, default: false })
+  isDeleted: boolean;
+
   static from(user: User): UserEntity {
     const userEntity = new UserEntity();
     userEntity.id = user.id;
@@ -53,6 +57,7 @@ export class UserEntity {
     userEntity.name = user.name;
     userEntity.is2faEnabled = user.is2faEnabled;
     userEntity.email = user.email;
+    userEntity.isDeleted = user.isDeleted;
 
     return userEntity;
   }

@@ -131,6 +131,14 @@ export class ChannelGateway
     return 'getBannedUsers Success!';
   }
 
+  @SubscribeMessage('getAdminUsers')
+  async getAdminUsers(client: any, { channelId }: { channelId: string }) {
+    console.log('socket: getAdminUsers', channelId);
+    // const adminUsers = await this.channelService.getAdminUsers(channelId);
+    // client.emit('getAdminUsers', adminUsers);
+    return 'getAdminUsers Success!';
+  }
+
   @SubscribeMessage('leaveChannel')
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
     console.log('socket: leaveChannel', channelId);

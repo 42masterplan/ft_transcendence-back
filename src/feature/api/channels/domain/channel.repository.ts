@@ -30,7 +30,7 @@ export class ChannelRepository {
     console.log('repository: getMyChannels');
     const list = await this.em.find(
       ChannelParticipantEntity,
-      { participantId: userId },
+      { participantId: userId, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
 
