@@ -1,15 +1,14 @@
-import { ChannelRepository } from '../domain/channel.repository';
-import { ChannelMessageRepository } from '../domain/channel-message.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { Injectable } from '@nestjs/common';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
-import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
-import { ChannelParticipantRepository } from '../domain/channel-participant.repository';
-import { ChannelUserBannedRepository } from '../domain/channel-user-banned.repository';
 import { Channel } from '../domain/channel';
+import { ChannelRepository } from '../domain/repositories/channel.repository';
+import { ChannelMessageRepository } from '../domain/repositories/channel-message.repository';
+import { ChannelParticipantRepository } from '../domain/repositories/channel-participant.repository';
+import { ChannelUserBannedRepository } from '../domain/repositories/channel-user-banned.repository';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';

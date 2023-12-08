@@ -1,7 +1,7 @@
 import { QueryOrder } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { ChannelUserBannedEntity } from '../infrastructure/channel-user-banned.entity';
+import { ChannelUserBannedEntity } from '../../infrastructure/channel-user-banned.entity';
 
 @Injectable()
 export class ChannelUserBannedRepository {

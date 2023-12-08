@@ -1,8 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { ChannelParticipantEntity } from '../infrastructure/channel-participant.entity';
 import { QueryOrder } from '@mikro-orm/core';
-import { ChannelParticipant } from './channel-participant';
+import { ChannelParticipantEntity } from '../../infrastructure/channel-participant.entity';
+import { ChannelParticipant } from '../channel-participant';
 
 @Injectable()
 export class ChannelParticipantRepository {

@@ -1,10 +1,9 @@
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
-import { QueryOrder } from '@mikro-orm/core';
 import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
-import { Channel } from './channel';
+import { CreateChannelDto } from '../../presentation/gateway/dto/create-channel.dto';
+import { Channel } from '../channel';
 
 @Injectable()
 export class ChannelRepository {

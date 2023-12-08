@@ -1,18 +1,17 @@
 import { Channel } from 'diagnostics_channel';
 import { ChannelService } from './application/channel.service';
-import { ChannelMessageRepository } from './domain/channel-message.repository';
-import { ChannelRepository } from './domain/channel.repository';
 import { ChannelGateway } from './presentation/gateway/channel.gateway';
 import { Module } from '@nestjs/common';
 import { UsersModule } from 'src/feature/api/users/users.module';
-import { ChannelParticipant } from './domain/channel-participant';
-import { ChannelParticipantRepository } from './domain/channel-participant.repository';
-import { ChannelUserBannedRepository } from './domain/channel-user-banned.repository';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ChannelEntity } from './infrastructure/channel.entity';
 import { ChannelMessageEntity } from './infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from './infrastructure/channel-participant.entity';
 import { ChannelUserBannedEntity } from './infrastructure/channel-user-banned.entity';
+import { ChannelRepository } from './domain/repositories/channel.repository';
+import { ChannelMessageRepository } from './domain/repositories/channel-message.repository';
+import { ChannelParticipantRepository } from './domain/repositories/channel-participant.repository';
+import { ChannelUserBannedRepository } from './domain/repositories/channel-user-banned.repository';
 
 @Module({
   imports: [MikroOrmModule.forFeature([ChannelEntity, ChannelParticipantEntity, ChannelMessageEntity, ChannelUserBannedEntity])
