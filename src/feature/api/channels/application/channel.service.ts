@@ -1,14 +1,15 @@
+import { Channel } from '../domain/channel';
+import { ChannelMessage } from '../domain/channel-message';
+import { ChannelMessageRepository } from '../domain/repositories/channel-message.repository';
+import { ChannelParticipantRepository } from '../domain/repositories/channel-participant.repository';
+import { ChannelUserBannedRepository } from '../domain/repositories/channel-user-banned.repository';
+import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { Injectable } from '@nestjs/common';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
-import { Channel } from '../domain/channel';
-import { ChannelRepository } from '../domain/repositories/channel.repository';
-import { ChannelMessageRepository } from '../domain/repositories/channel-message.repository';
-import { ChannelParticipantRepository } from '../domain/repositories/channel-participant.repository';
-import { ChannelUserBannedRepository } from '../domain/repositories/channel-user-banned.repository';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
@@ -27,12 +28,16 @@ export class ChannelService {
 
   async getMyChannels() {
     console.log('channel myChannels');
-    const myChannelList = await this.channelParticipantRepository.findAllByUserId(userId);
+    const myChannelList =
+      await this.channelParticipantRepository.findAllByUserId(userId);
     return await Promise.all(
       myChannelList.map(async (participants) => ({
         id: participants.channelId,
-        name: (await this.channelRepository.findOneById(participants.channelId)).name,
-        userCount: await (this.channelParticipantRepository.countByChannelId(participants.channelId,)),
+        name: (await this.channelRepository.findOneById(participants.channelId))
+          .name,
+        userCount: await this.channelParticipantRepository.countByChannelId(
+          participants.channelId,
+        ),
         isUnread: true,
       })),
     );
@@ -40,35 +45,45 @@ export class ChannelService {
 
   async getPublicChannels(): Promise<PublicChannelDto[]> {
     console.log('service publicChannels');
-    const myChannels = (await this.channelParticipantRepository.findAllByUserId(userId)).map(
-      (channel) => channel.channelId,
+    const myChannels = (
+      await this.channelParticipantRepository.findAllByUserId(userId)
+    ).map((channel) => channel.channelId);
+    const channels = await this.channelRepository.findPublicChannels(
+      userId,
+      myChannels,
     );
-    const participant = await this.channelRepository.findPublicChannels(userId, myChannels);
-    const publicChannelDto = await this.channelToPublicChannelDto(participant);
-    return publicChannelDto;
+    const channelsDto = await this.channelToPublicChannelDto(channels);
+    return channelsDto;
   }
 
   async joinChannel({ id, password }): Promise<string> {
     console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
-    if (!channel || channel.isDeleted == true) return 'fail';
-    if (channel.status == 'private') return 'Unacceptable';
+    if (!channel) return 'There is no channel';
+    if (channel.status == 'private') return 'Cannot join private channel';
     if (channel.password != password) return 'Wrong password!';
 
-    const isBanned = await this.channelUserBannedRepository.findOneByChannelIdAndUserId(id, userId);
-    if (isBanned && isBanned.isDeleted == false)
-      return 'Banned User';
+    const isBanned =
+      await this.channelUserBannedRepository.findOneByChannelIdAndUserId(
+        id,
+        userId,
+      );
+    if (isBanned && isBanned.isDeleted == false) return 'Banned User';
 
-    const user = await this.channelParticipantRepository.findOneByUserIdAndChannelId(userId, id);
+    const user =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        id,
+      );
     if (!user)
-      await this.createChannelParticipant('user', userId, channel.id);
+      await this.channelParticipantRepository.saveOne({
+        role: 'user',
+        participantId: userId,
+        channelId: channel.id,
+      });
     else if (user.isDeleted == true)
-    {
-      user.isDeleted = false;
-      await this.channelParticipantRepository.saveOne(user);
-    }
-    else
-      return 'Already joined';
+      await this.channelParticipantRepository.updateOne(userId, id, false);
+    else return 'Already joined';
     return 'joinChannel Success!';
   }
 
@@ -90,7 +105,8 @@ export class ChannelService {
 
   async getChannelHistory(channelId: string) {
     console.log('service channelHistory');
-    const message = await this.channelMessageRepository.getChannelHistory(channelId);
+    const message =
+      await this.channelMessageRepository.findAllByChannelId(channelId);
     const history = await this.messageToHistory(message);
     return history;
   }
@@ -119,9 +135,10 @@ export class ChannelService {
   }
 
   async getParticipants(channelId: string): Promise<any[]> {
-    const channelParticipant = await this.channelParticipantRepository.findAllByChannelId(channelId);
+    const channelParticipant =
+      await this.channelParticipantRepository.findAllByChannelId(channelId);
     const participants = [];
-    for await (const participant of channelParticipant){
+    for await (const participant of channelParticipant) {
       const user = await this.usersUseCase.findOne(participant.participantId);
       participants.push({
         channelId: participant.channelId,
@@ -135,9 +152,10 @@ export class ChannelService {
   }
 
   async getBannedUsers(channelId: string): Promise<any[]> {
-    const channelBannedUsers = await this.channelUserBannedRepository.findAllByChannelId(channelId);
+    const channelBannedUsers =
+      await this.channelUserBannedRepository.findAllByChannelId(channelId);
     const bannedUsers = [];
-    for await (const bannedUser of channelBannedUsers){
+    for await (const bannedUser of channelBannedUsers) {
       const user = await this.usersUseCase.findOne(bannedUser.userId);
       bannedUsers.push({
         channelId: bannedUser.channelId,
@@ -151,22 +169,24 @@ export class ChannelService {
 
   async leaveChannel(channelId: string) {
     const channel = this.channelRepository.findOneById(channelId);
-    if (!channel)
-      return 'There is no channel';
-    
-    const channelParticipant = await this.channelParticipantRepository.findOneByUserIdAndChannelId(userId, channelId);
+    if (!channel) return 'There is no channel';
+
+    const channelParticipant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
     if (!channelParticipant || channelParticipant.isDeleted == true)
       return 'You are not in this channel';
     else
-    {
-      channelParticipant.isDeleted = true;
-      await this.channelParticipantRepository.saveOne(channelParticipant);
-    }
+      await this.channelParticipantRepository.saveOne(
+        channelParticipant.updatedIsDeleted(),
+      );
     return 'leaveChannel Success!';
     //구현중
   }
 
-  async messageToHistory(list: ChannelMessageEntity[]) {
+  async messageToHistory(list: ChannelMessage[]) {
     const history = [];
     for await (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
@@ -191,37 +211,8 @@ export class ChannelService {
       publicChannelDto.name = channel.name;
       publicChannelDto.isPassword = channel.password !== ''; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
       publicChannelDto.id = channel.id;
-      publicChannelDto.userCount = await this.channelParticipantRepository.countByChannelId(
-        channel.id,
-      );
-
-      publicChannels.push(publicChannelDto);
-    }
-    return publicChannels;
-  }
-
-  async participantToPublicChannelDto(
-    participants: ChannelParticipantEntity[],
-  ): Promise<PublicChannelDto[]> {
-    const publicChannels = (PublicChannelDto[participants.length] = []);
-
-    for (const participant of participants) {
-      const channel = await this.channelRepository.findOneById(
-        participant.channelId,
-      );
-      if (channel.status !== 'Public') continue;
-      if (
-        publicChannels.some((channel) => channel.id === participant.channelId)
-      )
-        continue;
-      const publicChannelDto = new PublicChannelDto();
-      console.log(channel.status);
-      publicChannelDto.name = channel.name;
-      publicChannelDto.isPassword = channel.password == '' ? false : true; // 비밀번호가 비어있지 않으면 true, 그렇지 않으면 false
-      publicChannelDto.id = participant.channelId;
-      publicChannelDto.userCount = await this.channelParticipantRepository.countByChannelId(
-        participant.channelId,
-      );
+      publicChannelDto.userCount =
+        await this.channelParticipantRepository.countByChannelId(channel.id);
 
       publicChannels.push(publicChannelDto);
     }

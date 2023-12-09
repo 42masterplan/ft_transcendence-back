@@ -69,10 +69,12 @@ export class ChannelGateway
   async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
     const ret = await this.channelService.joinChannel({ id, password });
-    if (ret != 'joinChannel Success!')
-      return ret;
+    if (ret != 'joinChannel Success!') return ret;
     client.join(id);
-    const newMessage = await this.channelService.newMessage('[system] 참가함.' , id);
+    const newMessage = await this.channelService.newMessage(
+      '[system] 참가함.',
+      id,
+    );
     client.to(id).emit('newMessage', newMessage);
     client.emit('myChannels', await this.channelService.getMyChannels());
     return ret;
@@ -140,10 +142,12 @@ export class ChannelGateway
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
     console.log('socket: leaveChannel', channelId);
     const result = await this.channelService.leaveChannel(channelId);
-    if (result != 'leaveChannel Success!')
-      return result;
+    if (result != 'leaveChannel Success!') return result;
     client.leave(channelId);
-    const newMessage = await this.channelService.newMessage('[system] 나감.' , channelId);
+    const newMessage = await this.channelService.newMessage(
+      '[system] 나감.',
+      channelId,
+    );
     client.to(channelId).emit('newMessage', newMessage);
     client.emit('myChannels', await this.channelService.getMyChannels());
     return result;
