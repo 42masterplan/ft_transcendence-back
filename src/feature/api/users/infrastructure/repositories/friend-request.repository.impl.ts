@@ -31,6 +31,14 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     return this.repository.getEntityManager().persist(newFriendRequest).flush();
   }
 
+  async findManyByPrimaryUserId(
+    primaryUserId: string,
+  ): Promise<FriendRequest[]> {
+    const friendRequest = await this.repository.find({ primaryUserId });
+
+    return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
+  }
+
   async findManyByPrimaryUserIdTargetUserId({
     primaryUserId,
     targetUserId,

@@ -9,6 +9,15 @@ export class FriendRequestUseCase {
     private readonly repository: FriendRequestRepository,
   ) {}
 
+  async findMyFriendsRequests(myId: string): Promise<FriendRequest[]> {
+    const myFriendsRequests =
+      await this.repository.findManyByPrimaryUserId(myId);
+
+    return myFriendsRequests.filter(
+      (myFriendRequest) => myFriendRequest.isAccepted === null,
+    );
+  }
+
   async acceptFriendRequest({
     primaryUserId,
     targetUserId,

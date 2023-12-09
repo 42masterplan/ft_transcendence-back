@@ -49,18 +49,9 @@ export class FriendsController {
 
   @Get('request')
   getFriendsRequest() {
-    return [
-      {
-        id: 'randomUuid',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        introduction: 'Hello world!',
-      },
-      {
-        id: 'randomUuid2',
-        profileImage: 'https://localhost:8080/resources/test.jpg',
-        introduction: 'Bye world!',
-      },
-    ];
+    //TODO change to user decorator
+    const myId = 'b233ba54-50be-4dcc-9c84-a2ce366936a9';
+    return this.friendRequestUseCase.findMyFriendsRequests(myId);
   }
 
   @Post('request')
