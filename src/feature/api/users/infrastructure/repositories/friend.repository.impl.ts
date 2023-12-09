@@ -13,7 +13,7 @@ export class FriendRepositoryImpl implements FriendRepository {
   ) {}
 
   async findManyByMyId(myId: string): Promise<Friend[]> {
-    const friends = await this.friendRepository.find({ myId: myId });
+    const friends = await this.friendRepository.find({ myId });
 
     return friends.map((friend) => this.toDomain(friend));
   }

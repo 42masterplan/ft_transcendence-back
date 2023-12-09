@@ -37,6 +37,12 @@ export class UserEntity {
   @Property({ length: 128 })
   introduction: string;
 
+  @Property({ type: bool, default: false })
+  isValidateEmail: boolean;
+
+  @Property({ length: 64, nullable: true })
+  verificationCode: string;
+
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 
