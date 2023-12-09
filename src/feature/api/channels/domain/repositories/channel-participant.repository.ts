@@ -4,6 +4,7 @@ import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { Channel } from 'diagnostics_channel';
 
 @Injectable()
 export class ChannelParticipantRepository {
@@ -18,7 +19,7 @@ export class ChannelParticipantRepository {
     channelId: string,
   ): Promise<ChannelParticipant> {
     console.log('repository findOneByUserIdAndChannelId');
-    const channelEntity = await this.em.findOne(ChannelParticipantEntity,{
+    const channelEntity = await this.repository.findOne({
       participantId: userId,
       channelId: channelId,
     });
@@ -75,14 +76,13 @@ export class ChannelParticipantRepository {
     userId: string,
     channelId: string,
     isDeleted: boolean,
-  ): Promise<void> {
+  ): Promise<ChannelParticipant> {
     console.log('repository: updateIsDeleted');
-    const user = await this.em.findOne(ChannelParticipantEntity,
-      { participantId: userId, channelId: channelId },
+    const user = await this.repository.upsert(
+      { participantId: userId, channelId: channelId, isDeleted: isDeleted },
     );
-    user.isDeleted = isDeleted;
-    const result = await this.em.persistAndFlush(user);
-    return result;
+    await this.repository.getEntityManager().flush();
+    return this.toDomain(user);
   }
 
   private toDomain(
