@@ -1,5 +1,6 @@
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
+import { UsersUseCases } from '../use-case/users.use-case';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -7,16 +8,9 @@ export class FriendRequestUseCase {
   constructor(
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
+    @Inject(UsersUseCases)
+    private readonly usersUseCases: UsersUseCases,
   ) {}
-
-  async findMyFriendsRequests(myId: string): Promise<FriendRequest[]> {
-    const myFriendsRequests =
-      await this.repository.findManyByPrimaryUserId(myId);
-
-    return myFriendsRequests.filter(
-      (myFriendRequest) => myFriendRequest.isAccepted === null,
-    );
-  }
 
   async acceptFriendRequest({
     primaryUserId,
