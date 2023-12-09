@@ -48,6 +48,8 @@ export class UserRepositoryImpl implements UserRepository {
       email: userEntity.email,
       currentStatus: userEntity.currentStatus,
       introduction: userEntity.introduction,
+      isValidateEmail: userEntity.isValidateEmail,
+      verificationCode: userEntity.verificationCode,
       isDeleted: userEntity.isDeleted,
     });
   }
