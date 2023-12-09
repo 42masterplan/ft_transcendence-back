@@ -37,7 +37,7 @@ export class ChannelRepository {
     myChannels: string[],
   ): Promise<Channel[]> {
     const channels = await this.repository.find({
-      status: 'public',
+      status: 'Public',
       isDeleted: false,
       id: { $nin: myChannels },
     });
