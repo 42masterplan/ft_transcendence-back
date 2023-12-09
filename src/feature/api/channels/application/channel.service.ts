@@ -82,9 +82,12 @@ export class ChannelService {
         participantId: userId,
         channelId: channel.id,
       });
-    else if (user.isDeleted == true)
+    else if (user.isDeleted === true)
       await this.channelParticipantRepository.updateOne(userId, id, false);
-    else return 'Already joined';
+    else 
+    {
+      return 'Already joined';
+    }
     return 'joinChannel Success!';
   }
 

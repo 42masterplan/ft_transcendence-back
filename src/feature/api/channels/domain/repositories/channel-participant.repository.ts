@@ -14,11 +14,11 @@ export class ChannelParticipantRepository {
   ) {}
 
   async findOneByUserIdAndChannelId(
-    userId,
-    channelId,
+    userId: string,
+    channelId: string,
   ): Promise<ChannelParticipant> {
     console.log('repository findOneByUserIdAndChannelId');
-    const channelEntity = await this.repository.findOne({
+    const channelEntity = await this.em.findOne(ChannelParticipantEntity,{
       participantId: userId,
       channelId: channelId,
     });
@@ -75,12 +75,14 @@ export class ChannelParticipantRepository {
     userId: string,
     channelId: string,
     isDeleted: boolean,
-  ): Promise<number> {
+  ): Promise<void> {
     console.log('repository: updateIsDeleted');
-    return await this.repository.nativeUpdate(
+    const user = await this.em.findOne(ChannelParticipantEntity,
       { participantId: userId, channelId: channelId },
-      { isDeleted: isDeleted },
     );
+    user.isDeleted = isDeleted;
+    const result = await this.em.persistAndFlush(user);
+    return result;
   }
 
   private toDomain(
