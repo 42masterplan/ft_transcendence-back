@@ -78,6 +78,7 @@ export class FriendsController {
     return true;
   }
 
+  //TODO: change interface
   @Put('request')
   async acceptFriendRequest(@Body('friend-id') friendId: string) {
     //TODO: change to user decorator
@@ -90,6 +91,7 @@ export class FriendsController {
     return true;
   }
 
+  //TODO: change interface
   @Delete('request/:friendId')
   async rejectFriendRequest(@Param('friendId') friendId: string) {
     //TODO: change to user decorator
