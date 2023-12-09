@@ -32,8 +32,10 @@ export class ChannelUserBannedRepository {
       channelId: channelId,
       userId: userId,
     });
-
-    return this.toDomain(bannedUser);
+    
+    if(bannedUser) 
+      return  this.toDomain(bannedUser);
+    return null;
   }
 
   private toDomain(
