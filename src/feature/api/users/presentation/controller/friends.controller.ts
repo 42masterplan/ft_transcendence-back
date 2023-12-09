@@ -11,7 +11,6 @@ import {
   Param,
   Post,
   Put,
-  Query,
 } from '@nestjs/common';
 
 @Controller('users/friends')
@@ -82,8 +81,8 @@ export class FriendsController {
     return true;
   }
 
-  @Delete('request')
-  async rejectFriendRequest(@Query('friend-id') friendId: string) {
+  @Delete('request/:friendId')
+  async rejectFriendRequest(@Param('friendId') friendId: string) {
     //TODO: change to user decorator
     await this.friendRequestUseCase.rejectFriendRequest({
       primaryUserId: 'b233ba54-50be-4dcc-9c84-a2ce366936a9',
