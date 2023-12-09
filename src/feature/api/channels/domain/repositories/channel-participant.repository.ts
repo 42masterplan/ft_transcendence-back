@@ -1,83 +1,103 @@
-import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
-import { QueryOrder } from '@mikro-orm/core';
 import { ChannelParticipantEntity } from '../../infrastructure/channel-participant.entity';
 import { ChannelParticipant } from '../channel-participant';
+import { QueryOrder } from '@mikro-orm/core';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ChannelParticipantRepository {
-  constructor(private readonly em: EntityManager) {}
-  
-  async findOneByUserIdAndChannelId(userId, channelId): Promise<ChannelParticipantEntity> {
-    console.log('repsitory findOneByUserIdAndChannelId');
-    const channelEntity = await this.em.findOne(ChannelParticipantEntity, {participantId: userId, channelId: channelId});
+  constructor(
+    private readonly em: EntityManager,
+    @InjectRepository(ChannelParticipantEntity)
+    private readonly repository: EntityRepository<ChannelParticipantEntity>,
+  ) {}
 
-    return channelEntity;
+  async findOneByUserIdAndChannelId(
+    userId,
+    channelId,
+  ): Promise<ChannelParticipant> {
+    console.log('repository findOneByUserIdAndChannelId');
+    const channelEntity = await this.repository.findOne({
+      participantId: userId,
+      channelId: channelId,
+    });
+
+    return this.toDomain(channelEntity);
   }
 
-  async findAllByUserId(userId: string): Promise<ChannelParticipantEntity[]> {
+  async findAllByUserId(userId: string): Promise<ChannelParticipant[]> {
     console.log('repository: getMyChannels');
-    const list = await this.em.find(
-      ChannelParticipantEntity,
+    const list = await this.repository.find(
       { participantId: userId, isDeleted: false },
       { orderBy: { updatedAt: QueryOrder.DESC } },
     );
 
-    return list;
+    return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
-  async findAllByChannelId(
-    channelId: string,
-  ): Promise<ChannelParticipantEntity[]> {
+  async findAllByChannelId(channelId: string): Promise<ChannelParticipant[]> {
     console.log('repository: findAllByChannelId ', channelId);
-    const list = await this.em.find(
-      ChannelParticipantEntity,
+    const list = await this.repository.find(
       { channelId: channelId, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
     console.log(list);
-    return list;
+    return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
-  async saveOne(
-    channelParticipant: ChannelParticipantEntity,
-  ): Promise<ChannelParticipantEntity> {
+  async saveOne({
+    role,
+    participantId,
+    channelId,
+  }): Promise<ChannelParticipant> {
     console.log('repository: saveChannelParticipant');
-    const savedChannelParticipant = this.em.create(
-      ChannelParticipantEntity,
-      channelParticipant,
-    );
-    await this.em.flush();
-    return savedChannelParticipant;
+    const newChannelParticipant = this.repository.create({
+      role: role,
+      participantId: participantId,
+      channelId: channelId,
+    });
+    await this.repository
+      .getEntityManager()
+      .persistAndFlush(newChannelParticipant);
+    return this.toDomain(newChannelParticipant);
   }
 
   async countByChannelId(channelId: string): Promise<number> {
     console.log('repository: countUser');
-    return await this.em.count(ChannelParticipantEntity, {
-      channelId: channelId, isDeleted: false,
+    return await this.repository.count({
+      channelId: channelId,
+      isDeleted: false,
     });
   }
 
-  async updateOne(userId: string, channelId: string): Promise<void> {
+  async updateOne(
+    userId: string,
+    channelId: string,
+    isDeleted: boolean,
+  ): Promise<number> {
     console.log('repository: updateIsDeleted');
-    await this.em.nativeUpdate(
-      ChannelParticipantEntity,
+    return await this.repository.nativeUpdate(
       { participantId: userId, channelId: channelId },
-      { isDeleted: false },
+      { isDeleted: isDeleted },
     );
   }
 
-  private toDomain(channelParticipant: ChannelParticipantEntity): ChannelParticipant {
+  private toDomain(
+    channelParticipant: ChannelParticipantEntity,
+  ): ChannelParticipant {
     return new ChannelParticipant({
       participantId: channelParticipant.participantId,
       channelId: channelParticipant.channelId,
       role: channelParticipant.role,
       chatableAt: channelParticipant.chatableAt,
-      isDeleted: channelParticipant.isDeleted
+      isDeleted: channelParticipant.isDeleted,
     });
   }
 
-  private toEntity(channelParticipant: ChannelParticipant): ChannelParticipantEntity {
+  private toEntity(
+    channelParticipant: ChannelParticipant,
+  ): ChannelParticipantEntity {
     const channelParticipantEntity = new ChannelParticipantEntity();
     channelParticipantEntity.participantId = channelParticipant.participantId;
     channelParticipantEntity.channelId = channelParticipant.channelId;
@@ -86,5 +106,5 @@ export class ChannelParticipantRepository {
     channelParticipantEntity.isDeleted = channelParticipant.isDeleted;
 
     return channelParticipantEntity;
-  }s
+  }
 }

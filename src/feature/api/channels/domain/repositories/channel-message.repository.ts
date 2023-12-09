@@ -1,41 +1,37 @@
+import { ChannelMessage } from '../channel-message';
 import { QueryOrder } from '@mikro-orm/core';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
-import { ChannelMessage } from '../channel-message';
 
 @Injectable()
 export class ChannelMessageRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    @InjectRepository(ChannelMessageEntity)
+    private readonly repository: EntityRepository<ChannelMessageEntity>,
+  ) {}
 
-  async saveOne(message: ChannelMessageEntity): Promise<ChannelMessageEntity> {
-    const newMessage = this.em.create(ChannelMessageEntity, message);
-    await this.em.flush();
+  async saveOne(message: ChannelMessageEntity): Promise<ChannelMessage> {
+    const newMessage = this.repository.create(message);
+    await this.repository.getEntityManager().persistAndFlush(newMessage);
 
-    return newMessage;
+    return this.toDomain(newMessage);
   }
 
-  async findAllByChannelId(channelId: string): Promise<ChannelMessageEntity[]> {
-    const messages = await this.em.find(ChannelMessageEntity, {
-      channelId: channelId,
-    });
-
-    return messages;
-  }
-
-  async getChannelHistory(channelId: string): Promise<ChannelMessageEntity[]> {
-    console.log('repository: getChannelHistory');
-    const channelHistory = await this.em.find(
-      ChannelMessageEntity,
+  async findAllByChannelId(channelId: string): Promise<ChannelMessage[]> {
+    const messages = await this.repository.find(
       {
         channelId: channelId,
       },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
-    return channelHistory;
+
+    return messages.map((message) => this.toDomain(message));
   }
 
-  private toDomain(entity: ChannelMessageEntity): ChannelMessage { 
+  private toDomain(entity: ChannelMessageEntity): ChannelMessage {
     return new ChannelMessage({
       id: entity.id,
       participantId: entity.participantId,
