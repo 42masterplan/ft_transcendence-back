@@ -1,24 +1,28 @@
 export class User {
   private readonly _id: string;
   private readonly _intraId: string;
-  private readonly _name: string;
+  private readonly _name: string | null;
   private readonly _profileImage: string;
   private readonly _is2faEnabled: boolean;
-  private readonly _email: string;
+  private readonly _email: string | null;
   private readonly _currentStatus: string;
   private readonly _introduction: string;
+  private readonly _isValidateEmail: boolean;
+  private readonly _verificationCode: string | null;
   private readonly _isDeleted: boolean;
 
   // TODO: implement validation
   constructor(props: {
     id: string;
     intraId: string;
-    name: string;
+    name: string | null;
     profileImage: string;
     is2faEnabled: boolean;
-    email: string;
+    email: string | null;
     currentStatus: string;
     introduction: string;
+    isValidateEmail: boolean;
+    verificationCode: string | null;
     isDeleted: boolean;
   }) {
     this._id = props.id;
@@ -29,6 +33,8 @@ export class User {
     this._email = props.email;
     this._currentStatus = props.currentStatus;
     this._introduction = props.introduction;
+    this._isValidateEmail = props.isValidateEmail;
+    this._verificationCode = props.verificationCode;
     this._isDeleted = props.isDeleted;
   }
 
@@ -66,5 +72,13 @@ export class User {
 
   get introduction(): string {
     return this._introduction;
+  }
+
+  get isValidateEmail(): boolean {
+    return this._isValidateEmail;
+  }
+
+  get verificationCode(): string {
+    return this._verificationCode;
   }
 }

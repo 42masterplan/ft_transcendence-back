@@ -1,12 +1,13 @@
 import { CreateFriendRequestUseCase } from './application/friends/create-friend-request.use-case';
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
+import { FriendRequestUseCase } from './application/friends/friend-request.use-case';
 import { UsersUseCases } from './application/use-case/users.use-case';
 import { FriendRequestRepository } from './domain/friend/interface/friend-request.repository';
 import { FriendRepository } from './domain/friend/interface/friend.repository';
 import { UserRepository } from './domain/user.repository';
 import { FriendRequestEntity } from './infrastructure/friend-request.entity';
 import { FriendEntity } from './infrastructure/friend.entity';
-import { FriendRequestRepositoryImpl } from './infrastructure/repositories/friend-request.repository';
+import { FriendRequestRepositoryImpl } from './infrastructure/repositories/friend-request.repository.impl';
 import { FriendRepositoryImpl } from './infrastructure/repositories/friend.repository.impl';
 import { UserRepositoryImpl } from './infrastructure/user.repository.impl';
 import { FriendsController } from './presentation/controller/friends.controller';
@@ -25,6 +26,7 @@ import { Module } from '@nestjs/common';
 
     FindFriendsUseCase,
     CreateFriendRequestUseCase,
+    FriendRequestUseCase,
 
     {
       provide: UserRepository,

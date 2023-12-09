@@ -48,6 +48,8 @@ export class UserRepositoryImpl implements UserRepository {
       email: userEntity.email,
       currentStatus: userEntity.currentStatus,
       introduction: userEntity.introduction,
+      isValidateEmail: userEntity.isValidateEmail,
+      verificationCode: userEntity.verificationCode,
       isDeleted: userEntity.isDeleted,
     });
   }
@@ -62,6 +64,8 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.email = user.email;
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
+    userEntity.verificationCode = user.verificationCode;
+    userEntity.isValidateEmail = user.isValidateEmail;
     userEntity.isDeleted = user.isDeleted;
 
     return userEntity;
