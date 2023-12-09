@@ -39,4 +39,14 @@ export class ChannelParticipant {
   get isDeleted(): boolean {
     return this._isDeleted;
   }
+
+  updatedIsDeleted(): ChannelParticipant {
+    return new ChannelParticipant({
+      role: this.role,
+      chatableAt: this.chatableAt,
+      participantId: this.participantId,
+      channelId: this.channelId,
+      isDeleted: !this.isDeleted,
+    });
+  }
 }

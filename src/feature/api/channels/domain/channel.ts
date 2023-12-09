@@ -39,4 +39,14 @@ export class Channel {
   get isDeleted(): boolean {
     return this._isDeleted;
   }
+
+  updatedIsDeleted(): Channel {
+    return new Channel({
+      id: this.id,
+      name: this.name,
+      status: this.status,
+      password: this.password,
+      isDeleted: true,
+    });
+  }
 }
