@@ -53,6 +53,7 @@ export class ChannelService {
       myChannels,
     );
     const channelsDto = await this.channelToPublicChannelDto(channels);
+
     return channelsDto;
   }
 
@@ -178,10 +179,14 @@ export class ChannelService {
       );
     if (!channelParticipant || channelParticipant.isDeleted == true)
       return 'You are not in this channel';
-    else
-      await this.channelParticipantRepository.saveOne(
-        channelParticipant.updatedIsDeleted(),
+    else {
+      console.log(channelParticipant);
+      await this.channelParticipantRepository.updateOne(
+        userId,
+        channelId,
+        true,
       );
+    }
     return 'leaveChannel Success!';
     //구현중
   }
