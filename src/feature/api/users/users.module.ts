@@ -10,6 +10,7 @@ import { FriendRequestEntity } from './infrastructure/friend-request.entity';
 import { FriendEntity } from './infrastructure/friend.entity';
 import { FriendRequestRepositoryImpl } from './infrastructure/repositories/friend-request.repository.impl';
 import { FriendRepositoryImpl } from './infrastructure/repositories/friend.repository.impl';
+import { UserEntity } from './infrastructure/user.entity';
 import { UserRepositoryImpl } from './infrastructure/user.repository.impl';
 import { FriendsController } from './presentation/controller/friends.controller';
 import { UsersController } from './presentation/controller/users.controller';
@@ -19,7 +20,7 @@ import { Module } from '@nestjs/common';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([FriendEntity, FriendRequestEntity]),
+    MikroOrmModule.forFeature([UserEntity, FriendEntity, FriendRequestEntity]),
     MailModule,
   ],
   controllers: [UsersController, FriendsController],

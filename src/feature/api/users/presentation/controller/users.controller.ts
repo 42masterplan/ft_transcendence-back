@@ -180,7 +180,7 @@ export class UsersController {
   @Put('two-factor-auth')
   async update2fa(@Request() req, @Body() twoFactorEmail: TwoFactorEmailDto) {
     //TODO: AuthGuard, Use cache to manage time
-    //TODO: db: 이메일, 랜덤 코드, isValidateEmail false 저장
+    //TODO: code 존재할 시 create 막기
 
     if (!req.user.sub) throw new UnauthorizedException();
 

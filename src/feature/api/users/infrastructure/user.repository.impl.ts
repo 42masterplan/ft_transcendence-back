@@ -61,7 +61,7 @@ export class UserRepositoryImpl implements UserRepository {
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.create(UserEntity, createUserDto);
+    const user = await this.userRepository.create(createUserDto);
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
