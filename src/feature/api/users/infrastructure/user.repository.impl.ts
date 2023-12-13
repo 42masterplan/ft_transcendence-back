@@ -2,30 +2,35 @@ import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
+import { TwoFactorType } from '../presentation/type/two-factor.type';
 import { UserEntity } from './user.entity';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: EntityRepository<UserEntity>,
+  ) {}
 
   async findOneById(id: string): Promise<User | null> {
-    const user = await this.em.findOne(UserEntity, { id });
+    const user = await this.userRepository.findOne({ id });
     if (!user) return null;
 
     return this.toDomain(user);
   }
 
   async findOneByName(name: string): Promise<User | null> {
-    const user = await this.em.findOne(UserEntity, { name });
+    const user = await this.userRepository.findOne({ name });
     if (!user) return null;
 
     return this.toDomain(user);
   }
 
   async findOneByIntraId(intraId: string): Promise<User> {
-    const user = await this.em.findOne(UserEntity, { intraId });
+    const user = await this.userRepository.findOne({ intraId });
     if (user) return this.toDomain(user);
   }
 
@@ -33,7 +38,7 @@ export class UserRepositoryImpl implements UserRepository {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const user = await this.em.findOne(UserEntity, { intraId });
+    const user = await this.userRepository.findOne({ intraId });
     if (updateUserDto.name !== null && updateUserDto.name !== undefined)
       user.name = updateUserDto.name;
     if (
@@ -51,13 +56,25 @@ export class UserRepositoryImpl implements UserRepository {
       updateUserDto.introduction !== undefined
     )
       user.introduction = updateUserDto.introduction;
-    await this.em.flush();
+    await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.em.create(UserEntity, createUserDto);
-    await this.em.flush();
+    const user = await this.userRepository.create(UserEntity, createUserDto);
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
+  }
+
+  async updateTwoFactor(
+    intraId: string,
+    twoFactor: TwoFactorType,
+  ): Promise<User> {
+    const user = this.toEntity(await this.findOneByIntraId(intraId));
+    user.email = twoFactor.email;
+    user.isValidateEmail = twoFactor.isValidate;
+    user.verificationCode = twoFactor.code;
+    await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
 

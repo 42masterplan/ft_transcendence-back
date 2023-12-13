@@ -25,4 +25,14 @@ export class UsersService {
     if (user) return true;
     return false;
   }
+
+  async createRandomCode(intraId: string, email: string): Promise<number> {
+    const randomCode = Math.floor(Math.random() * 899999) + 100000;
+    await this.usersUseCases.updateTwoFactorWithEmail(
+      intraId,
+      email,
+      randomCode,
+    );
+    return randomCode;
+  }
 }

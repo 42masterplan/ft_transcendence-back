@@ -2,7 +2,9 @@ import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../../presentation/dto/update-user.dto';
+import { TwoFactorType } from '../../presentation/type/two-factor.type';
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersUseCases {
@@ -42,5 +44,18 @@ export class UsersUseCases {
     intraId;
     return true;
     // return await this.repository.isTw;
+  }
+
+  async updateTwoFactorWithEmail(
+    intraId: string,
+    email: string,
+    code: number,
+  ): Promise<void> {
+    const saltOrRounds = 10;
+    const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
+    await this.repository.updateTwoFactor(
+      intraId,
+      new TwoFactorType({ code: hashedCode, isValidate: false, email }),
+    );
   }
 }

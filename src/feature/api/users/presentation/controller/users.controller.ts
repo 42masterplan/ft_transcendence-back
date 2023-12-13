@@ -176,11 +176,20 @@ export class UsersController {
     };
   }
 
+  @UseGuards(AuthGuard('signIn'))
   @Put('two-factor-auth')
-  update2fa(@Body() twoFactorEmail: TwoFactorEmailDto) {
-    const randomCode = Math.floor(Math.random() * 899999) + 100000;
+  async update2fa(@Request() req, @Body() twoFactorEmail: TwoFactorEmailDto) {
     //TODO: AuthGuard, Use cache to manage time
-    this.mailService.sendMail(twoFactorEmail.email, randomCode);
+    //TODO: db: 이메일, 랜덤 코드, isValidateEmail false 저장
+
+    if (!req.user.sub) throw new UnauthorizedException();
+
+    const code = await this.usersService.createRandomCode(
+      req.user.sub,
+      twoFactorEmail.email,
+    );
+
+    this.mailService.sendMail(twoFactorEmail.email, code);
     return true;
   }
 
