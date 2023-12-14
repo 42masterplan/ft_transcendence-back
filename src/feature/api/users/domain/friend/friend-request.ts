@@ -1,8 +1,12 @@
+import { User } from '../user';
+
 export class FriendRequest {
   private readonly _id: number;
-  private _isAccepted: boolean;
+  private _isAccepted: boolean | null;
   private readonly _primaryUserId: string;
   private readonly _targetUserId: string;
+
+  targetUser?: User | null;
 
   // TODO: implement validation
   constructor(props: {
@@ -29,11 +33,15 @@ export class FriendRequest {
     this._isAccepted = isAccepted;
   }
 
+  connectTargetUser(user: User): void {
+    this.targetUser = user;
+  }
+
   get id(): number {
     return this._id;
   }
 
-  get isAccepted(): boolean {
+  get isAccepted(): boolean | null {
     return this._isAccepted;
   }
 
