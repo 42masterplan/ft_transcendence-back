@@ -14,8 +14,6 @@ import * as Joi from 'joi';
       rootPath: join(__dirname, '..', 'resources'),
       serveRoot: '/resources',
     }),
-    DatabaseModule,
-    ApiModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
@@ -23,8 +21,10 @@ import * as Joi from 'joi';
 
       validationSchema: Joi.object({
         PORT: Joi.number().default(8080),
-        POSTGRES_HOST: Joi.string().required(),
-        POSTGRES_PORT: Joi.number().default(3306),
+        // POSTGRES_HOST: Joi.string().required(),
+        // POSTGRES_PORT: Joi.number().default(3306),
+				POSTGRES_HOST: Joi.string().required(),
+        POSTGRES_PORT: Joi.number().required(),
         POSTGRES_USERNAME: Joi.string().required(),
         POSTGRES_PASSWORD: Joi.string().required(),
         POSTGRES_DATABASE: Joi.string().required(),
@@ -34,6 +34,8 @@ import * as Joi from 'joi';
         AUTH_JWT_SECRET: Joi.string().required(),
       }),
     }),
+		DatabaseModule,
+    ApiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

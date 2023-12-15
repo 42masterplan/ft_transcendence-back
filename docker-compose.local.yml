@@ -1,13 +1,29 @@
+version: '3'
+
 services:
-  database:
-    image: postgres:alpine
-    restart: always
-    container_name: database
+  postgres:
+    container_name: nestjs-postgres
+    image: postgres:latest
     ports:
       - '5432:5432'
+    volumes:
+      - /data/postgres:/data/postgres
     env_file:
       - .env.develop
 
+  pgadmin:
+    links:
+      - postgres:postgres
+    container_name: nestjs-pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - '5050:80'
+    volumes:
+      - /data/pgadmin:/root/.pgadmin
+    env_file:
+      - .env.develop
+    networks:
+      - postgres
   backend:
     build:
       dockerfile: Dockerfile
@@ -18,7 +34,12 @@ services:
     env_file:
       - .env.develop
     depends_on:
-      - database
+      - postgres
     volumes:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
+    networks:
+      - postgres
+networks:
+  postgres:
+    driver: bridge
