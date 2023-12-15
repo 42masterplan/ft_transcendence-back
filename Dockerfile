@@ -1,12 +1,12 @@
-FROM node:lts-alpine
-WORKDIR /usr/src/app
-COPY package.json ./
+FROM node:18.15-alpine
 
-RUN npm install
+WORKDIR /app
 
 COPY . .
+# install packages
+RUN npm install
+RUN npm install -g @nestjs/cli
+# build
+RUN nest build
 
-RUN npm i
-RUN npm run build
-
-CMD ["npm", "run", "start:dev"]
+ENTRYPOINT [ "node", "/app/dist/main.js" ]
