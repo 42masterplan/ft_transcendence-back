@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    networks:
+      - tcen
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: postgres
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    container_name: backend
+    ports:
+      - '8080:8080'
+    env_file:
+      - .env.develop
+    depends_on:
+      - postgres
+    networks:
+      - tcen
+
+networks:
+  tcen:
+    driver: bridge
