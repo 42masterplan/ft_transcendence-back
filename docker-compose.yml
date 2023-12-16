@@ -8,10 +8,8 @@ services:
       - '5432:5432'
     networks:
       - tcen
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: postgres
+    env_file:
+      - .env.postgres
 
   backend:
     build:
