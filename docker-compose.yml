@@ -1,15 +1,19 @@
+version: '3.8'
+
 services:
-  database:
-    image: postgres:alpine
-    restart: always
-    container_name: database
+  postgres:
+    container_name: postgres
+    image: postgres:latest
     ports:
       - '5432:5432'
+    networks:
+      - tcen
     env_file:
-      - .env.develop
+      - .env.postgres
 
   backend:
     build:
+      context: ./
       dockerfile: Dockerfile
     restart: always
     container_name: backend
@@ -18,7 +22,10 @@ services:
     env_file:
       - .env.develop
     depends_on:
-      - database
-    volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
+      - postgres
+    networks:
+      - tcen
+
+networks:
+  tcen:
+    driver: bridge
