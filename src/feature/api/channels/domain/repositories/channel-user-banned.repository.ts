@@ -13,6 +13,26 @@ export class ChannelUserBannedRepository {
     private readonly repository: EntityRepository<ChannelUserBannedEntity>,
   ) {}
 
+  async saveOne(userId: string, channelId: string): Promise<ChannelUserBanned> {
+    console.log('repository saveBannedUser');
+    const newChannelUserBanned = this.repository.create({
+      userId: userId,
+      channelId: channelId,
+    });
+    await this.repository
+      .getEntityManager()
+      .persistAndFlush(newChannelUserBanned);
+    return this.toDomain(newChannelUserBanned);
+  }
+
+  async updateOne(channelUserBanned: ChannelUserBanned): Promise<ChannelUserBanned> {
+    console.log('repository updateBannedUser');
+    const entity = this.toEntity(channelUserBanned);
+    const newChannelUserBanned = await this.repository.upsert(entity);
+    await this.repository.getEntityManager().flush();
+    return this.toDomain(newChannelUserBanned);
+  }
+
   async findAllByChannelId(channelId: string): Promise<ChannelUserBanned[]> {
     console.log('repository findBannedUserByChannelId');
     const list = await this.repository.find(
@@ -32,9 +52,8 @@ export class ChannelUserBannedRepository {
       channelId: channelId,
       userId: userId,
     });
-    
-    if(bannedUser) 
-      return  this.toDomain(bannedUser);
+
+    if (bannedUser) return this.toDomain(bannedUser);
     return null;
   }
 

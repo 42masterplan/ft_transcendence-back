@@ -25,11 +25,19 @@ export class ChannelRepository {
     return channels.map((channel) => this.toDomain(channel));
   }
 
-  async saveChannel(createChannelDto: CreateChannelDto): Promise<Channel> {
+  async saveOne(createChannelDto: CreateChannelDto): Promise<Channel> {
     console.log('repository: saveChannel');
     const channel = this.repository.create(createChannelDto);
     await this.repository.getEntityManager().persistAndFlush(channel);
     return this.toDomain(channel);
+  }
+
+  async updateOne(channel: Channel): Promise<Channel> {
+    console.log('repository: updateChannel');
+    const entity = this.toEntity(channel);
+    const newChannel = await this.repository.upsert(entity);
+    await this.repository.getEntityManager().flush();
+    return this.toDomain(newChannel);
   }
 
   async findPublicChannels(
