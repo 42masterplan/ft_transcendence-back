@@ -6,7 +6,7 @@ import { ChannelUserBannedRepository } from '../domain/repositories/channel-user
 import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
 
@@ -105,7 +105,14 @@ export class ChannelService {
 
   async newMessage(content: string, channelId: string): Promise<any> {
     const user = await this.usersUseCase.findOne(userId);
-
+    const participant = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+      userId,
+      channelId,
+    );
+    if (!participant || participant.isDeleted === true)
+      throw new ForbiddenException('You are not in this channel');
+    if (participant.chatableAt > new Date(Date.now()))
+      throw new ForbiddenException('You are muted');
     await this.channelMessageRepository.saveOne({
       channelId: channelId,
       participantId: userId,
@@ -174,6 +181,7 @@ export class ChannelService {
       await this.channelUserBannedRepository.findAllByChannelId(channelId);
     const bannedUsers = [];
     for await (const bannedUser of channelBannedUsers) {
+      if (bannedUser.isDeleted === true) continue;
       const user = await this.usersUseCase.findOne(bannedUser.userId);
       bannedUsers.push({
         channelId: bannedUser.channelId,
@@ -251,9 +259,9 @@ export class ChannelService {
     return 'success'
   }
 
-  async unbanUser(channelId: string, targetId: string) {
+  async unBanUser(channelId: string, targetId: string) {
     if (userId === targetId)
-      return 'Cannot unban yourself';
+      return 'Cannot unBan yourself';
 
     const participant = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
       userId,
@@ -279,12 +287,12 @@ export class ChannelService {
 
     isTargetBanned.updatedIsDeleted(true);
     this.channelUserBannedRepository.updateOne(isTargetBanned);
-    return 'unbanUser Success!'
+    return 'unBanUser Success!'
   }
 
   async kickUser(channelId: string, targetId: string): Promise<string>
   {
-    if (userId === userId) return 'Cannot kick yourself';
+    if (userId === targetId) return 'Cannot kick yourself';
 
     const participant = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
       userId,
@@ -304,7 +312,7 @@ export class ChannelService {
 
     target.updatedIsDeleted(true);
 
-    this.channelParticipantRepository.updateOne(target);
+    await this.channelParticipantRepository.updateOne(target);
     return 'kickUser Success!'
   }
 
