@@ -61,7 +61,6 @@ export class ChannelGateway
   async getPublicChannels(client: Socket) {
     console.log('socket: allPublicChannel');
     const channels = await this.channelService.getPublicChannels();
-    // console.log(channels);
     client.emit('getPublicChannels', channels);
   }
 
@@ -83,8 +82,9 @@ export class ChannelGateway
   @SubscribeMessage('myRole')
   async getMyRole(client: Socket, { channelId }) {
     console.log('myRole');
-    // return (await this.channelService.getMyRole(roomId));
-    client.emit('myRole', { role: 'owner', channelId: channelId }); // 테이블에 roomId랑 userId검색하기
+    const myRole = await this.channelService.getMyRole(channelId);
+    // return (await this.channelService.getMyRole(channelId));
+    client.emit('myRole', { role: myRole, channelId: channelId }); // 테이블에 roomId랑 userId검색하기
   }
 
   @SubscribeMessage('channelHistory')
@@ -133,8 +133,8 @@ export class ChannelGateway
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getAdminUsers', channelId);
-    // const adminUsers = await this.channelService.getAdminUsers(channelId);
-    // client.emit('getAdminUsers', adminUsers);
+    const adminUsers = await this.channelService.getAdminUsers(channelId);
+    client.emit('getAdminUsers', adminUsers);
     return 'getAdminUsers Success!';
   }
 
@@ -159,12 +159,16 @@ export class ChannelGateway
     { channelId, userId }: { channelId: string; userId: string },
   ) {
     console.log('socket: banUser', channelId, userId);
-    // await this.channelService.banUser(client, channelId, userId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 누구에 의해서 BAN되었습니다.
-    //TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
+    const result = await this.channelService.banUser(channelId, userId);
+    if (result != 'success')
+      return result;
+    await this.channelService.newMessage(
+      '[system]' + userId + '를 차단함.',
+      channelId,
+    );
+    client.to(channelId).emit('myChannels', await this.channelService.getMyChannels());
+    // 다시생각해봐야함
     return 'banUser Success!';
-    return 'banUser fail!';
   }
 
   @SubscribeMessage('kickUser')
@@ -173,12 +177,16 @@ export class ChannelGateway
     { channelId, userId }: { channelId: string; userId: string },
   ) {
     console.log('socket: kickUser', channelId, userId);
-    // await this.channelService.kickUser(client, channelId, userId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 누구에 의해서 추방 되었습니다.
-    //TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
-    return 'kickUser Success!';
-    return 'kickUser fail!';
+    const result = await this.channelService.kickUser(channelId, userId);
+    if (result != 'kickUser Success!')
+      return result;
+    await this.channelService.newMessage(
+        '[system]' + userId + '를 킥함.',
+        channelId,
+      );
+
+    client.to(channelId).emit('myChannels', await this.channelService.getMyChannels());
+    return 'banUser Success!';
   }
 
   @SubscribeMessage('muteUser')
@@ -187,12 +195,14 @@ export class ChannelGateway
     { channelId, userId }: { channelId: string; userId: string },
   ) {
     console.log('socket: muteUser', channelId, userId);
-    // await this.channelService.muteUser(client, channelId, userId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 누구에 의해서 Mute되었습니다. 한동안 말을 할 수 없습니다.
-    //TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
+    const result = await this.channelService.muteUser(channelId, userId);
+    if (result != 'muteUser Success!')
+      return result;
+    await this.channelService.newMessage(
+        '[system]' + userId + '를 뮤트함.',
+        channelId,
+      );
     return 'muteUser Success!';
-    return 'muteUser fail!';
   }
 
   /*unbanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
@@ -202,11 +212,9 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    //TODO: 권환 확인해서 권한이 owner가 아니면 다 fail이다.
     console.log('socket: unbanUser', channelId, userId);
-    // await this.channelService.unbanUser(client, channelId, userId);
-    return 'unbanUser Success!';
-    return 'unbanUser fail!';
+    const result = await this.channelService.unbanUser(channelId, userId);
+    return result;
   }
 
   @SubscribeMessage('changePassword')
@@ -215,8 +223,8 @@ export class ChannelGateway
     { channelId, password }: { channelId: string; password: string },
   ) {
     console.log('socket: changePassword', channelId, password);
-    // await this.channelService.changePassword(client, channelId, password);
-    return 'changePassword Success!';
+    const result = await this.channelService.changePassword(channelId, password);
+    return result;
   }
 
   @SubscribeMessage('changeAdmin')
