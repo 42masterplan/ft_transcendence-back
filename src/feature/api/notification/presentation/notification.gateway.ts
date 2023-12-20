@@ -76,6 +76,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
       // return;
     // }
 		//TODO: JWT를 이용해서 해당 정보를 가져올 것 현재 임시로 넣음
+		//TODO: 두명이 연속으로 접속하는 경우 에러 처리
 		console.log('!!Alarm socket Connection');
 		const user = {id: '622f9743-20c2-4251-9c34-341ee717b007', name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
     this.sockets.set(user.id, socket.id);
@@ -110,6 +111,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 		console.log(this.requestQueue);
 		// const useInfo = getUserInfo(srcId);
 		//TODO : 유저 정보를 가져올 것
+		console.log('socket gameRequest',"userId: ",userId, gameMode,theme)
 		const userInfo = {name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
     this.server.to(receiverSocketId).emit('gameRequest',{
 			profileImage: userInfo.profileImage,
@@ -132,7 +134,13 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 		//MAP으로, 새로운 requestId할당.
 		//객체 == [{requestId, userA, userB, theme} ...]
 		//두명의 유저에게 gameStart를 동시에 emit해준다.
+		console.log('socket gameResponse');
+		console.log(this.requestQueue);
+		console.log(isAccept, matchId);
 		const matchInfo = this.requestQueue.get(matchId);
+		if (!matchInfo && isAccept == true) {
+			return 'gameResponse Fail!';
+		}
 		const userSocketId = this.sockets.get(matchInfo.srcId);
 	// 	const userA,B;
 	if (isAccept) {
@@ -148,9 +156,14 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
   }
 
 	@SubscribeMessage('gameCancel')
-	async handleGameCancel(client, data) {
+	async handleGameCancel(client, {matchId}) {
 		console.log('socket gameCancel');
-		this.server.emit('gameCancel', data);
+		const matchInfo = this.requestQueue.get(matchId);
+		console.log(matchInfo);
+		const destId = this.sockets.get(matchInfo.destId);
+		this.requestQueue.delete(matchId);
+		this.server.to(destId).emit('gameCancel', {matchId});
+		console.log(this.requestQueue);
 		return 'success';
-	}	
+	}
 }
