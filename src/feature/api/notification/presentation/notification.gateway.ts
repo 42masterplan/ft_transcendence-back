@@ -76,6 +76,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
       // return;
     // }
 		//TODO: JWT를 이용해서 해당 정보를 가져올 것 현재 임시로 넣음
+		console.log('!!Alarm socket Connection');
 		const user = {id: '622f9743-20c2-4251-9c34-341ee717b007', name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
     this.sockets.set(user.id, socket.id);
   }
@@ -96,10 +97,17 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 	@SubscribeMessage('gameRequest')
 	async handleGameRequest(client, { userId , gameMode, theme }) {
 		const receiverSocketId = this.sockets.get(userId);
-		const matchId = v4();
+		// const matchId = v4();
 		const srcId = '622f9743-20c2-4251-9c34-341ee717b007';//게임 요청을 보낸 사람의 아이디
 		const destId = userId;//요청을 받는 사람의 아이디
+		//만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
+		//이전에 할당된 매칭 큐를 확인해서 pop해준다.
+		//MAP으로, 새로운 requestId할당.
+		//객체 == [{requestId, userA, userB, theme} ...]
+		//두명의 유저에게 gameStart를 동시에 emit해준다.
+		const matchId = srcId + destId;
 		this.requestQueue.set(matchId, {srcId, destId, gameMode, theme});
+		console.log(this.requestQueue);
 		// const useInfo = getUserInfo(srcId);
 		//TODO : 유저 정보를 가져올 것
 		const userInfo = {name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
@@ -110,7 +118,9 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 			gameMode: gameMode,
 			theme: theme
 		});
-    return 'gameRequest success!';
+		console.log('socket gameRequest');
+		console.log(this.sockets);
+    return {msg:'gameRequestSuccess!',matchId: matchId};
 		//실패한 경우 
 		//자유로은 실패 메시지
   }
