@@ -1,7 +1,7 @@
 export class ChannelUserBanned {
   private readonly _userId: string;
   private readonly _channelId: string;
-  private readonly _isDeleted: boolean;
+  private _isDeleted: boolean;
 
   // TODO: implement validation
   constructor(props: {
@@ -26,11 +26,7 @@ export class ChannelUserBanned {
     return this._isDeleted;
   }
 
-  updatedIsDeleted(): ChannelUserBanned {
-    return new ChannelUserBanned({
-      userId: this.userId,
-      channelId: this.channelId,
-      isDeleted: true,
-    });
+  updatedIsDeleted(isDeleted: boolean) {
+    this._isDeleted = isDeleted;
   }
 }
