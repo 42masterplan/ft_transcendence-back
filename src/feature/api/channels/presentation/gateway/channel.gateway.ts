@@ -45,8 +45,14 @@ export class ChannelGateway
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
     console.log('socket newMessage');
+    try
+    {
     const newMessage = await this.channelService.newMessage(content, channelId);
     this.server.to(channelId).emit('newMessage', newMessage);
+    }
+    catch(e){
+      return e.message;
+    }
     return 'success';
   }
 
@@ -163,9 +169,10 @@ export class ChannelGateway
     if (result != 'success')
       return result;
     await this.channelService.newMessage(
-      '[system]' + userId + '를 차단함.',
+      '[system]' + userId + '를 밴함.',
       channelId,
     );
+    this.channelService.kickUser(channelId, userId);
     client.to(channelId).emit('myChannels', await this.channelService.getMyChannels());
     // 다시생각해봐야함
     return 'banUser Success!';
@@ -178,13 +185,13 @@ export class ChannelGateway
   ) {
     console.log('socket: kickUser', channelId, userId);
     const result = await this.channelService.kickUser(channelId, userId);
+    console.log(result)
     if (result != 'kickUser Success!')
       return result;
     await this.channelService.newMessage(
         '[system]' + userId + '를 킥함.',
         channelId,
       );
-
     client.to(channelId).emit('myChannels', await this.channelService.getMyChannels());
     return 'banUser Success!';
   }
@@ -199,22 +206,26 @@ export class ChannelGateway
     if (result != 'muteUser Success!')
       return result;
     await this.channelService.newMessage(
-        '[system]' + userId + '를 뮤트함.',
+        '[system] ' + userId + ' 를 뮤트함.',
         channelId,
       );
     return 'muteUser Success!';
   }
 
-  /*unbanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
+  /*unBanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
 
-  @SubscribeMessage('unbanUser')
-  async unbanUser(
+  @SubscribeMessage('unBanUser')
+  async unBanUser(
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    console.log('socket: unbanUser', channelId, userId);
-    const result = await this.channelService.unbanUser(channelId, userId);
+    console.log('socket: unBanUser', channelId, userId);
+    const result = await this.channelService.unBanUser(channelId, userId);
+    console.log(result);
+    if (result !== 'unBanUser Success!')
     return result;
+    const bannedUsers = await this.channelService.getBannedUsers(channelId);
+    client.emit('getBannedUsers', bannedUsers);
   }
 
   @SubscribeMessage('changePassword')
