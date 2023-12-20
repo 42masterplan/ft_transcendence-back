@@ -23,6 +23,8 @@ export class ChannelParticipantRepository {
       channelId: channelId,
     });
 
+    if (!channelEntity)
+      return null;
     return this.toDomain(channelEntity);
   }
 
