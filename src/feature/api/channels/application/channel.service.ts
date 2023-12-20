@@ -73,7 +73,11 @@ export class ChannelService {
     const channel = await this.channelRepository.findOneById(id);
     if (!channel) return 'There is no channel';
     if (channel.status === 'private') return 'Cannot join private channel';
-    if (channel.password != password) return 'Wrong password!';
+    
+    const crypto = require('crypto');
+    const secret = 'pipapopu';
+    const hasedPassword = crypto.createHmac('sha256', secret).update(password).digest('base64');
+    if (channel.password != hasedPassword) return 'Wrong password!';
 
     const isBanned =
       await this.channelUserBannedRepository.findOneByChannelIdAndUserId(
@@ -109,10 +113,8 @@ export class ChannelService {
       userId,
       channelId,
     );
-    if (!participant || participant.isDeleted === true)
-      throw new ForbiddenException('You are not in this channel');
     if (participant.chatableAt > new Date(Date.now()))
-      throw new ForbiddenException('You are muted');
+      throw new ForbiddenException(participant.chatableAt.getHours() + '시 ' + participant.chatableAt.getMinutes() + '분 까지 뮤트되었습니다.ㅋ');
     await this.channelMessageRepository.saveOne({
       channelId: channelId,
       participantId: userId,
@@ -139,6 +141,9 @@ export class ChannelService {
     console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름을 입력해주세요.');
+    const crypto = require('crypto');
+    const secret = 'pipapopu';
+    createChannelDto.password = crypto.createHmac('sha256', secret).update(createChannelDto.password).digest('base64');
     const channel = await this.channelRepository.saveOne(createChannelDto);
     await this.createChannelParticipant('owner', userId, channel.id);
     return channel.id;
@@ -213,12 +218,14 @@ export class ChannelService {
   }
 
   async getAdminUsers(channelId: string): Promise<any[]> {
+    console.log('service getAdminUsers')
     const channelParticipant =
       await this.channelParticipantRepository.findAllByChannelId(channelId);
     const adminUsers = [];
     for await (const participant of channelParticipant) {
       if (participant.role === 'user') continue;
       const user = await this.usersUseCase.findOne(participant.participantId);
+      console.log(user.name);
       adminUsers.push({
         channelId: participant.channelId,
         userId: user.id,
@@ -250,7 +257,7 @@ export class ChannelService {
     const target = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
       targetId,
       channelId);
-    if (!target || target.isDeleted === true) 
+    if (!target) 
       return 'Target is not in this channel';
     if (participant.role !== 'owner' && target.role !== 'user')
       return 'Admin can only ban user';
@@ -336,9 +343,36 @@ export class ChannelService {
     if (participant.role !== 'owner' && target.role !== 'user')
       return 'Admin can only kick user';
     
-    target.updatedChatableAt(new Date(Date.now() + 60000));
+    target.updatedChatableAt(new Date(Date.now() + 3 * 60000));
     await this.channelParticipantRepository.updateOne(target);
     return 'muteUser Success!';
+  }
+
+  async changeAdmin(channelId: string, targetId: string, types: string): Promise<string> {
+    if (userId === targetId) return 'Cannot change yourself';
+
+    const participant = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+      userId,
+      channelId);
+    if (!participant || participant.isDeleted === true) 
+      return 'You are not in this channel';
+    if (participant.role !== 'owner')
+      return 'You are not owner';
+    console.log(participant.role);
+    
+    const target = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+      targetId,
+      channelId);
+    if (!target || target.isDeleted === true) 
+      return 'Target is not in this channel';
+    if (target.role === types)
+      return 'Target is already ' + types;
+
+    target.updatedRole(types);
+    console.log('target', target);
+    await this.channelParticipantRepository.updateOne(target);
+    return 'changeAdmin Success!';
+
   }
 
   async changePassword(channelId: string, password: string): Promise<string> {
