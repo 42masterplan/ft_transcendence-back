@@ -48,6 +48,16 @@ export class ChannelParticipantRepository {
     return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
+  async findAllByChannelIdAndRole(channelId: string, role: string): Promise<ChannelParticipant[]> {
+    console.log('repository: findAllByChannelIdAndRole ', channelId, role);
+    const list = await this.repository.find(
+      { channelId: channelId, role: role, isDeleted: false },
+      { orderBy: { createdAt: QueryOrder.ASC } },
+    );
+    console.log(list);
+    return list.map((channelParticipant) => this.toDomain(channelParticipant));
+  }
+
   async saveOne({
     role,
     participantId,
