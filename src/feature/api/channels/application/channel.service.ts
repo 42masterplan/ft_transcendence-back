@@ -36,6 +36,7 @@ export class ChannelService {
         userCount: await this.channelParticipantRepository.countByChannelId(
           participants.channelId,
         ),
+        role: participants.role,
         isUnread: true,
       })),
     );
