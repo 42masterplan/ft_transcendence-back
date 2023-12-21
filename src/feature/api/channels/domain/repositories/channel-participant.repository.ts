@@ -44,7 +44,6 @@ export class ChannelParticipantRepository {
       { channelId: channelId, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
-    console.log(list);
     return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
@@ -54,7 +53,6 @@ export class ChannelParticipantRepository {
       { channelId: channelId, role: role, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
-    console.log(list);
     return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
