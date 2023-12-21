@@ -90,25 +90,10 @@ export class ChannelGateway
     return ret;
   }
 
-  @SubscribeMessage('myRole')
-  async getMyRole(client: Socket, { channelId }) {
-    console.log('socket: myRole');
-    try {
-      const myRole = await this.channelService.getMyRole(channelId);
-      console.log('myRole', myRole, channelId);
-      client.emit('myRole', { role: myRole, channelId: channelId }); // 테이블에 roomId랑 userId검색하기
-    } catch (e) {
-      console.log(e.message);
-      return e.message;
-    }
-  }
-
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client: Socket, { channelId }) {
     console.log('socket: channelHistory');
     const history = await this.channelService.getChannelHistory(channelId);
-    const myRole = await this.channelService.getMyRole(channelId);
-    client.emit('myRole', { role: myRole, channelId: channelId });
     return history;
   }
 
@@ -121,7 +106,6 @@ export class ChannelGateway
         createChannelDto,
       );
       client.join(channelId);
-      client.emit('myRole', { role: 'owner', channelId: channelId });
     } catch (e) {
       console.log(e.message);
       return '이미 존재하는 방입니다.';
