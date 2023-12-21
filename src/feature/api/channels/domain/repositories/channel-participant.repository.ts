@@ -23,8 +23,7 @@ export class ChannelParticipantRepository {
       channelId: channelId,
     });
 
-    if (!channelEntity)
-      return null;
+    if (!channelEntity) return null;
     return this.toDomain(channelEntity);
   }
 
@@ -47,7 +46,10 @@ export class ChannelParticipantRepository {
     return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
-  async findAllByChannelIdAndRole(channelId: string, role: string): Promise<ChannelParticipant[]> {
+  async findAllByChannelIdAndRole(
+    channelId: string,
+    role: string,
+  ): Promise<ChannelParticipant[]> {
     console.log('repository: findAllByChannelIdAndRole ', channelId, role);
     const list = await this.repository.find(
       { channelId: channelId, role: role, isDeleted: false },

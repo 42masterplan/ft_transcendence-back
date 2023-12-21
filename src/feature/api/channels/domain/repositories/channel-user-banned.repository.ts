@@ -25,7 +25,9 @@ export class ChannelUserBannedRepository {
     return this.toDomain(newChannelUserBanned);
   }
 
-  async updateOne(channelUserBanned: ChannelUserBanned): Promise<ChannelUserBanned> {
+  async updateOne(
+    channelUserBanned: ChannelUserBanned,
+  ): Promise<ChannelUserBanned> {
     console.log('repository updateBannedUser');
     const entity = this.toEntity(channelUserBanned);
     const newChannelUserBanned = await this.repository.upsert(entity);

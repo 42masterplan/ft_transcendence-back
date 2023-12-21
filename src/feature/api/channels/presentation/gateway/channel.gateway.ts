@@ -1,4 +1,5 @@
 import { Socket } from 'dgram';
+import { UsersUseCases } from '../../../users/application/use-case/users.use-case';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
@@ -10,7 +11,6 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { UsersUseCases } from '../../../users/application/use-case/users.use-case';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UsePipes(
@@ -30,9 +30,10 @@ export class ChannelGateway
 {
   @WebSocketServer()
   server;
-  constructor(private readonly channelService: ChannelService,
-    private readonly usersUseCase: UsersUseCases
-    ) {}
+  constructor(
+    private readonly channelService: ChannelService,
+    private readonly usersUseCase: UsersUseCases,
+  ) {}
 
   async handleConnection(client: any, ...args: any[]) {
     console.log("It's get connected!");
@@ -48,12 +49,13 @@ export class ChannelGateway
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
     console.log('socket newMessage');
-    try
-    {
-    const newMessage = await this.channelService.newMessage(content, channelId);
-    this.server.to(channelId).emit('newMessage', newMessage);
-    }
-    catch(e){
+    try {
+      const newMessage = await this.channelService.newMessage(
+        content,
+        channelId,
+      );
+      this.server.to(channelId).emit('newMessage', newMessage);
+    } catch (e) {
       return e.message;
     }
     return 'success';
@@ -91,14 +93,11 @@ export class ChannelGateway
   @SubscribeMessage('myRole')
   async getMyRole(client: Socket, { channelId }) {
     console.log('myRole');
-    try
-    {
-    const myRole = await this.channelService.getMyRole(channelId);
-    client.emit('myRole', { role: myRole, channelId: channelId }); // 테이블에 roomId랑 userId검색하기
-    }
-    catch (e)
-    {
-      console.log(e.message)
+    try {
+      const myRole = await this.channelService.getMyRole(channelId);
+      client.emit('myRole', { role: myRole, channelId: channelId }); // 테이블에 roomId랑 userId검색하기
+    } catch (e) {
+      console.log(e.message);
       return e.message;
     }
   }
@@ -124,7 +123,7 @@ export class ChannelGateway
       client.join(channelId);
       client.emit('myRole', { role: 'owner', channelId: channelId });
     } catch (e) {
-      console.log(e.message)
+      console.log(e.message);
       return '이미 존재하는 방입니다.';
     }
     client.emit('myChannels', await this.channelService.getMyChannels());
@@ -177,15 +176,18 @@ export class ChannelGateway
   ) {
     console.log('socket: banUser', channelId, userId);
     const result = await this.channelService.banUser(channelId, userId);
-    if (result != 'success')
-      return result;
+    if (result != 'success') return result;
     const newMessage = await this.channelService.newMessage(
-      '[system]' + (await this.usersUseCase.findOne(userId)).name + '님이 밴되었습니다.',
+      '[system]' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 밴되었습니다.',
       channelId,
     );
     this.server.to(channelId).emit('newMessage', newMessage);
     this.channelService.kickUser(channelId, userId);
-    client.to(channelId).emit('myChannels', await this.channelService.getMyChannels());
+    client
+      .to(channelId)
+      .emit('myChannels', await this.channelService.getMyChannels());
     // 다시생각해봐야함
     return 'banUser Success!';
   }
@@ -197,16 +199,19 @@ export class ChannelGateway
   ) {
     console.log('socket: kickUser', channelId, userId);
     const result = await this.channelService.kickUser(channelId, userId);
-    console.log(result)
-    if (result != 'kickUser Success!')
-      return result;
+    console.log(result);
+    if (result != 'kickUser Success!') return result;
     const newMessage = await this.channelService.newMessage(
-        '[system]' + (await this.usersUseCase.findOne(userId)).name + '님이 추방되었습니다.',
-        channelId,
-      );
+      '[system]' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 추방되었습니다.',
+      channelId,
+    );
 
     this.server.to(channelId).emit('newMessage', newMessage);
-    client.to(channelId).emit('myChannels', await this.channelService.getMyChannels());
+    client
+      .to(channelId)
+      .emit('myChannels', await this.channelService.getMyChannels());
     return 'kickUser Success!';
   }
 
@@ -217,12 +222,13 @@ export class ChannelGateway
   ) {
     console.log('socket: muteUser', channelId, userId);
     const result = await this.channelService.muteUser(channelId, userId);
-    if (result != 'muteUser Success!')
-      return result;
+    if (result != 'muteUser Success!') return result;
     const newMessage = await this.channelService.newMessage(
-        '[system] ' + (await this.usersUseCase.findOne(userId)).name + '님이 뮤트되었습니다.',
-        channelId,
-      );
+      '[system] ' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 뮤트되었습니다.',
+      channelId,
+    );
     this.server.to(channelId).emit('newMessage', newMessage);
     return 'muteUser Success!';
   }
@@ -237,8 +243,7 @@ export class ChannelGateway
     console.log('socket: unBanUser', channelId, userId);
     const result = await this.channelService.unBanUser(channelId, userId);
     console.log(result);
-    if (result !== 'unBanUser Success!')
-    return result;
+    if (result !== 'unBanUser Success!') return result;
     const bannedUsers = await this.channelService.getBannedUsers(channelId);
     client.emit('getBannedUsers', bannedUsers);
   }
@@ -249,7 +254,10 @@ export class ChannelGateway
     { channelId, password }: { channelId: string; password: string },
   ) {
     console.log('socket: changePassword', channelId, password);
-    const result = await this.channelService.changePassword(channelId, password);
+    const result = await this.channelService.changePassword(
+      channelId,
+      password,
+    );
     return result;
   }
 
@@ -263,7 +271,11 @@ export class ChannelGateway
     }: { channelId: string; userId: string; types: 'admin' | 'user' },
   ) {
     console.log('socket: changeAdmin', channelId, userId);
-    const result = await this.channelService.changeAdmin(channelId, userId, types);
+    const result = await this.channelService.changeAdmin(
+      channelId,
+      userId,
+      types,
+    );
     if (result === 'changeAdmin Success!') {
       const adminUsers = await this.channelService.getAdminUsers(channelId);
       client.emit('getAdminUsers', adminUsers);
