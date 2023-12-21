@@ -91,8 +91,16 @@ export class ChannelGateway
   @SubscribeMessage('myRole')
   async getMyRole(client: Socket, { channelId }) {
     console.log('myRole');
+    try
+    {
     const myRole = await this.channelService.getMyRole(channelId);
     client.emit('myRole', { role: myRole, channelId: channelId }); // 테이블에 roomId랑 userId검색하기
+    }
+    catch (e)
+    {
+      console.log(e.message)
+      return e.message;
+    }
   }
 
   @SubscribeMessage('channelHistory')

@@ -63,7 +63,7 @@ export class ChannelService {
         channelId,
       );
     if (!myRole && myRole.isDeleted === true)
-      return 'You are not in this channel';
+      throw new ForbiddenException('You are not in this channel');
     return myRole.role;
   }
 
