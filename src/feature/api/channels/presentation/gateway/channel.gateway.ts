@@ -92,9 +92,10 @@ export class ChannelGateway
 
   @SubscribeMessage('myRole')
   async getMyRole(client: Socket, { channelId }) {
-    console.log('myRole');
+    console.log('socket: myRole');
     try {
       const myRole = await this.channelService.getMyRole(channelId);
+      console.log('myRole', myRole, channelId);
       client.emit('myRole', { role: myRole, channelId: channelId }); // 테이블에 roomId랑 userId검색하기
     } catch (e) {
       console.log(e.message);
@@ -104,11 +105,10 @@ export class ChannelGateway
 
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client: Socket, { channelId }) {
-    console.log(channelId);
     console.log('socket: channelHistory');
     const history = await this.channelService.getChannelHistory(channelId);
-    console.log(history);
-    client.emit('myRole', { role: 'owner', channelId: channelId });
+    const myRole = await this.channelService.getMyRole(channelId);
+    client.emit('myRole', { role: myRole, channelId: channelId });
     return history;
   }
 
@@ -199,7 +199,6 @@ export class ChannelGateway
   ) {
     console.log('socket: kickUser', channelId, userId);
     const result = await this.channelService.kickUser(channelId, userId);
-    console.log(result);
     if (result != 'kickUser Success!') return result;
     const newMessage = await this.channelService.newMessage(
       '[system]' +
@@ -242,7 +241,6 @@ export class ChannelGateway
   ) {
     console.log('socket: unBanUser', channelId, userId);
     const result = await this.channelService.unBanUser(channelId, userId);
-    console.log(result);
     if (result !== 'unBanUser Success!') return result;
     const bannedUsers = await this.channelService.getBannedUsers(channelId);
     client.emit('getBannedUsers', bannedUsers);
@@ -280,6 +278,7 @@ export class ChannelGateway
       const adminUsers = await this.channelService.getAdminUsers(channelId);
       client.emit('getAdminUsers', adminUsers);
     }
+    // 롤 바뀐애한테 myChannels emit하기
     return result;
   }
 }
