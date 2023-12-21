@@ -7,7 +7,6 @@ import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
@@ -71,13 +70,10 @@ export class ChannelService {
   async joinChannel({ id, password }): Promise<string> {
     console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
+    password = this.hashPassword(password);
     if (!channel) return 'There is no channel';
     if (channel.status === 'private') return 'Cannot join private channel';
-    
-    const crypto = require('crypto');
-    const secret = 'pipapopu';
-    const hasedPassword = crypto.createHmac('sha256', secret).update(password).digest('base64');
-    if (channel.password != hasedPassword) return 'Wrong password!';
+    if (channel.password != password) return 'Wrong password!';
 
     const isBanned =
       await this.channelUserBannedRepository.findOneByChannelIdAndUserId(
@@ -141,26 +137,14 @@ export class ChannelService {
     console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름을 입력해주세요.');
-    const crypto = require('crypto');
-    const secret = 'pipapopu';
-    createChannelDto.password = crypto.createHmac('sha256', secret).update(createChannelDto.password).digest('base64');
+    createChannelDto.password = this.hashPassword(createChannelDto.password);
     const channel = await this.channelRepository.saveOne(createChannelDto);
-    await this.createChannelParticipant('owner', userId, channel.id);
+    await this.channelParticipantRepository.saveOne({
+      role: 'owner',
+      participantId: userId,
+      channelId: channel.id,
+    });
     return channel.id;
-  }
-
-  async createChannelParticipant(
-    role: string,
-    userId: string,
-    channelId: string,
-  ): Promise<ChannelParticipantEntity> {
-    const channelParticipant = new ChannelParticipantEntity();
-    channelParticipant.role = role;
-    channelParticipant.participantId = userId;
-    channelParticipant.channelId = channelId;
-
-    await this.channelParticipantRepository.saveOne(channelParticipant);
-    return channelParticipant;
   }
 
   async getParticipants(channelId: string): Promise<any[]> {
@@ -177,7 +161,6 @@ export class ChannelService {
         profileImage: user.profileImage,
       });
     }
-    console.log(participants);
     return participants;
   }
 
@@ -199,8 +182,8 @@ export class ChannelService {
   }
 
   async leaveChannel(channelId: string) {
-    const channel = this.channelRepository.findOneById(channelId);
-    if (!channel) return 'There is no channel';
+    const channel = await this.channelRepository.findOneById(channelId);
+    if (!channel || channel.isDeleted) return 'There is no channel';
 
     const channelParticipant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
@@ -209,23 +192,30 @@ export class ChannelService {
       );
     if (!channelParticipant || channelParticipant.isDeleted === true)
       return 'You are not in this channel';
-    else {
-      channelParticipant.updatedIsDeleted(true);
-      await this.channelParticipantRepository.updateOne(channelParticipant);
+    else if (channelParticipant.role === 'owner') {
+      if (await this.channelParticipantRepository.countByChannelId(channelId) > 1){
+        const participants = await this.channelParticipantRepository.findAllByChannelId(channelId);
+        const newOwner = participants[1];
+        newOwner.updatedRole('owner');   
+        await this.channelParticipantRepository.updateOne(newOwner);
+      }
+      else {
+        channel.updatedIsDeleted(true);
+        await this.channelRepository.updateOne(channel);
+      }
     }
+    channelParticipant.updatedIsDeleted(true);
+    await this.channelParticipantRepository.updateOne(channelParticipant);
     return 'leaveChannel Success!';
-    //구현중
   }
 
   async getAdminUsers(channelId: string): Promise<any[]> {
     console.log('service getAdminUsers')
     const channelParticipant =
-      await this.channelParticipantRepository.findAllByChannelId(channelId);
+      await this.channelParticipantRepository.findAllByChannelIdAndRole(channelId, 'admin');
     const adminUsers = [];
     for await (const participant of channelParticipant) {
-      if (participant.role === 'user') continue;
       const user = await this.usersUseCase.findOne(participant.participantId);
-      console.log(user.name);
       adminUsers.push({
         channelId: participant.channelId,
         userId: user.id,
@@ -358,7 +348,6 @@ export class ChannelService {
       return 'You are not in this channel';
     if (participant.role !== 'owner')
       return 'You are not owner';
-    console.log(participant.role);
     
     const target = await this.channelParticipantRepository.findOneByUserIdAndChannelId(
       targetId,
@@ -369,7 +358,6 @@ export class ChannelService {
       return 'Target is already ' + types;
 
     target.updatedRole(types);
-    console.log('target', target);
     await this.channelParticipantRepository.updateOne(target);
     return 'changeAdmin Success!';
 
@@ -386,9 +374,17 @@ export class ChannelService {
 
     const channel = await this.channelRepository.findOneById(channelId);
     if (!channel) return 'There is no channel';
+    password = this.hashPassword(password);
     channel.updatedPassword(password);
     await this.channelRepository.updateOne(channel);
     return 'changePassword Success!';
+  }
+
+  hashPassword(password: string): string{
+    if (password === '') return password;
+    const crypto = require('crypto');
+    const secret = 'pipapopu';
+    return crypto.createHmac('sha256', secret).update(password).digest('base64');
   }
 
   async messageToHistory(list: ChannelMessage[]) {
