@@ -1,3 +1,4 @@
+import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -5,45 +6,41 @@ import {
   WebSocketGateway,
   WebSocketServer,
   WsException,
-	ConnectedSocket
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
-import { NotificationUseCases } from '../application/notification.use-case';
-import { v4 } from 'uuid';
 
 type gameMode = 'normal' | 'ladder';
 type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
 type gameRequest = {
-	profileImage: string,
-	userName: string,
-	matchId: string,
-	gameMode: gameMode,
-	theme: theme
-}
+  profileImage: string;
+  userName: string;
+  matchId: string;
+  gameMode: gameMode;
+  theme: theme;
+};
 type gameResponse = {
-	matchId: string,
-	isAccept: boolean
-}
+  matchId: string;
+  isAccept: boolean;
+};
 type gameCancel = {
-	matchId: string
-}
+  matchId: string;
+};
 type gameStart = {
-	matchId: string,
-	theme: theme
-}
+  matchId: string;
+  theme: theme;
+};
 type gameEnd = {
-	matchId: string,
-	winner: string
-}
+  matchId: string;
+  winner: string;
+};
 
 type MatchStore = {
-	srcId: string,
-	destId: string,
-	gameMode: gameMode,
-	theme: theme
-}
-
+  srcId: string;
+  destId: string;
+  gameMode: gameMode;
+  theme: theme;
+};
 
 @WebSocketGateway({ namespace: 'alarm' })
 @UsePipes(
@@ -58,112 +55,141 @@ type MatchStore = {
     },
   }),
 )
-export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
-	constructor() {}
-	@WebSocketServer()
-	private readonly server: Server;
-	private sockets: Map<string, string> = new Map();
-	private requestQueue: Map<string, MatchStore> = new Map();
-	/**
+export class NotificationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
+  constructor() {}
+  @WebSocketServer()
+  private readonly server: Server;
+  private sockets: Map<string, string> = new Map();
+  private requestQueue: Map<string, MatchStore> = new Map();
+  /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
    */
   async handleConnection(@ConnectedSocket() socket: Socket) {
     // const user = getUserFromSocket(socket, this.userFactory);
-		//유저가 없는 경우는 끊어버린다.(있어선 안되는 상황)
+    //유저가 없는 경우는 끊어버린다.(있어선 안되는 상황)
     // if (!user) {
-      // socket.disconnect();
-      // return;
+    // socket.disconnect();
+    // return;
     // }
-		//TODO: JWT를 이용해서 해당 정보를 가져올 것 현재 임시로 넣음
-		//TODO: 두명이 연속으로 접속하는 경우 에러 처리
-		console.log('!!Alarm socket Connection');
-		const user = {id: '622f9743-20c2-4251-9c34-341ee717b007', name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
+    //TODO: JWT를 이용해서 해당 정보를 가져올 것 현재 임시로 넣음
+    //TODO: 두명이 연속으로 접속하는 경우 에러 처리
+    console.log('!!Alarm socket Connection');
+    const user = {
+      id: '622f9743-20c2-4251-9c34-341ee717b007',
+      name: 'joushin',
+      profileImage: 'http://localhost:8080/resources/sloth_health.svg',
+    };
     this.sockets.set(user.id, socket.id);
   }
-	
-	/**
-	 * 
-	 * 연결이 끊어졌을 때 실행되는 메서드입니다.
-	 * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
-	 */
-	async handleDisconnect(@ConnectedSocket() socket: Socket) {
-		// const user= getUserFromSocket(socket, this.userFactory);
+
+  /**
+   *
+   * 연결이 끊어졌을 때 실행되는 메서드입니다.
+   * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
+   */
+  async handleDisconnect(@ConnectedSocket() socket: Socket) {
+    // const user= getUserFromSocket(socket, this.userFactory);
     // if (!user) return;
-		//TODO: JWT를 이용해서 해당 정보를 가져올 것
-		const user = {id: '622f9743-20c2-4251-9c34-341ee717b007', name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
+    //TODO: JWT를 이용해서 해당 정보를 가져올 것
+    const user = {
+      id: '622f9743-20c2-4251-9c34-341ee717b007',
+      name: 'joushin',
+      profileImage: 'http://localhost:8080/resources/sloth_health.svg',
+    };
     this.sockets.delete(user.id);
-	}
-
-	@SubscribeMessage('gameRequest')
-	async handleGameRequest(client, { userId , gameMode, theme }) {
-		const receiverSocketId = this.sockets.get(userId);
-		// const matchId = v4();
-		const srcId = '622f9743-20c2-4251-9c34-341ee717b007';//게임 요청을 보낸 사람의 아이디
-		const destId = userId;//요청을 받는 사람의 아이디
-		//만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
-		//이전에 할당된 매칭 큐를 확인해서 pop해준다.
-		//MAP으로, 새로운 requestId할당.
-		//객체 == [{requestId, userA, userB, theme} ...]
-		//두명의 유저에게 gameStart를 동시에 emit해준다.
-		const matchId = srcId + destId;
-		this.requestQueue.set(matchId, {srcId, destId, gameMode, theme});
-		console.log(this.requestQueue);
-		// const useInfo = getUserInfo(srcId);
-		//TODO : 유저 정보를 가져올 것
-		console.log('socket gameRequest',"userId: ",userId, gameMode,theme)
-		const userInfo = {name: 'joushin', profileImage: 'http://localhost:8080/resources/sloth_health.svg'};
-    this.server.to(receiverSocketId).emit('gameRequest',{
-			profileImage: userInfo.profileImage,
-			userName: userInfo.name,
-			matchId: matchId,
-			gameMode: gameMode,
-			theme: theme
-		});
-		console.log('socket gameRequest');
-		console.log(this.sockets);
-    return {msg:'gameRequestSuccess!',matchId: matchId};
-		//실패한 경우 
-		//자유로은 실패 메시지
   }
 
-	@SubscribeMessage('gameResponse')
-  async handleGameResponse(client, { isAccept,
-	matchId }) {
-		//이전에 할당된 매칭 큐를 확인해서 pop해준다.
-		//MAP으로, 새로운 requestId할당.
-		//객체 == [{requestId, userA, userB, theme} ...]
-		//두명의 유저에게 gameStart를 동시에 emit해준다.
-		console.log('socket gameResponse');
-		console.log(this.requestQueue);
-		console.log(isAccept, matchId);
-		const matchInfo = this.requestQueue.get(matchId);
-		if (!matchInfo && isAccept == true) {
-			return 'gameResponse Fail!';
-		}
-		const userSocketId = this.sockets.get(matchInfo.srcId);
-	// 	const userA,B;
-	if (isAccept) {
-    this.server.to(userSocketId).emit('gameStart',{
-			matchId: matchId,
-			theme: matchInfo.theme
-		});
-	}
-	this.requestQueue.delete(matchId);
-  return 'gameRequest success!';
-		//실패한 경우 
-		//자유로은 실패 메시지
+  @SubscribeMessage('gameRequest')
+  async handleGameRequest(client, { userId, gameMode, theme }) {
+    const receiverSocketId = this.sockets.get(userId);
+    // const matchId = v4();
+    const srcId = '622f9743-20c2-4251-9c34-341ee717b007'; //게임 요청을 보낸 사람의 아이디
+    const destId = userId; //요청을 받는 사람의 아이디
+    //만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
+    //이전에 할당된 매칭 큐를 확인해서 pop해준다.
+    //MAP으로, 새로운 requestId할당.
+    //객체 == [{requestId, userA, userB, theme} ...]
+    //두명의 유저에게 gameStart를 동시에 emit해준다.
+    const matchId = srcId + destId;
+    this.requestQueue.set(matchId, { srcId, destId, gameMode, theme });
+    console.log(this.requestQueue);
+    // const useInfo = getUserInfo(srcId);
+    //TODO : 유저 정보를 가져올 것
+    console.log('socket gameRequest', 'userId: ', userId, gameMode, theme);
+    const userInfo = {
+      name: 'joushin',
+      profileImage: 'http://localhost:8080/resources/sloth_health.svg',
+    };
+    this.server.to(receiverSocketId).emit('gameRequest', {
+      profileImage: userInfo.profileImage,
+      userName: userInfo.name,
+      matchId: matchId,
+      gameMode: gameMode,
+      theme: theme,
+    });
+    console.log('socket gameRequest');
+    console.log(this.sockets);
+    return { msg: 'gameRequestSuccess!', matchId: matchId };
+    //실패한 경우
+    //자유로은 실패 메시지
   }
 
-	@SubscribeMessage('gameCancel')
-	async handleGameCancel(client, {matchId}) {
-		console.log('socket gameCancel');
-		const matchInfo = this.requestQueue.get(matchId);
-		console.log(matchInfo);
-		const destId = this.sockets.get(matchInfo.destId);
-		this.requestQueue.delete(matchId);
-		this.server.to(destId).emit('gameCancel', {matchId});
-		console.log(this.requestQueue);
-		return 'success';
-	}
+  @SubscribeMessage('gameResponse')
+  async handleGameResponse(client, { isAccept, matchId }) {
+    //이전에 할당된 매칭 큐를 확인해서 pop해준다.
+    //MAP으로, 새로운 requestId할당.
+    //객체 == [{requestId, userA, userB, theme} ...]
+    //두명의 유저에게 gameStart를 동시에 emit해준다.
+    console.log('socket gameResponse');
+    console.log(this.requestQueue);
+    console.log(isAccept, matchId);
+    const matchInfo = this.requestQueue.get(matchId);
+    if (!matchInfo && isAccept == true) {
+      return 'gameResponse Fail!';
+    }
+    const userSocketId = this.sockets.get(matchInfo.srcId);
+    // 	const userA,B;
+    if (isAccept) {
+      this.server.to(userSocketId).emit('gameStart', {
+        matchId: matchId,
+        theme: matchInfo.theme,
+      });
+    }
+    this.requestQueue.delete(matchId);
+    return 'gameRequest success!';
+    //실패한 경우
+    //자유로은 실패 메시지
+  }
+
+  @SubscribeMessage('gameCancel')
+  async handleGameCancel(client, { matchId }) {
+    console.log('socket gameCancel');
+    const matchInfo = this.requestQueue.get(matchId);
+    console.log(matchInfo);
+    const destId = this.sockets.get(matchInfo.destId);
+    this.requestQueue.delete(matchId);
+    this.server.to(destId).emit('gameCancel', { matchId });
+    console.log(this.requestQueue);
+    return 'gameCancel Success!';
+  }
+  @SubscribeMessage('DmHistory')
+  async handleDMHistory(client, { userId }) {
+    console.log('socket DmHistory');
+    const userSocketId = this.sockets.get(userId);
+    this.server.to(userSocketId).emit('DMHistory', { userId });
+    return 'DmHistory Success!';
+  }
+
+  @SubscribeMessage('DmNewMessage')
+  async handleDMNewMessage(client, { userId, message, matchId }) {
+    console.log('socket DmNewMessage');
+    const userSocketId = this.sockets.get(userId);
+    this.server
+      .to(userSocketId)
+      .emit('DMNewMessage', { userId, message, matchId });
+    return 'DmNewMessage Success!';
+  }
 }
