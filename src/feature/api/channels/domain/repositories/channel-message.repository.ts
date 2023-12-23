@@ -13,8 +13,16 @@ export class ChannelMessageRepository {
     private readonly repository: EntityRepository<ChannelMessageEntity>,
   ) {}
 
-  async saveOne(message: ChannelMessageEntity): Promise<ChannelMessage> {
-    const newMessage = this.repository.create(message);
+  async saveOne({
+    channelId,
+    participantId,
+    content,
+  }): Promise<ChannelMessage> {
+    const newMessage = this.repository.create({
+      channelId: channelId,
+      participantId: participantId,
+      content: content,
+    });
     await this.repository.getEntityManager().persistAndFlush(newMessage);
 
     return this.toDomain(newMessage);
