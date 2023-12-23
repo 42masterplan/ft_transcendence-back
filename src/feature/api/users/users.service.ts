@@ -1,4 +1,4 @@
-import { TwoFactorUseCase } from './application/use-case/two-factor.use-case';
+import { TwoFactorAuthUseCase } from './application/use-case/two-factor-auth.use-case';
 import { UsersUseCase } from './application/use-case/users.use-case';
 import { User } from './domain/user';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 export class UsersService {
   constructor(
     private readonly usersUseCase: UsersUseCase,
-    private readonly twoFactorUseCase: TwoFactorUseCase,
+    private readonly twoFactorUseCase: TwoFactorAuthUseCase,
   ) {}
 
   async updateOne(intraId: string, updateUserDto: UpdateUserDto) {

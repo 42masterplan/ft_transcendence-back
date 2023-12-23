@@ -1,10 +1,10 @@
 import { UserRepository } from '../../domain/user.repository';
-import { TwoFactorType } from '../../presentation/type/two-factor.type';
+import { TwoFactorAuthType } from '../../presentation/type/two-factor-auth.type';
 import { Inject, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class TwoFactorUseCase {
+export class TwoFactorAuthUseCase {
   constructor(
     @Inject(UserRepository)
     private readonly repository: UserRepository,
@@ -19,21 +19,29 @@ export class TwoFactorUseCase {
     const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
     await this.repository.updateTwoFactor(
       intraId,
-      new TwoFactorType({ code: hashedCode, isValidate: false, email }),
+      new TwoFactorAuthType({
+        code: hashedCode,
+        isEmailValidated: false,
+        email,
+      }),
     );
   }
 
   async reset(intraId: string): Promise<void> {
     await this.repository.updateTwoFactor(
       intraId,
-      new TwoFactorType({ code: null, isValidate: false, email: null }),
+      new TwoFactorAuthType({
+        code: null,
+        isEmailValidated: false,
+        email: null,
+      }),
     );
   }
 
   async accept(intraId: string): Promise<void> {
     await this.repository.updateTwoFactor(
       intraId,
-      new TwoFactorType({ code: null, isValidate: true }),
+      new TwoFactorAuthType({ code: null, isEmailValidated: true }),
     );
   }
 }

@@ -2,7 +2,7 @@ import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
-import { TwoFactorType } from '../presentation/type/two-factor.type';
+import { TwoFactorAuthType } from '../presentation/type/two-factor-auth.type';
 import { UserEntity } from './user.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/postgresql';
@@ -76,16 +76,19 @@ export class UserRepositoryImpl implements UserRepository {
 
   async updateTwoFactor(
     intraId: string,
-    twoFactor: TwoFactorType,
+    twoFactor: TwoFactorAuthType,
   ): Promise<User> {
     const user = await this.userRepository.findOne({ intraId });
     if (twoFactor.email !== undefined) {
       user.email = twoFactor.email;
       console.log(twoFactor.email);
     }
-    if (twoFactor.isValidate !== undefined && twoFactor.isValidate !== null) {
-      user.isEmailValidated = twoFactor.isValidate;
-      console.log(twoFactor.isValidate);
+    if (
+      twoFactor.isEmailValidated !== undefined &&
+      twoFactor.isEmailValidated !== null
+    ) {
+      user.isEmailValidated = twoFactor.isEmailValidated;
+      console.log(twoFactor.isEmailValidated);
     }
     if (twoFactor.code !== undefined) {
       user.verificationCode = twoFactor.code;

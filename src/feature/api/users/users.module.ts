@@ -4,7 +4,7 @@ import { DeleteFriendUseCase } from './application/friends/delete-friend.use-cas
 import { FindAcceptableFriendRequestUseCase } from './application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from './application/friends/friend-request.use-case';
-import { TwoFactorUseCase } from './application/use-case/two-factor.use-case';
+import { TwoFactorAuthUseCase } from './application/use-case/two-factor-auth.use-case';
 import { UsersUseCase } from './application/use-case/users.use-case';
 import { FriendRequestRepository } from './domain/friend/interface/friend-request.repository';
 import { FriendRepository } from './domain/friend/interface/friend.repository';
@@ -16,6 +16,7 @@ import { FriendRepositoryImpl } from './infrastructure/repositories/friend.repos
 import { UserEntity } from './infrastructure/user.entity';
 import { UserRepositoryImpl } from './infrastructure/user.repository.impl';
 import { FriendsController } from './presentation/controller/friends.controller';
+import { TwoFactorAuthController } from './presentation/controller/two-factor-auth.controller';
 import { UsersController } from './presentation/controller/users.controller';
 import { UsersService } from './users.service';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
@@ -26,12 +27,13 @@ import { Module } from '@nestjs/common';
     MikroOrmModule.forFeature([UserEntity, FriendEntity, FriendRequestEntity]),
     MailModule,
   ],
-  controllers: [UsersController, FriendsController],
+  controllers: [UsersController, FriendsController, TwoFactorAuthController],
   providers: [
     /** application */
     UsersUseCase,
     UsersService,
-    TwoFactorUseCase,
+
+    TwoFactorAuthUseCase,
 
     FindFriendsUseCase,
     DeleteFriendUseCase,

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { MailService } from '../../../mail/mail.service';
-import { TwoFactorUseCase } from '../../application/use-case/two-factor.use-case';
+import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { TwoFactorEmailValidateDto } from '../dto/two-factor-email-validate.dto';
@@ -34,7 +34,7 @@ export class UsersController {
     private readonly mailService: MailService,
 
     private readonly usersUseCase: UsersUseCase,
-    private readonly twoFactorUseCase: TwoFactorUseCase,
+    private readonly twoFactorUseCase: TwoFactorAuthUseCase,
   ) {}
 
   @Get('')
