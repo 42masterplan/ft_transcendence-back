@@ -13,7 +13,7 @@ export class TwoFactorAuthUseCase {
   async update2faCode(intraId: string, code: number): Promise<string> {
     const saltOrRounds = 10;
     const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
-    const user = await this.repository.updateTwoFactor(
+    const user = await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({
         code: hashedCode,
@@ -24,7 +24,7 @@ export class TwoFactorAuthUseCase {
   }
 
   async validate2fa(intraId: string): Promise<void> {
-    await this.repository.updateTwoFactor(
+    await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({ code: null, is2faValidated: true }),
     );
@@ -37,7 +37,7 @@ export class TwoFactorAuthUseCase {
   ): Promise<void> {
     const saltOrRounds = 10;
     const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
-    await this.repository.updateTwoFactor(
+    await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({
         code: hashedCode,
@@ -49,7 +49,7 @@ export class TwoFactorAuthUseCase {
   }
 
   async resetEmail(intraId: string): Promise<void> {
-    await this.repository.updateTwoFactor(
+    await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({
         code: null,
@@ -61,7 +61,7 @@ export class TwoFactorAuthUseCase {
   }
 
   async acceptEmail(intraId: string): Promise<void> {
-    await this.repository.updateTwoFactor(
+    await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({ code: null, isEmailValidated: true }),
     );

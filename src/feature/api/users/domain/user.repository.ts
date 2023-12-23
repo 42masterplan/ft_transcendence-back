@@ -9,7 +9,10 @@ export interface UserRepository {
   findOneByIntraId(intraId: string): Promise<User>;
   updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User>;
   createOne(createUserDto: CreateUserDto): Promise<User>;
-  updateTwoFactor(intraId: string, twoFactor: TwoFactorAuthType): Promise<User>;
+  updateTwoFactorAuth(
+    intraId: string,
+    twoFactorAuth: TwoFactorAuthType,
+  ): Promise<User>;
 }
 
 export const UserRepository = Symbol('UserRepository');

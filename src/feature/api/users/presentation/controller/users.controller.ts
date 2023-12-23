@@ -1,7 +1,4 @@
 import path from 'node:path';
-import { MailService } from '../../../mail/mail.service';
-import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
-import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import {
@@ -26,13 +23,7 @@ import { diskStorage } from 'multer';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly mailService: MailService,
-
-    private readonly usersUseCase: UsersUseCase,
-    private readonly twoFactorUseCase: TwoFactorAuthUseCase,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('')
   getAll(@Query('status') status: string) {

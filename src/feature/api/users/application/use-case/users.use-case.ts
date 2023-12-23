@@ -38,7 +38,11 @@ export class UsersUseCase {
     }
   }
 
-  async isTwoFactorEnabled(intraId: string): Promise<boolean> {
+  // async reset2faValidation(intraId: string): Promise<boolean> {
+
+  // }
+
+  async isTwoFactorAuthEnabled(intraId: string): Promise<boolean> {
     intraId;
     return true;
     // return await this.repository.isTw;

@@ -16,21 +16,24 @@ export class UserRepositoryImpl implements UserRepository {
   ) {}
 
   async findOneById(id: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ id });
+    const user = await this.userRepository.findOne({ id, isDeleted: false });
     if (!user) return null;
 
     return this.toDomain(user);
   }
 
   async findOneByName(name: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ name });
+    const user = await this.userRepository.findOne({ name, isDeleted: false });
     if (!user) return null;
 
     return this.toDomain(user);
   }
 
   async findOneByIntraId(intraId: string): Promise<User> {
-    const user = await this.userRepository.findOne({ intraId });
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
     if (user) return this.toDomain(user);
   }
 
@@ -38,7 +41,10 @@ export class UserRepositoryImpl implements UserRepository {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({ intraId });
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
     if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
       user.name = updateUserDto.name;
     }
@@ -74,25 +80,28 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
-  async updateTwoFactor(
+  async updateTwoFactorAuth(
     intraId: string,
-    twoFactor: TwoFactorAuthType,
+    twoFactorAuth: TwoFactorAuthType,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({ intraId });
-    if (twoFactor.email !== undefined) {
-      user.email = twoFactor.email;
-      console.log(twoFactor.email);
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    if (twoFactorAuth.email !== undefined) {
+      user.email = twoFactorAuth.email;
+      console.log(twoFactorAuth.email);
     }
     if (
-      twoFactor.isEmailValidated !== undefined &&
-      twoFactor.isEmailValidated !== null
+      twoFactorAuth.isEmailValidated !== undefined &&
+      twoFactorAuth.isEmailValidated !== null
     ) {
-      user.isEmailValidated = twoFactor.isEmailValidated;
-      console.log(twoFactor.isEmailValidated);
+      user.isEmailValidated = twoFactorAuth.isEmailValidated;
+      console.log(twoFactorAuth.isEmailValidated);
     }
-    if (twoFactor.code !== undefined) {
-      user.verificationCode = twoFactor.code;
-      console.log(twoFactor.code);
+    if (twoFactorAuth.code !== undefined) {
+      user.verificationCode = twoFactorAuth.code;
+      console.log(twoFactorAuth.code);
     }
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);

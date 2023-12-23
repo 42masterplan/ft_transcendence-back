@@ -1,8 +1,8 @@
 import { MailService } from '../../../mail/mail.service';
 import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
 import { UsersService } from '../../users.service';
-import { TwoFactorEmailValidateDto } from '../dto/two-factor-email-validate.dto';
-import { TwoFactorEmailDto } from '../dto/two-factor-email.dto';
+import { TwoFactorAuthEmailValidateDto } from '../dto/two-factor-auth-email-validate.dto';
+import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
 import {
   BadRequestException,
   Body,
@@ -18,7 +18,7 @@ import * as bcrypt from 'bcrypt';
 @Controller('users/two-factor-auth')
 export class TwoFactorAuthController {
   constructor(
-    private readonly twoFactorUseCase: TwoFactorAuthUseCase,
+    private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
   ) {}
@@ -27,16 +27,16 @@ export class TwoFactorAuthController {
   @Put('email')
   async updateEmail(
     @Request() req,
-    @Body() twoFactorEmail: TwoFactorEmailDto,
+    @Body() twoFactorAuthEmail: TwoFactorAuthEmailDto,
   ): Promise<boolean> {
     const intraId = req.user.sub;
     const code = Math.floor(Math.random() * 899999) + 100000;
-    await this.twoFactorUseCase.updateEmailWithCode(
+    await this.twoFactorAuthUseCase.updateEmailWithCode(
       intraId,
-      twoFactorEmail.email,
+      twoFactorAuthEmail.email,
       code,
     );
-    await this.mailService.sendMail(twoFactorEmail.email, code);
+    await this.mailService.sendMail(twoFactorAuthEmail.email, code);
     return true;
   }
 
@@ -44,7 +44,7 @@ export class TwoFactorAuthController {
   @Post('email/validate')
   async validateEmail(
     @Request() req,
-    @Body() twoFactorEmailValidate: TwoFactorEmailValidateDto,
+    @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ): Promise<boolean> {
     const intraId = req.user.sub;
     const user = await this.usersService.findOneByIntraId(intraId);
@@ -53,14 +53,14 @@ export class TwoFactorAuthController {
 
     if (user.isEmailValidated === true) return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate) {
-      await this.twoFactorUseCase.resetEmail(intraId);
+      await this.twoFactorAuthUseCase.resetEmail(intraId);
       throw new BadRequestException();
     }
     const isMatch = await bcrypt.compare(
-      twoFactorEmailValidate.code.toString(),
+      twoFactorAuthEmailValidate.code.toString(),
       user.verificationCode,
     );
-    if (isMatch) await this.twoFactorUseCase.acceptEmail(intraId);
+    if (isMatch) await this.twoFactorAuthUseCase.acceptEmail(intraId);
 
     return isMatch;
   }
@@ -70,7 +70,7 @@ export class TwoFactorAuthController {
   async request2fa(@Request() req) {
     const intraId = req.user.sub;
     const code = Math.floor(Math.random() * 899999) + 100000;
-    const email = await this.twoFactorUseCase.update2faCode(intraId, code);
+    const email = await this.twoFactorAuthUseCase.update2faCode(intraId, code);
     await this.mailService.sendMail(email, code);
     return true;
   }
@@ -79,7 +79,7 @@ export class TwoFactorAuthController {
   @Post('validate')
   async validate2fa(
     @Request() req,
-    @Body() twoFactorEmailValidate: TwoFactorEmailValidateDto,
+    @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ) {
     const intraId = req.user.sub;
     const user = await this.usersService.findOneByIntraId(intraId);
@@ -91,10 +91,10 @@ export class TwoFactorAuthController {
       throw new BadRequestException();
 
     const isMatch = await bcrypt.compare(
-      twoFactorEmailValidate.code.toString(),
+      twoFactorAuthEmailValidate.code.toString(),
       user.verificationCode,
     );
-    if (isMatch) await this.twoFactorUseCase.validate2fa(intraId);
+    if (isMatch) await this.twoFactorAuthUseCase.validate2fa(intraId);
 
     return isMatch;
   }

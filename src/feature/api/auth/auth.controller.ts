@@ -24,7 +24,11 @@ export class AuthController {
       isExist = false;
       const createUserDto = new CreateUserDto(intraId);
       await this.usersService.createOne(createUserDto);
-    } else if (user.name === null || user.email === null) {
+    } else if (
+      user.name === null ||
+      user.email === null ||
+      !user.isEmailValidated
+    ) {
       isExist = false;
     } else {
       is2faEnabled = user.is2faEnabled;
