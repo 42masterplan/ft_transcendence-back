@@ -60,7 +60,7 @@ export class UserRepositoryImpl implements UserRepository {
     ) {
       user.introduction = updateUserDto.introduction;
     }
-    if (user.isValidateEmail === false) {
+    if (user.isEmailValidated === false) {
       user.email = null;
       user.verificationCode = null;
     }
@@ -84,7 +84,7 @@ export class UserRepositoryImpl implements UserRepository {
       console.log(twoFactor.email);
     }
     if (twoFactor.isValidate !== undefined && twoFactor.isValidate !== null) {
-      user.isValidateEmail = twoFactor.isValidate;
+      user.isEmailValidated = twoFactor.isValidate;
       console.log(twoFactor.isValidate);
     }
     if (twoFactor.code !== undefined) {
@@ -105,7 +105,8 @@ export class UserRepositoryImpl implements UserRepository {
       email: userEntity.email,
       currentStatus: userEntity.currentStatus,
       introduction: userEntity.introduction,
-      isValidateEmail: userEntity.isValidateEmail,
+      isEmailValidated: userEntity.isEmailValidated,
+      is2faValidated: userEntity.is2faValidated,
       verificationCode: userEntity.verificationCode,
       isDeleted: userEntity.isDeleted,
       updatedAt: userEntity.updatedAt,
@@ -123,7 +124,7 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
     userEntity.verificationCode = user.verificationCode;
-    userEntity.isValidateEmail = user.isValidateEmail;
+    userEntity.isEmailValidated = user.isEmailValidated;
     userEntity.isDeleted = user.isDeleted;
 
     return userEntity;

@@ -5,7 +5,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
-export class JwtSignInStrategy extends PassportStrategy(Strategy, 'signIn') {
+export class JwtEmailStrategy extends PassportStrategy(Strategy, 'email') {
   constructor(private readonly usersService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -16,7 +16,10 @@ export class JwtSignInStrategy extends PassportStrategy(Strategy, 'signIn') {
 
   async validate(payload: any): Promise<JwtPayload> {
     const user = await this.usersService.findOneByIntraId(payload.sub);
-    if (!user) throw new UnauthorizedException();
+    if (!user || user.name == null)
+      throw new UnauthorizedException('Registration Required');
+    if (user.email === null || (user.email !== null && !user.isEmailValidated))
+      throw new UnauthorizedException('Email Required');
     return { sub: payload.sub };
   }
 }

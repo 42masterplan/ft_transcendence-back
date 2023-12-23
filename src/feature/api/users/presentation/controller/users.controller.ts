@@ -220,7 +220,7 @@ export class UsersController {
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 
-    if (user.isValidateEmail === true) return true;
+    if (user.isEmailValidated === true) return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate) {
       return false;
     }

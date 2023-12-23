@@ -7,7 +7,8 @@ export class User {
   private readonly _email: string | null;
   private readonly _currentStatus: string;
   private readonly _introduction: string;
-  private readonly _isValidateEmail: boolean;
+  private readonly _isEmailValidated: boolean;
+  private readonly _is2faValidated: boolean;
   private readonly _verificationCode: string | null;
   private readonly _isDeleted: boolean;
   private readonly _updatedAt: Date;
@@ -22,7 +23,8 @@ export class User {
     email: string | null;
     currentStatus: string;
     introduction: string;
-    isValidateEmail: boolean;
+    isEmailValidated: boolean;
+    is2faValidated: boolean;
     verificationCode: string | null;
     isDeleted: boolean;
     updatedAt: Date;
@@ -35,7 +37,8 @@ export class User {
     this._email = props.email;
     this._currentStatus = props.currentStatus;
     this._introduction = props.introduction;
-    this._isValidateEmail = props.isValidateEmail;
+    this._isEmailValidated = props.isEmailValidated;
+    this._is2faValidated = props.is2faValidated;
     this._verificationCode = props.verificationCode;
     this._isDeleted = props.isDeleted;
     this._updatedAt = props.updatedAt;
@@ -77,8 +80,12 @@ export class User {
     return this._introduction;
   }
 
-  get isValidateEmail(): boolean {
-    return this._isValidateEmail;
+  get isEmailValidated(): boolean {
+    return this._isEmailValidated;
+  }
+
+  get is2faValidated(): boolean {
+    return this._is2faValidated;
   }
 
   get verificationCode(): string {
