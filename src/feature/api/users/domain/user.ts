@@ -10,6 +10,7 @@ export class User {
   private readonly _isValidateEmail: boolean;
   private readonly _verificationCode: string | null;
   private readonly _isDeleted: boolean;
+  private readonly _updatedAt: Date;
 
   // TODO: implement validation
   constructor(props: {
@@ -24,6 +25,7 @@ export class User {
     isValidateEmail: boolean;
     verificationCode: string | null;
     isDeleted: boolean;
+    updatedAt: Date;
   }) {
     this._id = props.id;
     this._intraId = props.intraId;
@@ -36,6 +38,7 @@ export class User {
     this._isValidateEmail = props.isValidateEmail;
     this._verificationCode = props.verificationCode;
     this._isDeleted = props.isDeleted;
+    this._updatedAt = props.updatedAt;
   }
 
   get isDeleted(): boolean {
@@ -80,5 +83,9 @@ export class User {
 
   get verificationCode(): string {
     return this._verificationCode;
+  }
+
+  get updatedAt(): Date {
+    return this._updatedAt;
   }
 }

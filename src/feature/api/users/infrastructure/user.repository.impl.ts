@@ -39,23 +39,31 @@ export class UserRepositoryImpl implements UserRepository {
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
     const user = await this.userRepository.findOne({ intraId });
-    if (updateUserDto.name !== null && updateUserDto.name !== undefined)
+    if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
       user.name = updateUserDto.name;
+    }
     if (
       updateUserDto.profileImage !== null &&
       updateUserDto.profileImage !== undefined
-    )
+    ) {
       user.profileImage = updateUserDto.profileImage;
+    }
     if (
       updateUserDto.is2faEnabled !== null &&
       updateUserDto.is2faEnabled !== undefined
-    )
+    ) {
       user.is2faEnabled = updateUserDto.is2faEnabled;
+    }
     if (
       updateUserDto.introduction !== null &&
       updateUserDto.introduction !== undefined
-    )
+    ) {
       user.introduction = updateUserDto.introduction;
+    }
+    if (user.isValidateEmail === false) {
+      user.email = null;
+      user.verificationCode = null;
+    }
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
@@ -70,10 +78,19 @@ export class UserRepositoryImpl implements UserRepository {
     intraId: string,
     twoFactor: TwoFactorType,
   ): Promise<User> {
-    const user = this.toEntity(await this.findOneByIntraId(intraId));
-    user.email = twoFactor.email;
-    user.isValidateEmail = twoFactor.isValidate;
-    user.verificationCode = twoFactor.code;
+    const user = await this.userRepository.findOne({ intraId });
+    if (twoFactor.email !== undefined) {
+      user.email = twoFactor.email;
+      console.log(twoFactor.email);
+    }
+    if (twoFactor.isValidate !== undefined && twoFactor.isValidate !== null) {
+      user.isValidateEmail = twoFactor.isValidate;
+      console.log(twoFactor.isValidate);
+    }
+    if (twoFactor.code !== undefined) {
+      user.verificationCode = twoFactor.code;
+      console.log(twoFactor.code);
+    }
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
@@ -91,6 +108,7 @@ export class UserRepositoryImpl implements UserRepository {
       isValidateEmail: userEntity.isValidateEmail,
       verificationCode: userEntity.verificationCode,
       isDeleted: userEntity.isDeleted,
+      updatedAt: userEntity.updatedAt,
     });
   }
 

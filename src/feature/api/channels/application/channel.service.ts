@@ -9,7 +9,7 @@ import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto
 import { Injectable } from '@nestjs/common';
 import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
 import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
-import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
+import { UsersUseCase } from 'src/feature/api/users/application/use-case/users.use-case';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
@@ -23,7 +23,7 @@ export class ChannelService {
     private readonly channelMessageRepository: ChannelMessageRepository,
     private readonly channelParticipantRepository: ChannelParticipantRepository,
     private readonly channelUserBannedRepository: ChannelUserBannedRepository,
-    private readonly usersUseCase: UsersUseCases,
+    private readonly usersUseCase: UsersUseCase,
   ) {}
 
   async getMyChannels() {
@@ -84,8 +84,7 @@ export class ChannelService {
       });
     else if (user.isDeleted === true)
       await this.channelParticipantRepository.updateOne(userId, id, false);
-    else 
-    {
+    else {
       return 'Already joined';
     }
     return 'joinChannel Success!';

@@ -4,7 +4,8 @@ import { DeleteFriendUseCase } from './application/friends/delete-friend.use-cas
 import { FindAcceptableFriendRequestUseCase } from './application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from './application/friends/friend-request.use-case';
-import { UsersUseCases } from './application/use-case/users.use-case';
+import { TwoFactorUseCase } from './application/use-case/two-factor.use-case';
+import { UsersUseCase } from './application/use-case/users.use-case';
 import { FriendRequestRepository } from './domain/friend/interface/friend-request.repository';
 import { FriendRepository } from './domain/friend/interface/friend.repository';
 import { UserRepository } from './domain/user.repository';
@@ -28,8 +29,9 @@ import { Module } from '@nestjs/common';
   controllers: [UsersController, FriendsController],
   providers: [
     /** application */
-    UsersUseCases,
+    UsersUseCase,
     UsersService,
+    TwoFactorUseCase,
 
     FindFriendsUseCase,
     DeleteFriendUseCase,
@@ -53,6 +55,6 @@ import { Module } from '@nestjs/common';
       useClass: FriendRequestRepositoryImpl,
     },
   ],
-  exports: [UsersUseCases, UsersService],
+  exports: [UsersUseCase, UsersService],
 })
 export class UsersModule {}
