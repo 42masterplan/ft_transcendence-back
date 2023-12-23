@@ -13,6 +13,7 @@ export interface UserRepository {
     intraId: string,
     twoFactorAuth: TwoFactorAuthType,
   ): Promise<User>;
+  resetTwoFactorAuthValidation(intraId: string): Promise<void>;
 }
 
 export const UserRepository = Symbol('UserRepository');

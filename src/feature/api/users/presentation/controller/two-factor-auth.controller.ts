@@ -86,6 +86,7 @@ export class TwoFactorAuthController {
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 
+    // TODO: 2FA enabled가 false라면?
     if (user.is2faValidated === true) return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate)
       throw new BadRequestException();

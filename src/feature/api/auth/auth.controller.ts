@@ -1,3 +1,4 @@
+import { UsersUseCase } from '../users/application/use-case/users.use-case';
 import { CreateUserDto } from '../users/presentation/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -8,6 +9,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
   ) {}
 
   @Get('callback')
@@ -33,6 +35,7 @@ export class AuthController {
     } else {
       is2faEnabled = user.is2faEnabled;
     }
+    await this.usersUseCase.resetTwoFactorAuthValidation(intraId);
 
     return {
       accessToken: jwtToken,

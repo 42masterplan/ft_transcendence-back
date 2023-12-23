@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 export class UsersService {
   constructor(
     private readonly usersUseCase: UsersUseCase,
-    private readonly twoFactorUseCase: TwoFactorAuthUseCase,
+    private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
   ) {}
 
   async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
@@ -32,7 +32,11 @@ export class UsersService {
 
   async createRandomCode(intraId: string, email: string): Promise<number> {
     const randomCode = Math.floor(Math.random() * 899999) + 100000;
-    await this.twoFactorUseCase.updateEmailWithCode(intraId, email, randomCode);
+    await this.twoFactorAuthUseCase.updateEmailWithCode(
+      intraId,
+      email,
+      randomCode,
+    );
     return randomCode;
   }
 }

@@ -80,6 +80,15 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
+  async resetTwoFactorAuthValidation(intraId: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    user.is2faValidated = false;
+    await this.userRepository.getEntityManager().flush();
+  }
+
   async updateTwoFactorAuth(
     intraId: string,
     twoFactorAuth: TwoFactorAuthType,
@@ -90,18 +99,21 @@ export class UserRepositoryImpl implements UserRepository {
     });
     if (twoFactorAuth.email !== undefined) {
       user.email = twoFactorAuth.email;
-      console.log(twoFactorAuth.email);
     }
     if (
       twoFactorAuth.isEmailValidated !== undefined &&
       twoFactorAuth.isEmailValidated !== null
     ) {
       user.isEmailValidated = twoFactorAuth.isEmailValidated;
-      console.log(twoFactorAuth.isEmailValidated);
     }
     if (twoFactorAuth.code !== undefined) {
       user.verificationCode = twoFactorAuth.code;
-      console.log(twoFactorAuth.code);
+    }
+    if (
+      twoFactorAuth.is2faValidated !== undefined &&
+      twoFactorAuth.is2faValidated !== null
+    ) {
+      user.is2faValidated = twoFactorAuth.is2faValidated;
     }
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
