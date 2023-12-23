@@ -16,7 +16,8 @@ export class JwtEmailStrategy extends PassportStrategy(Strategy, 'email') {
 
   async validate(payload: any): Promise<JwtPayload> {
     const user = await this.usersService.findOneByIntraId(payload.sub);
-    if (!user || user.name == null)
+    if (!user) throw new UnauthorizedException('IntraId Required');
+    if (user.name == null)
       throw new UnauthorizedException('Registration Required');
     if (user.email === null || (user.email !== null && !user.isEmailValidated))
       throw new UnauthorizedException('Email Required');
