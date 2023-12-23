@@ -1,5 +1,7 @@
 import { MailModule } from '../mail/mail.module';
 import { CreateFriendRequestUseCase } from './application/friends/create-friend-request.use-case';
+import { DeleteFriendUseCase } from './application/friends/delete-friend.use-case';
+import { FindAcceptableFriendRequestUseCase } from './application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from './application/friends/friend-request.use-case';
 import { UsersUseCases } from './application/use-case/users.use-case';
@@ -30,8 +32,11 @@ import { Module } from '@nestjs/common';
     UsersService,
 
     FindFriendsUseCase,
+    DeleteFriendUseCase,
+
     CreateFriendRequestUseCase,
     FriendRequestUseCase,
+    FindAcceptableFriendRequestUseCase,
 
     {
       provide: UserRepository,

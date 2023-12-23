@@ -9,13 +9,32 @@ import { Injectable } from '@nestjs/common';
 export class FriendRepositoryImpl implements FriendRepository {
   constructor(
     @InjectRepository(FriendEntity)
-    private readonly friendRepository: EntityRepository<FriendEntity>,
+    private readonly repository: EntityRepository<FriendEntity>,
   ) {}
 
   async findManyByMyId(myId: string): Promise<Friend[]> {
-    const friends = await this.friendRepository.find({ myId });
+    const friends = await this.repository.find({ myId });
 
     return friends.map((friend) => this.toDomain(friend));
+  }
+
+  async deleteMyFriend({
+    myId,
+    friendId,
+  }: {
+    myId: string;
+    friendId: string;
+  }): Promise<Friend> {
+    const friend = await this.repository.findOneOrFail({
+      myId,
+      friendId,
+    });
+
+    friend.isDeleted = true;
+
+    this.repository.getEntityManager().flush();
+
+    return this.toDomain(friend);
   }
 
   private toDomain(entity: FriendEntity): Friend {
