@@ -3,8 +3,6 @@ import { MailService } from '../../../mail/mail.service';
 import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
-import { TwoFactorEmailValidateDto } from '../dto/two-factor-email-validate.dto';
-import { TwoFactorEmailDto } from '../dto/two-factor-email.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import {
   BadRequestException,
@@ -24,7 +22,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import * as bcrypt from 'bcrypt';
 import { diskStorage } from 'multer';
 
 @Controller('users')
@@ -180,58 +177,6 @@ export class UsersController {
     return {
       profileImage: image.path,
     };
-  }
-
-  @UseGuards(AuthGuard('signIn'))
-  @Put('two-factor-auth')
-  async update2fa(@Request() req, @Body() twoFactorEmail: TwoFactorEmailDto) {
-    //TODO: AuthGuard, Use cache to manage time
-
-    if (!req.user.sub) throw new UnauthorizedException();
-
-    const user = await this.usersService.findOneByIntraId(req.user.sub);
-    const expiredDate = new Date();
-    console.log(expiredDate);
-    expiredDate.setMinutes(expiredDate.getMinutes() - 5);
-
-    if (user.verificationCode !== null) {
-      if (user.updatedAt <= expiredDate)
-        await this.twoFactorUseCase.reset(req.user.sub);
-      throw new BadRequestException('이미 인증 코드가 존재합니다.');
-      //todo: 다시해주기
-    }
-    const code = await this.usersService.createRandomCode(
-      req.user.sub,
-      twoFactorEmail.email,
-    );
-    await this.mailService.sendMail(twoFactorEmail.email, code);
-    return true;
-  }
-
-  @UseGuards(AuthGuard('signIn'))
-  @Post('two-factor-auth/validate')
-  async validate2fa(
-    @Request() req,
-    @Body() twoFactorEmailValidate: TwoFactorEmailValidateDto,
-  ) {
-    if (!req.user.sub) throw new UnauthorizedException();
-
-    const user = await this.usersService.findOneByIntraId(req.user.sub);
-    const expiredDate = new Date();
-    expiredDate.setMinutes(expiredDate.getMinutes() - 5);
-
-    if (user.isEmailValidated === true) return true;
-    if (user.verificationCode === null || user.updatedAt <= expiredDate) {
-      return false;
-    }
-    const isMatch = await bcrypt.compare(
-      twoFactorEmailValidate.code.toString(),
-      user.verificationCode,
-    );
-    if (isMatch) {
-      await this.twoFactorUseCase.accept(req.user.sub);
-    }
-    return isMatch;
   }
 
   @Put('game-setting')

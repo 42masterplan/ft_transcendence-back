@@ -10,7 +10,27 @@ export class TwoFactorAuthUseCase {
     private readonly repository: UserRepository,
   ) {}
 
-  async updateOneWithEmail(
+  async update2faCode(intraId: string, code: number): Promise<string> {
+    const saltOrRounds = 10;
+    const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
+    const user = await this.repository.updateTwoFactor(
+      intraId,
+      new TwoFactorAuthType({
+        code: hashedCode,
+        is2faValidated: false,
+      }),
+    );
+    return user.email;
+  }
+
+  async validate2fa(intraId: string): Promise<void> {
+    await this.repository.updateTwoFactor(
+      intraId,
+      new TwoFactorAuthType({ code: null, is2faValidated: true }),
+    );
+  }
+
+  async updateEmailWithCode(
     intraId: string,
     email: string,
     code: number,
@@ -23,22 +43,24 @@ export class TwoFactorAuthUseCase {
         code: hashedCode,
         isEmailValidated: false,
         email,
+        is2faValidated: false,
       }),
     );
   }
 
-  async reset(intraId: string): Promise<void> {
+  async resetEmail(intraId: string): Promise<void> {
     await this.repository.updateTwoFactor(
       intraId,
       new TwoFactorAuthType({
         code: null,
         isEmailValidated: false,
         email: null,
+        is2faValidated: false,
       }),
     );
   }
 
-  async accept(intraId: string): Promise<void> {
+  async acceptEmail(intraId: string): Promise<void> {
     await this.repository.updateTwoFactor(
       intraId,
       new TwoFactorAuthType({ code: null, isEmailValidated: true }),

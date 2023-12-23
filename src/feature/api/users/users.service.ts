@@ -32,7 +32,7 @@ export class UsersService {
 
   async createRandomCode(intraId: string, email: string): Promise<number> {
     const randomCode = Math.floor(Math.random() * 899999) + 100000;
-    await this.twoFactorUseCase.updateOneWithEmail(intraId, email, randomCode);
+    await this.twoFactorUseCase.updateEmailWithCode(intraId, email, randomCode);
     return randomCode;
   }
 }
