@@ -1,5 +1,5 @@
 import { Socket } from 'dgram';
-import { UsersUseCases } from '../../../users/application/use-case/users.use-case';
+import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
@@ -32,7 +32,7 @@ export class ChannelGateway
   server;
   constructor(
     private readonly channelService: ChannelService,
-    private readonly usersUseCase: UsersUseCases,
+    private readonly usersUseCase: UsersUseCase,
   ) {}
 
   async handleConnection(client: any, ...args: any[]) {
