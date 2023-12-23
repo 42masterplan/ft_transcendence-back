@@ -6,9 +6,7 @@ import { ChannelUserBannedRepository } from '../domain/repositories/channel-user
 import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
-import { Injectable } from '@nestjs/common';
-import { ChannelMessageEntity } from 'src/feature/api/channels/infrastructure/channel-message.entity';
-import { ChannelParticipantEntity } from 'src/feature/api/channels/infrastructure/channel-participant.entity';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
@@ -38,6 +36,7 @@ export class ChannelService {
         userCount: await this.channelParticipantRepository.countByChannelId(
           participants.channelId,
         ),
+        role: participants.role,
         isUnread: true,
       })),
     );
@@ -57,11 +56,24 @@ export class ChannelService {
     return channelsDto;
   }
 
+  async getMyRole(channelId: string): Promise<string> {
+    console.log('service myRole');
+    const myRole =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (!myRole && myRole.isDeleted === true)
+      throw new ForbiddenException('You are not in this channel');
+    return myRole.role;
+  }
+
   async joinChannel({ id, password }): Promise<string> {
     console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
+    password = this.hashPassword(password);
     if (!channel) return 'There is no channel';
-    if (channel.status == 'private') return 'Cannot join private channel';
+    if (channel.status === 'private') return 'Cannot join private channel';
     if (channel.password != password) return 'Wrong password!';
 
     const isBanned =
@@ -69,7 +81,7 @@ export class ChannelService {
         id,
         userId,
       );
-    if (isBanned && isBanned.isDeleted == false) return 'Banned User';
+    if (isBanned && isBanned.isDeleted === false) return 'Banned User';
 
     const user =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
@@ -82,10 +94,11 @@ export class ChannelService {
         participantId: userId,
         channelId: channel.id,
       });
-    else if (user.isDeleted === true)
-      await this.channelParticipantRepository.updateOne(userId, id, false);
-    else 
-    {
+    else if (user.isDeleted === true) {
+      user.updatedIsDeleted(false);
+      user.updatedRole('user');
+      await this.channelParticipantRepository.updateOne(user);
+    } else {
       return 'Already joined';
     }
     return 'joinChannel Success!';
@@ -93,11 +106,23 @@ export class ChannelService {
 
   async newMessage(content: string, channelId: string): Promise<any> {
     const user = await this.usersUseCase.findOne(userId);
-    const newMessage = new ChannelMessageEntity();
-    newMessage.channelId = channelId;
-    newMessage.participantId = userId;
-    newMessage.content = content;
-    await this.channelMessageRepository.saveOne(newMessage);
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (participant.chatableAt > new Date(Date.now()))
+      throw new ForbiddenException(
+        participant.chatableAt.getHours() +
+          '시 ' +
+          participant.chatableAt.getMinutes() +
+          '분 까지 뮤트되었습니다.ㅋ',
+      );
+    await this.channelMessageRepository.saveOne({
+      channelId: channelId,
+      participantId: userId,
+      content,
+    });
     return {
       channelId: channelId,
       userId: userId,
@@ -117,25 +142,16 @@ export class ChannelService {
 
   async createChannel(client, createChannelDto: CreateChannelDto) {
     console.log('service createChannel');
-    if (createChannelDto.name == '')
+    if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름을 입력해주세요.');
-    const channel = await this.channelRepository.saveChannel(createChannelDto);
-    await this.createChannelParticipant('owner', userId, channel.id);
+    createChannelDto.password = this.hashPassword(createChannelDto.password);
+    const channel = await this.channelRepository.saveOne(createChannelDto);
+    await this.channelParticipantRepository.saveOne({
+      role: 'owner',
+      participantId: userId,
+      channelId: channel.id,
+    });
     return channel.id;
-  }
-
-  async createChannelParticipant(
-    role: string,
-    userId: string,
-    channelId: string,
-  ): Promise<ChannelParticipantEntity> {
-    const channelParticipant = new ChannelParticipantEntity();
-    channelParticipant.role = role;
-    channelParticipant.participantId = userId;
-    channelParticipant.channelId = channelId;
-
-    await this.channelParticipantRepository.saveOne(channelParticipant);
-    return channelParticipant;
   }
 
   async getParticipants(channelId: string): Promise<any[]> {
@@ -143,6 +159,7 @@ export class ChannelService {
       await this.channelParticipantRepository.findAllByChannelId(channelId);
     const participants = [];
     for await (const participant of channelParticipant) {
+      if (participant.participantId === userId) continue;
       const user = await this.usersUseCase.findOne(participant.participantId);
       participants.push({
         channelId: participant.channelId,
@@ -151,7 +168,6 @@ export class ChannelService {
         profileImage: user.profileImage,
       });
     }
-    console.log(participants);
     return participants;
   }
 
@@ -160,6 +176,7 @@ export class ChannelService {
       await this.channelUserBannedRepository.findAllByChannelId(channelId);
     const bannedUsers = [];
     for await (const bannedUser of channelBannedUsers) {
+      if (bannedUser.isDeleted === true) continue;
       const user = await this.usersUseCase.findOne(bannedUser.userId);
       bannedUsers.push({
         channelId: bannedUser.channelId,
@@ -172,26 +189,233 @@ export class ChannelService {
   }
 
   async leaveChannel(channelId: string) {
-    const channel = this.channelRepository.findOneById(channelId);
-    if (!channel) return 'There is no channel';
+    const channel = await this.channelRepository.findOneById(channelId);
+    if (!channel || channel.isDeleted) return 'There is no channel';
 
     const channelParticipant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
         channelId,
       );
-    if (!channelParticipant || channelParticipant.isDeleted == true)
+    if (!channelParticipant || channelParticipant.isDeleted === true)
       return 'You are not in this channel';
-    else {
-      console.log(channelParticipant);
-      await this.channelParticipantRepository.updateOne(
+    else if (channelParticipant.role === 'owner') {
+      if (
+        (await this.channelParticipantRepository.countByChannelId(channelId)) >
+        1
+      ) {
+        const participants =
+          await this.channelParticipantRepository.findAllByChannelId(channelId);
+        const newOwner = participants[1];
+        newOwner.updatedRole('owner');
+        await this.channelParticipantRepository.updateOne(newOwner);
+      } else {
+        channel.updatedIsDeleted(true);
+        await this.channelRepository.updateOne(channel);
+      }
+    }
+    channelParticipant.updatedIsDeleted(true);
+    await this.channelParticipantRepository.updateOne(channelParticipant);
+    return 'leaveChannel Success!';
+  }
+
+  async getAdminUsers(channelId: string): Promise<any[]> {
+    console.log('service getAdminUsers');
+    const channelParticipant =
+      await this.channelParticipantRepository.findAllByChannelIdAndRole(
+        channelId,
+        'admin',
+      );
+    const adminUsers = [];
+    for await (const participant of channelParticipant) {
+      const user = await this.usersUseCase.findOne(participant.participantId);
+      adminUsers.push({
+        channelId: participant.channelId,
+        userId: user.id,
+        userName: user.name,
+        profileImage: user.profileImage,
+      });
+    }
+    return adminUsers;
+  }
+
+  async banUser(channelId: string, targetId: string) {
+    if (targetId === userId) return 'Cannot ban yourself';
+
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
         channelId,
-        true,
       );
-    }
-    return 'leaveChannel Success!';
-    //구현중
+    if (!participant || participant.isDeleted === true)
+      return 'You are not in this channel';
+    if (participant.role === 'user') return 'You are not admin';
+
+    const isTargetBanned =
+      await this.channelUserBannedRepository.findOneByChannelIdAndUserId(
+        channelId,
+        targetId,
+      );
+    if (isTargetBanned && isTargetBanned.isDeleted === false)
+      return 'Already Banned User';
+
+    const target =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        targetId,
+        channelId,
+      );
+    if (!target) return 'Target is not in this channel';
+    if (participant.role !== 'owner' && target.role !== 'user')
+      return 'Admin can only ban user';
+
+    this.channelUserBannedRepository.saveOne(targetId, channelId);
+    return 'success';
+  }
+
+  async unBanUser(channelId: string, targetId: string) {
+    if (userId === targetId) return 'Cannot unBan yourself';
+
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (!participant || participant.isDeleted === true)
+      return 'You are not in this channel';
+    if (participant.role === 'user') return 'You are not admin';
+
+    const isTargetBanned =
+      await this.channelUserBannedRepository.findOneByChannelIdAndUserId(
+        channelId,
+        targetId,
+      );
+    if (!isTargetBanned || isTargetBanned.isDeleted === true)
+      return 'Target is not banned';
+
+    const target =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        targetId,
+        channelId,
+      );
+    if (participant.role !== 'owner' && target.role !== 'user')
+      return 'Admin can only ban user';
+
+    isTargetBanned.updatedIsDeleted(true);
+    this.channelUserBannedRepository.updateOne(isTargetBanned);
+    return 'unBanUser Success!';
+  }
+
+  async kickUser(channelId: string, targetId: string): Promise<string> {
+    if (userId === targetId) return 'Cannot kick yourself';
+
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (!participant || participant.isDeleted === true)
+      return 'You are not in this channel';
+    if (participant.role === 'user') return 'You are not admin';
+
+    const target =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        targetId,
+        channelId,
+      );
+    if (!target || target.isDeleted === true)
+      return 'Target is not in this channel';
+    if (participant.role !== 'owner' && target.role !== 'user')
+      return 'Admin can only kick user';
+
+    target.updatedIsDeleted(true);
+
+    await this.channelParticipantRepository.updateOne(target);
+    return 'kickUser Success!';
+  }
+
+  async muteUser(channelId: string, targetId: string): Promise<string> {
+    if (userId === targetId) return 'Cannot mute yourself';
+
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (!participant || participant.isDeleted === true)
+      return 'You are not in this channel';
+    if (participant.role === 'user') return 'You are not admin';
+
+    const target =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        targetId,
+        channelId,
+      );
+    if (!target || target.isDeleted === true)
+      return 'Target is not in this channel';
+    if (participant.role !== 'owner' && target.role !== 'user')
+      return 'Admin can only kick user';
+
+    target.updatedChatableAt(new Date(Date.now() + 3 * 60000));
+    await this.channelParticipantRepository.updateOne(target);
+    return 'muteUser Success!';
+  }
+
+  async changeAdmin(
+    channelId: string,
+    targetId: string,
+    types: string,
+  ): Promise<string> {
+    if (userId === targetId) return 'Cannot change yourself';
+
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (!participant || participant.isDeleted === true)
+      return 'You are not in this channel';
+    if (participant.role !== 'owner') return 'You are not owner';
+
+    const target =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        targetId,
+        channelId,
+      );
+    if (!target || target.isDeleted === true)
+      return 'Target is not in this channel';
+    if (target.role === types) return 'Target is already ' + types;
+
+    target.updatedRole(types);
+    await this.channelParticipantRepository.updateOne(target);
+    return 'changeAdmin Success!';
+  }
+
+  async changePassword(channelId: string, password: string): Promise<string> {
+    const participant =
+      await this.channelParticipantRepository.findOneByUserIdAndChannelId(
+        userId,
+        channelId,
+      );
+    if (!participant || participant.isDeleted === true)
+      return 'You are not in this channel';
+    if (participant.role !== 'owner') return 'You are not owner';
+
+    const channel = await this.channelRepository.findOneById(channelId);
+    if (!channel) return 'There is no channel';
+    password = this.hashPassword(password);
+    channel.updatedPassword(password);
+    await this.channelRepository.updateOne(channel);
+    return 'changePassword Success!';
+  }
+
+  hashPassword(password: string): string {
+    if (password === '') return password;
+    const crypto = require('crypto');
+    const secret = 'pipapopu';
+    return crypto
+      .createHmac('sha256', secret)
+      .update(password)
+      .digest('base64');
   }
 
   async messageToHistory(list: ChannelMessage[]) {

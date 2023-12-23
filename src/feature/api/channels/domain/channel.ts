@@ -1,9 +1,9 @@
 export class Channel {
   private readonly _id: string;
   private readonly _name: string;
-  private readonly _status: string;
-  private readonly _password: string;
-  private readonly _isDeleted: boolean;
+  private _status: string;
+  private _password: string;
+  private _isDeleted: boolean;
 
   // TODO: implement validation
   constructor(props: {
@@ -40,13 +40,15 @@ export class Channel {
     return this._isDeleted;
   }
 
-  updatedIsDeleted(): Channel {
-    return new Channel({
-      id: this.id,
-      name: this.name,
-      status: this.status,
-      password: this.password,
-      isDeleted: true,
-    });
+  updatedIsDeleted(isDeleted: boolean) {
+    this._isDeleted = isDeleted;
+  }
+
+  updatedStatus(status: string) {
+    this._status = status;
+  }
+
+  updatedPassword(password: string) {
+    this._password = password;
   }
 }

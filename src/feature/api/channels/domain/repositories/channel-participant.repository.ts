@@ -4,7 +4,6 @@ import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import { Channel } from 'diagnostics_channel';
 
 @Injectable()
 export class ChannelParticipantRepository {
@@ -24,6 +23,7 @@ export class ChannelParticipantRepository {
       channelId: channelId,
     });
 
+    if (!channelEntity) return null;
     return this.toDomain(channelEntity);
   }
 
@@ -43,7 +43,18 @@ export class ChannelParticipantRepository {
       { channelId: channelId, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
-    console.log(list);
+    return list.map((channelParticipant) => this.toDomain(channelParticipant));
+  }
+
+  async findAllByChannelIdAndRole(
+    channelId: string,
+    role: string,
+  ): Promise<ChannelParticipant[]> {
+    console.log('repository: findAllByChannelIdAndRole ', channelId, role);
+    const list = await this.repository.find(
+      { channelId: channelId, role: role, isDeleted: false },
+      { orderBy: { createdAt: QueryOrder.ASC } },
+    );
     return list.map((channelParticipant) => this.toDomain(channelParticipant));
   }
 
@@ -73,16 +84,13 @@ export class ChannelParticipantRepository {
   }
 
   async updateOne(
-    userId: string,
-    channelId: string,
-    isDeleted: boolean,
+    channelParticipant: ChannelParticipant,
   ): Promise<ChannelParticipant> {
     console.log('repository: updateIsDeleted');
-    const user = await this.repository.upsert(
-      { participantId: userId, channelId: channelId, isDeleted: isDeleted },
-    );
+    const newEntity = this.toEntity(channelParticipant);
+    const newChannelParticipant = await this.repository.upsert(newEntity);
     await this.repository.getEntityManager().flush();
-    return this.toDomain(user);
+    return this.toDomain(newChannelParticipant);
   }
 
   private toDomain(
