@@ -45,11 +45,27 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
-    user.name = updateUserDto.name;
-    user.profileImage = updateUserDto.profileImage;
-    user.is2faEnabled = updateUserDto.is2faEnabled;
-    user.introduction = updateUserDto.introduction;
-
+    if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
+      user.name = updateUserDto.name;
+    }
+    if (
+      updateUserDto.profileImage !== null &&
+      updateUserDto.profileImage !== undefined
+    ) {
+      user.profileImage = updateUserDto.profileImage;
+    }
+    if (
+      updateUserDto.is2faEnabled !== null &&
+      updateUserDto.is2faEnabled !== undefined
+    ) {
+      user.is2faEnabled = updateUserDto.is2faEnabled;
+    }
+    if (
+      updateUserDto.introduction !== null &&
+      updateUserDto.introduction !== undefined
+    ) {
+      user.introduction = updateUserDto.introduction;
+    }
     if (user.isEmailValidated === false) {
       user.email = null;
       user.verificationCode = null;
@@ -81,10 +97,24 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
-    user.email = twoFactorAuth.email;
-    user.isEmailValidated = twoFactorAuth.isEmailValidated;
-    user.verificationCode = twoFactorAuth.code;
-    user.is2faValidated = twoFactorAuth.is2faValidated;
+    if (twoFactorAuth.email !== undefined) {
+      user.email = twoFactorAuth.email;
+    }
+    if (
+      twoFactorAuth.isEmailValidated !== undefined &&
+      twoFactorAuth.isEmailValidated !== null
+    ) {
+      user.isEmailValidated = twoFactorAuth.isEmailValidated;
+    }
+    if (twoFactorAuth.code !== undefined) {
+      user.verificationCode = twoFactorAuth.code;
+    }
+    if (
+      twoFactorAuth.is2faValidated !== undefined &&
+      twoFactorAuth.is2faValidated !== null
+    ) {
+      user.is2faValidated = twoFactorAuth.is2faValidated;
+    }
 
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
