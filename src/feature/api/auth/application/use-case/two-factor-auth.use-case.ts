@@ -1,4 +1,4 @@
-import { UserRepository } from '../../domain/user.repository';
+import { UserRepository } from '../../../users/domain/user.repository';
 import { TwoFactorAuthType } from '../../presentation/type/two-factor-auth.type';
 import { Inject, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';

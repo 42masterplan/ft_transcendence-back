@@ -1,8 +1,8 @@
+import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
-import { TwoFactorAuthType } from '../presentation/type/two-factor-auth.type';
 import { UserEntity } from './user.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/postgresql';

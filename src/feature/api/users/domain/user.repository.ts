@@ -1,6 +1,6 @@
+import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
-import { TwoFactorAuthType } from '../presentation/type/two-factor-auth.type';
 import { User } from './user';
 
 export interface UserRepository {

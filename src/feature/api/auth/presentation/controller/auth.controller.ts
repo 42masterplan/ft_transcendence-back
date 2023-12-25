@@ -1,7 +1,7 @@
-import { UsersUseCase } from '../users/application/use-case/users.use-case';
-import { CreateUserDto } from '../users/presentation/dto/create-user.dto';
-import { UsersService } from '../users/users.service';
-import { AuthService } from './auth.service';
+import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
+import { CreateUserDto } from '../../../users/presentation/dto/create-user.dto';
+import { UsersService } from '../../../users/users.service';
+import { AuthService } from '../../auth.service';
 import { Controller, Get, Query } from '@nestjs/common';
 
 @Controller('auth')

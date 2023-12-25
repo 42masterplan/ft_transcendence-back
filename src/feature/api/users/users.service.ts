@@ -1,4 +1,3 @@
-import { TwoFactorAuthUseCase } from './application/use-case/two-factor-auth.use-case';
 import { UsersUseCase } from './application/use-case/users.use-case';
 import { User } from './domain/user';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
@@ -7,10 +6,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly usersUseCase: UsersUseCase,
-    private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
-  ) {}
+  constructor(private readonly usersUseCase: UsersUseCase) {}
 
   async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
     return await this.usersUseCase.updateOne(intraId, updateUserDto);
@@ -28,15 +24,5 @@ export class UsersService {
     const user = await this.usersUseCase.findOneByName(name);
     if (user) return true;
     return false;
-  }
-
-  async createRandomCode(intraId: string, email: string): Promise<number> {
-    const randomCode = Math.floor(Math.random() * 899999) + 100000;
-    await this.twoFactorAuthUseCase.updateEmailWithCode(
-      intraId,
-      email,
-      randomCode,
-    );
-    return randomCode;
   }
 }

@@ -1,6 +1,6 @@
 import { MailService } from '../../../mail/mail.service';
+import { UsersService } from '../../../users/users.service';
 import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
-import { UsersService } from '../../users.service';
 import { TwoFactorAuthEmailValidateDto } from '../dto/two-factor-auth-email-validate.dto';
 import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
 import {
