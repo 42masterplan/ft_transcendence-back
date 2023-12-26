@@ -1,7 +1,7 @@
 import { UsersService } from '../../users/users.service';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
-import { getUserFromSocket } from '../../../tools/socketTools';
+import { getUserFromSocket } from '../../auth/tools/socketTools';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
