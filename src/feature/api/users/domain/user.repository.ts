@@ -4,6 +4,7 @@ import { UpdateUserDto } from '../presentation/dto/update-user.dto';
 import { User } from './user';
 
 export interface UserRepository {
+  findAll(): Promise<User[]>;
   findOneById(id: string): Promise<User>;
   findOneByName(name: string): Promise<User>;
   findOneByIntraId(intraId: string): Promise<User>;
