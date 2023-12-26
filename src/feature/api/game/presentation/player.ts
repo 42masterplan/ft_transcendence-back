@@ -1,18 +1,10 @@
-const SCREEN_WIDTH = 400;
-const SCREEN_HEIGHT = 600; //screen ratio is 2:3
-const PLAYER_WIDTH = 100;
-const PLAYER_HEIGHT = 15;
-const PLAYER_A_COLOR = 'rgba(217, 217, 217, 1)';
-const PLAYER_B_COLOR = 'rgba(0, 133, 255, 1)';
-const BALL_COLOR = 'white';
-const BALL_SPEED = 5 / 3;
-// ball velocity's speed is 5
-const BALL_VELOCITY = { x: 1.1785, y: 1.1785 };
-const PADDLE_OFFSET = SCREEN_WIDTH / 100;
-const SCORE_LIMIT = 10;
-const GAME_TIME_LIMIT = 180;
-const DEBOUNCINGTIME = 500;
-const RENDERING_RATE = 5;
+import {
+  BALL_SPEED,
+  PLAYER_A_COLOR,
+  PLAYER_HEIGHT,
+  PLAYER_WIDTH,
+  ball,
+} from './util';
 
 export class Player {
   private _id: string;
@@ -65,24 +57,49 @@ export class Player {
     this._dx = dx;
   }
 
-  isCollided(ball) {
-    const offsetX = ball.x - this.x + ball.radius;
-    if (this.color === PLAYER_A_COLOR) {
-      const offsetY = ball.y - this.y + ball.radius - this.height;
+  isCollided(ball: ball) {
+    const offsetX = ball.x - this._x + ball.radius;
+    if (this._color === PLAYER_A_COLOR) {
+      const offsetY = ball.y - this._y + ball.radius - this._height;
       return (
-        offsetX < this.width + 4 &&
+        offsetX < this._width + 4 &&
         offsetX > 0 &&
         offsetY <= 10 &&
         offsetY >= -10
       );
     } else {
-      const offsetY = this.y - ball.y - ball.radius + this.height;
+      const offsetY = this._y - ball.y - ball.radius + this._height;
       return (
-        offsetX < this.width + 4 &&
+        offsetX < this._width + 4 &&
         offsetX > 0 &&
         offsetY >= -10 &&
         offsetY <= 10
       );
     }
+  }
+
+  handleCollision(ball: ball, now: number) {
+    ball.lastCollision = now;
+    const reflectedAngle = -Math.atan2(ball.velocity.y, ball.velocity.x);
+    ball.velocity.x = Math.cos(reflectedAngle) * BALL_SPEED;
+    ball.velocity.y = Math.sin(reflectedAngle) * BALL_SPEED;
+    this.applySpin(ball);
+  }
+
+  applySpin(ball: ball) {
+    const spinFactor = 0.4;
+    ball.velocity.x += this._dx * spinFactor;
+    let speed = Math.sqrt(
+      ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
+    );
+    ball.velocity.x = BALL_SPEED * (ball.velocity.x / speed);
+    ball.velocity.y = BALL_SPEED * (ball.velocity.y / speed);
+    if (ball.velocity.x > 0.75) ball.velocity.x = 0.75;
+    else if (ball.velocity.x < -0.75) ball.velocity.x = -0.75;
+    speed = Math.sqrt(
+      ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
+    );
+    ball.velocity.x = BALL_SPEED * (ball.velocity.x / speed);
+    ball.velocity.y = BALL_SPEED * (ball.velocity.y / speed);
   }
 }
