@@ -95,7 +95,12 @@ export class TwoFactorAuthController {
       twoFactorAuthEmailValidate.code.toString(),
       user.verificationCode,
     );
-    if (isMatch) await this.twoFactorAuthUseCase.validate2fa(intraId);
+    if (isMatch) {
+      const email = await this.twoFactorAuthUseCase.validate2fa(intraId);
+      return {
+        email: email,
+      };
+    }
 
     return isMatch;
   }
