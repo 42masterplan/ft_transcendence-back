@@ -58,7 +58,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     const entity = await this.repository.findOneOrFail(friendRequest.id);
 
     entity.isAccepted = friendRequest.isAccepted;
-
+    //TODO: 동작하는지 확인 필요
     this.repository.getEntityManager().flush();
 
     return this.toDomain(entity);
