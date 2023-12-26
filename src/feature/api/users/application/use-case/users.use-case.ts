@@ -11,7 +11,11 @@ export class UsersUseCase {
     private readonly repository: UserRepository,
   ) {}
 
-  findOne(id: string): Promise<User> {
+  async findAll(): Promise<User[]> {
+    return this.repository.findAll();
+  }
+
+  async findOne(id: string): Promise<User> {
     return this.repository.findOneById(id);
   }
 
