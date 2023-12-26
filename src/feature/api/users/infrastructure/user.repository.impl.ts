@@ -15,6 +15,12 @@ export class UserRepositoryImpl implements UserRepository {
     private readonly userRepository: EntityRepository<UserEntity>,
   ) {}
 
+  async findAll(): Promise<User[]> {
+    const users = await this.userRepository.find({ isDeleted: false });
+    if (!users) return [];
+    return users.map((user) => this.toDomain(user));
+  }
+
   async findOneById(id: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ id, isDeleted: false });
     if (!user) return null;
