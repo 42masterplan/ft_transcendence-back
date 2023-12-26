@@ -1,9 +1,6 @@
 import { UsersService } from '@/src/feature/api/users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import * as dotenv from 'dotenv';
 import { Socket } from 'socket.io';
-
-dotenv.config();
 
 /**
  * 소켓에서 유저를 가져오는 메서드입니다.
