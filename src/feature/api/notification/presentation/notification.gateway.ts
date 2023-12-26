@@ -1,7 +1,7 @@
-import { UsersService } from '../../users/users.service';
-import { UsersUseCase } from '../../users/application/use-case/users.use-case';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { UsersUseCase } from '../../users/application/use-case/users.use-case';
+import { UsersService } from '../../users/users.service';
+import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -61,8 +61,10 @@ type MatchStore = {
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly usersService: UsersService
-		,private readonly userUseCase: UsersUseCase) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userUseCase: UsersUseCase,
+  ) {}
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
@@ -74,10 +76,10 @@ export class NotificationGateway
   async handleConnection(@ConnectedSocket() socket: Socket) {
     const user = await getUserFromSocket(socket, this.usersService);
 
-    console.log('알림 소켓 연결!!',user);
+    console.log('알림 소켓 연결!!', user);
     if (!user) {
-    socket.disconnect();
-    return;
+      socket.disconnect();
+      return;
     }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
@@ -89,7 +91,7 @@ export class NotificationGateway
    * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
    */
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-		const user = await getUserFromSocket(socket, this.usersService);
+    const user = await getUserFromSocket(socket, this.usersService);
     if (!user) return;
     //TODO: JWT를 이용해서 해당 정보를 가져올 것
 
@@ -99,8 +101,8 @@ export class NotificationGateway
   @SubscribeMessage('gameRequest')
   async handleGameRequest(client, { userId, gameMode, theme }) {
     const receiverSocketId = this.sockets.get(userId);
-		const user = await getUserFromSocket(client, this.usersService);
-		if (!user) return;
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
     const srcId = user.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     //만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
@@ -108,7 +110,7 @@ export class NotificationGateway
     //MAP으로, 새로운 requestId할당.
     //객체 == [{requestId, userA, userB, theme} ...]
     //두명의 유저에게 gameStart를 동시에 emit해준다.
-		const destUser= await this.userUseCase.findOne(userId);
+    const destUser = await this.userUseCase.findOne(userId);
     const matchId = srcId + destId;
     this.requestQueue.set(matchId, { srcId, destId, gameMode, theme });
     console.log(this.requestQueue);
