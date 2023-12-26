@@ -1,15 +1,23 @@
-import { IsBoolean, IsString, IsUrl } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUrl } from 'class-validator';
 
-export class CreateUserDto {
+export class UpdateUserDto {
   @IsString()
-  name: string;
+  @IsOptional()
+  name?: string;
 
-  @IsUrl()
-  profileImage: string;
+  @IsUrl({
+    require_tld: false,
+    require_protocol: true,
+    require_port: true,
+  })
+  @IsOptional()
+  profileImage?: string;
 
   @IsString()
-  introduction: string;
+  @IsOptional()
+  introduction?: string;
 
   @IsBoolean()
-  is2faEnabled: boolean;
+  @IsOptional()
+  is2faEnabled?: boolean;
 }

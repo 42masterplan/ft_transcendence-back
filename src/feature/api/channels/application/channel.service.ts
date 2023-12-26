@@ -7,7 +7,7 @@ import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { UsersUseCases } from 'src/feature/api/users/application/use-case/users.use-case';
+import { UsersUseCase } from 'src/feature/api/users/application/use-case/users.use-case';
 
 const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
 const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
@@ -21,7 +21,7 @@ export class ChannelService {
     private readonly channelMessageRepository: ChannelMessageRepository,
     private readonly channelParticipantRepository: ChannelParticipantRepository,
     private readonly channelUserBannedRepository: ChannelUserBannedRepository,
-    private readonly usersUseCase: UsersUseCases,
+    private readonly usersUseCase: UsersUseCase,
   ) {}
 
   async getMyChannels() {

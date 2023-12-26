@@ -1,6 +1,6 @@
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
-import { UsersUseCases } from '../use-case/users.use-case';
+import { UsersUseCase } from '../use-case/users.use-case';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -8,8 +8,8 @@ export class FindAcceptableFriendRequestUseCase {
   constructor(
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
-    @Inject(UsersUseCases)
-    private readonly usersUseCases: UsersUseCases,
+    @Inject(UsersUseCase)
+    private readonly usersUseCases: UsersUseCase,
   ) {}
 
   async findMyFriendsRequests(myId: string): Promise<FriendRequest[]> {

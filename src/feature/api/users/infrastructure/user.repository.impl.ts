@@ -1,41 +1,123 @@
+import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
+import { UpdateUserDto } from '../presentation/dto/update-user.dto';
 import { UserEntity } from './user.entity';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UserRepositoryImpl implements UserRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: EntityRepository<UserEntity>,
+  ) {}
 
   async findOneById(id: string): Promise<User | null> {
-    const user = await this.em.findOne(UserEntity, { id });
+    const user = await this.userRepository.findOne({ id, isDeleted: false });
     if (!user) return null;
 
     return this.toDomain(user);
   }
 
-  async findOneByName(name: string): Promise<User> {
-    const user = await this.em.findOne(UserEntity, { name });
+  async findOneByName(name: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({ name, isDeleted: false });
+    if (!user) return null;
+
     return this.toDomain(user);
   }
 
   async findOneByIntraId(intraId: string): Promise<User> {
-    const user = await this.em.findOne(UserEntity, { intraId });
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    if (user) return this.toDomain(user);
+  }
+
+  async updateOne(
+    intraId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
+      user.name = updateUserDto.name;
+    }
+    if (
+      updateUserDto.profileImage !== null &&
+      updateUserDto.profileImage !== undefined
+    ) {
+      user.profileImage = updateUserDto.profileImage;
+    }
+    if (
+      updateUserDto.is2faEnabled !== null &&
+      updateUserDto.is2faEnabled !== undefined
+    ) {
+      user.is2faEnabled = updateUserDto.is2faEnabled;
+    }
+    if (
+      updateUserDto.introduction !== null &&
+      updateUserDto.introduction !== undefined
+    ) {
+      user.introduction = updateUserDto.introduction;
+    }
+    if (user.isEmailValidated === false) {
+      user.email = null;
+      user.verificationCode = null;
+    }
+    await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
-  async saveOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.em.create(UserEntity, createUserDto);
-    await this.em.flush();
+  async createOne(createUserDto: CreateUserDto): Promise<User> {
+    const user = await this.userRepository.create(createUserDto);
+    await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
-  async isTwoFactorEnabledByIntraId(intraId: string): Promise<boolean> {
-    const user = await this.findOneByIntraId(intraId);
-    if (user === null) return false;
-    // if (user.intraId)
+  async resetTwoFactorAuthValidation(intraId: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    user.is2faValidated = false;
+    await this.userRepository.getEntityManager().flush();
+  }
+
+  async updateTwoFactorAuth(
+    intraId: string,
+    twoFactorAuth: TwoFactorAuthType,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    if (twoFactorAuth.email !== undefined) {
+      user.email = twoFactorAuth.email;
+    }
+    if (
+      twoFactorAuth.isEmailValidated !== undefined &&
+      twoFactorAuth.isEmailValidated !== null
+    ) {
+      user.isEmailValidated = twoFactorAuth.isEmailValidated;
+    }
+    if (twoFactorAuth.code !== undefined) {
+      user.verificationCode = twoFactorAuth.code;
+    }
+    if (
+      twoFactorAuth.is2faValidated !== undefined &&
+      twoFactorAuth.is2faValidated !== null
+    ) {
+      user.is2faValidated = twoFactorAuth.is2faValidated;
+    }
+
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
   }
 
   private toDomain(userEntity: UserEntity): User {
@@ -48,9 +130,11 @@ export class UserRepositoryImpl implements UserRepository {
       email: userEntity.email,
       currentStatus: userEntity.currentStatus,
       introduction: userEntity.introduction,
-      isValidateEmail: userEntity.isValidateEmail,
+      isEmailValidated: userEntity.isEmailValidated,
+      is2faValidated: userEntity.is2faValidated,
       verificationCode: userEntity.verificationCode,
       isDeleted: userEntity.isDeleted,
+      updatedAt: userEntity.updatedAt,
     });
   }
 
@@ -65,7 +149,7 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
     userEntity.verificationCode = user.verificationCode;
-    userEntity.isValidateEmail = user.isValidateEmail;
+    userEntity.isEmailValidated = user.isEmailValidated;
     userEntity.isDeleted = user.isDeleted;
 
     return userEntity;
