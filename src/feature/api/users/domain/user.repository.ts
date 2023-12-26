@@ -8,6 +8,7 @@ export interface UserRepository {
   findOneByName(name: string): Promise<User>;
   findOneByIntraId(intraId: string): Promise<User>;
   updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User>;
+  updateStatus(intraId: string, status: string): Promise<User>;
   createOne(createUserDto: CreateUserDto): Promise<User>;
   updateTwoFactorAuth(
     intraId: string,

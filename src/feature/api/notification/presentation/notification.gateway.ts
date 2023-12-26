@@ -73,6 +73,7 @@ export class NotificationGateway
     }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
+    this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
 
   /**
@@ -83,9 +84,9 @@ export class NotificationGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     const user = await getUserFromSocket(socket, this.usersService);
     if (!user) return;
-    //TODO: JWT를 이용해서 해당 정보를 가져올 것
 
     this.sockets.delete(user.id);
+    this.userUseCase.updateStatus(user.intraId, 'off-line');
   }
 
   @SubscribeMessage('gameRequest')
