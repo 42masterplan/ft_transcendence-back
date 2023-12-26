@@ -29,11 +29,9 @@ export async function getUserFromSocket(
   }
   try {
     const userToken = jwtService.verify(accesstoken);
-    console.log('유저토큰!!', userToken);
     const intraId = userToken?.sub;
-    console.log('유저토큰!!', intraId);
+    console.log('유저: ', intraId);
     const user = await usersService.findOneByIntraId(intraId);
-    console.log('유저토큰!!', user);
     return user;
   } catch (e) {
     console.log(accesstoken, e);
