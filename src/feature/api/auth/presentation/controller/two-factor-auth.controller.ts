@@ -72,7 +72,7 @@ export class TwoFactorAuthController {
     const code = Math.floor(Math.random() * 899999) + 100000;
     const email = await this.twoFactorAuthUseCase.update2faCode(intraId, code);
     await this.mailService.sendMail(email, code);
-    return email;
+    return { email: email };
   }
 
   @UseGuards(AuthGuard('email'))
