@@ -16,9 +16,7 @@ import { Server, Socket } from 'socket.io';
 type gameMode = 'normal' | 'ladder';
 type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
 type gameRequest = {
-  profileImage: string;
-  userName: string;
-  matchId: string;
+  userId: string;
   gameMode: gameMode;
   theme: theme;
 };
@@ -28,14 +26,6 @@ type gameResponse = {
 };
 type gameCancel = {
   matchId: string;
-};
-type gameStart = {
-  matchId: string;
-  theme: theme;
-};
-type gameEnd = {
-  matchId: string;
-  winner: string;
 };
 
 type MatchStore = {
@@ -99,7 +89,7 @@ export class NotificationGateway
   }
 
   @SubscribeMessage('gameRequest')
-  async handleGameRequest(client, { userId, gameMode, theme }) {
+  async handleGameRequest(client, { userId, gameMode, theme }: gameRequest) {
     const receiverSocketId = this.sockets.get(userId);
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return;
@@ -132,7 +122,7 @@ export class NotificationGateway
   }
 
   @SubscribeMessage('gameResponse')
-  async handleGameResponse(client, { isAccept, matchId }) {
+  async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
     //이전에 할당된 매칭 큐를 확인해서 pop해준다.
     //MAP으로, 새로운 requestId할당.
     //객체 == [{requestId, userA, userB, theme} ...]
@@ -159,7 +149,7 @@ export class NotificationGateway
   }
 
   @SubscribeMessage('gameCancel')
-  async handleGameCancel(client, { matchId }) {
+  async handleGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel');
     const matchInfo = this.requestQueue.get(matchId);
     console.log(matchInfo);
