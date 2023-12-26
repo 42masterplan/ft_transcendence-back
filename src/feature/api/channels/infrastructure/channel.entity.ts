@@ -20,7 +20,7 @@ export class ChannelEntity {
   @Property({ length: 32 })
   status: string;
 
-  @Property({ length: 32, nullable: true })
+  @Property({ length: 128, nullable: true })
   password: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })

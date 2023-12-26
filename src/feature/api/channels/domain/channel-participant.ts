@@ -1,9 +1,9 @@
 export class ChannelParticipant {
-  private readonly _role: string;
-  private readonly _chatableAt: Date;
+  private _role: string;
+  private _chatableAt: Date;
   private readonly _participantId: string;
   private readonly _channelId: string;
-  private readonly _isDeleted: boolean;
+  private _isDeleted: boolean;
 
   // TODO: implement validation
   constructor(props: {
@@ -40,13 +40,15 @@ export class ChannelParticipant {
     return this._isDeleted;
   }
 
-  updatedIsDeleted(): ChannelParticipant {
-    return new ChannelParticipant({
-      role: this.role,
-      chatableAt: this.chatableAt,
-      participantId: this.participantId,
-      channelId: this.channelId,
-      isDeleted: !this.isDeleted,
-    });
+  updatedIsDeleted(isDeleted: boolean) {
+    this._isDeleted = isDeleted;
+  }
+
+  updatedRole(role: string) {
+    this._role = role;
+  }
+
+  updatedChatableAt(chatableAt: Date) {
+    this._chatableAt = chatableAt;
   }
 }

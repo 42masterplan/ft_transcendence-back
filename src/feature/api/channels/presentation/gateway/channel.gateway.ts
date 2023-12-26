@@ -1,4 +1,5 @@
 import { Socket } from 'dgram';
+import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
@@ -29,7 +30,10 @@ export class ChannelGateway
 {
   @WebSocketServer()
   server;
-  constructor(private readonly channelService: ChannelService) {}
+  constructor(
+    private readonly channelService: ChannelService,
+    private readonly usersUseCase: UsersUseCase,
+  ) {}
 
   async handleConnection(client: any, ...args: any[]) {
     console.log("It's get connected!");
@@ -45,8 +49,15 @@ export class ChannelGateway
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
     console.log('socket newMessage');
-    const newMessage = await this.channelService.newMessage(content, channelId);
-    this.server.to(channelId).emit('newMessage', newMessage);
+    try {
+      const newMessage = await this.channelService.newMessage(
+        content,
+        channelId,
+      );
+      this.server.to(channelId).emit('newMessage', newMessage);
+    } catch (e) {
+      return e.message;
+    }
     return 'success';
   }
 
@@ -61,7 +72,6 @@ export class ChannelGateway
   async getPublicChannels(client: Socket) {
     console.log('socket: allPublicChannel');
     const channels = await this.channelService.getPublicChannels();
-    // console.log(channels);
     client.emit('getPublicChannels', channels);
   }
 
@@ -80,20 +90,10 @@ export class ChannelGateway
     return ret;
   }
 
-  @SubscribeMessage('myRole')
-  async getMyRole(client: Socket, { channelId }) {
-    console.log('myRole');
-    // return (await this.channelService.getMyRole(roomId));
-    client.emit('myRole', { role: 'owner', channelId: channelId }); // 테이블에 roomId랑 userId검색하기
-  }
-
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client: Socket, { channelId }) {
-    console.log(channelId);
     console.log('socket: channelHistory');
     const history = await this.channelService.getChannelHistory(channelId);
-    console.log(history);
-    client.emit('myRole', { role: 'owner', channelId: channelId });
     return history;
   }
 
@@ -106,8 +106,8 @@ export class ChannelGateway
         createChannelDto,
       );
       client.join(channelId);
-      client.emit('myRole', { role: 'owner', channelId: channelId });
     } catch (e) {
+      console.log(e.message);
       return '이미 존재하는 방입니다.';
     }
     client.emit('myChannels', await this.channelService.getMyChannels());
@@ -133,8 +133,8 @@ export class ChannelGateway
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getAdminUsers', channelId);
-    // const adminUsers = await this.channelService.getAdminUsers(channelId);
-    // client.emit('getAdminUsers', adminUsers);
+    const adminUsers = await this.channelService.getAdminUsers(channelId);
+    client.emit('getAdminUsers', adminUsers);
     return 'getAdminUsers Success!';
   }
 
@@ -143,12 +143,12 @@ export class ChannelGateway
     console.log('socket: leaveChannel', channelId);
     const result = await this.channelService.leaveChannel(channelId);
     if (result != 'leaveChannel Success!') return result;
-    client.leave(channelId);
     const newMessage = await this.channelService.newMessage(
       '[system] 나감.',
       channelId,
     );
     client.to(channelId).emit('newMessage', newMessage);
+    client.leave(channelId);
     client.emit('myChannels', await this.channelService.getMyChannels());
     return result;
   }
@@ -159,12 +159,21 @@ export class ChannelGateway
     { channelId, userId }: { channelId: string; userId: string },
   ) {
     console.log('socket: banUser', channelId, userId);
-    // await this.channelService.banUser(client, channelId, userId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 누구에 의해서 BAN되었습니다.
-    //TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
+    const result = await this.channelService.banUser(channelId, userId);
+    if (result != 'success') return result;
+    const newMessage = await this.channelService.newMessage(
+      '[system]' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 밴되었습니다.',
+      channelId,
+    );
+    this.server.to(channelId).emit('newMessage', newMessage);
+    this.channelService.kickUser(channelId, userId);
+    client
+      .to(channelId)
+      .emit('myChannels', await this.channelService.getMyChannels());
+    // 다시생각해봐야함
     return 'banUser Success!';
-    return 'banUser fail!';
   }
 
   @SubscribeMessage('kickUser')
@@ -173,12 +182,20 @@ export class ChannelGateway
     { channelId, userId }: { channelId: string; userId: string },
   ) {
     console.log('socket: kickUser', channelId, userId);
-    // await this.channelService.kickUser(client, channelId, userId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 누구에 의해서 추방 되었습니다.
-    //TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
+    const result = await this.channelService.kickUser(channelId, userId);
+    if (result != 'kickUser Success!') return result;
+    const newMessage = await this.channelService.newMessage(
+      '[system]' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 추방되었습니다.',
+      channelId,
+    );
+
+    this.server.to(channelId).emit('newMessage', newMessage);
+    client
+      .to(channelId)
+      .emit('myChannels', await this.channelService.getMyChannels());
     return 'kickUser Success!';
-    return 'kickUser fail!';
   }
 
   @SubscribeMessage('muteUser')
@@ -187,26 +204,30 @@ export class ChannelGateway
     { channelId, userId }: { channelId: string; userId: string },
   ) {
     console.log('socket: muteUser', channelId, userId);
-    // await this.channelService.muteUser(client, channelId, userId);
-    //TODO: system message 추가해서 전체 유저한테 보내야함.
-    //ex) [system] user가 누구에 의해서 Mute되었습니다. 한동안 말을 할 수 없습니다.
-    //TODO :권한 비교 후 가능한 경우에만 성공 메시지 보내기 실패한 경우에도 return은 꼭 해줘야함
+    const result = await this.channelService.muteUser(channelId, userId);
+    if (result != 'muteUser Success!') return result;
+    const newMessage = await this.channelService.newMessage(
+      '[system] ' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 뮤트되었습니다.',
+      channelId,
+    );
+    this.server.to(channelId).emit('newMessage', newMessage);
     return 'muteUser Success!';
-    return 'muteUser fail!';
   }
 
-  /*unbanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
+  /*unBanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
 
-  @SubscribeMessage('unbanUser')
-  async unbanUser(
+  @SubscribeMessage('unBanUser')
+  async unBanUser(
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    //TODO: 권환 확인해서 권한이 owner가 아니면 다 fail이다.
-    console.log('socket: unbanUser', channelId, userId);
-    // await this.channelService.unbanUser(client, channelId, userId);
-    return 'unbanUser Success!';
-    return 'unbanUser fail!';
+    console.log('socket: unBanUser', channelId, userId);
+    const result = await this.channelService.unBanUser(channelId, userId);
+    if (result !== 'unBanUser Success!') return result;
+    const bannedUsers = await this.channelService.getBannedUsers(channelId);
+    client.emit('getBannedUsers', bannedUsers);
   }
 
   @SubscribeMessage('changePassword')
@@ -215,8 +236,11 @@ export class ChannelGateway
     { channelId, password }: { channelId: string; password: string },
   ) {
     console.log('socket: changePassword', channelId, password);
-    // await this.channelService.changePassword(client, channelId, password);
-    return 'changePassword Success!';
+    const result = await this.channelService.changePassword(
+      channelId,
+      password,
+    );
+    return result;
   }
 
   @SubscribeMessage('changeAdmin')
@@ -226,10 +250,19 @@ export class ChannelGateway
       channelId,
       userId,
       types,
-    }: { channelId: string; userId: string; types: 'add' | 'remove' },
+    }: { channelId: string; userId: string; types: 'admin' | 'user' },
   ) {
     console.log('socket: changeAdmin', channelId, userId);
-    // await this.channelService.changeAdmin(client, channelId, userId);
-    return 'changeAdmin Success!';
+    const result = await this.channelService.changeAdmin(
+      channelId,
+      userId,
+      types,
+    );
+    if (result === 'changeAdmin Success!') {
+      const adminUsers = await this.channelService.getAdminUsers(channelId);
+      client.emit('getAdminUsers', adminUsers);
+    }
+    // 롤 바뀐애한테 myChannels emit하기
+    return result;
   }
 }
