@@ -1,7 +1,7 @@
 import { UsersService } from '../../users/users.service';
-
+import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
-
+import { getUserFromSocket } from '../../../tools/socketTools';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -12,6 +12,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+
 type gameMode = 'normal' | 'ladder';
 type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
 type gameRequest = {
@@ -60,7 +61,8 @@ type MatchStore = {
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService
+		,private readonly userUseCase: UsersUseCase) {}
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
@@ -69,26 +71,15 @@ export class NotificationGateway
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
    */
-  // @UseGuards(AuthGuard('jwt'))
   async handleConnection(@ConnectedSocket() socket: Socket) {
-    // const user = getUserFromSocket(socket, this.userFactory);
-    // const intraId = req.user.sub;
-    // const user = await this.usersService.findOneByIntraId('joushin');
-    // console.log(user);
-    // console.log(intraId);
-    //유저가 없는 경우는 끊어버린다.(있어선 안되는 상황)
-    // if (!user) {
-    // socket.disconnect();
-    // return;
-    // }
-    //TODO: JWT를 이용해서 해당 정보를 가져올 것 현재 임시로 넣음
+    const user = await getUserFromSocket(socket, this.usersService);
+
+    console.log('알림 소켓 연결!!',user);
+    if (!user) {
+    socket.disconnect();
+    return;
+    }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
-    console.log('!!Alarm socket Connection');
-    const user = {
-      id: '622f9743-20c2-4251-9c34-341ee717b007',
-      name: 'joushin',
-      profileImage: 'http://localhost:8080/resources/sloth_health.svg',
-    };
     this.sockets.set(user.id, socket.id);
   }
 
@@ -98,41 +89,35 @@ export class NotificationGateway
    * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
    */
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    // const user= getUserFromSocket(socket, this.userFactory);
-    // if (!user) return;
+		const user = await getUserFromSocket(socket, this.usersService);
+    if (!user) return;
     //TODO: JWT를 이용해서 해당 정보를 가져올 것
-    const user = {
-      id: '622f9743-20c2-4251-9c34-341ee717b007',
-      name: 'joushin',
-      profileImage: 'http://localhost:8080/resources/sloth_health.svg',
-    };
+
     this.sockets.delete(user.id);
   }
 
   @SubscribeMessage('gameRequest')
   async handleGameRequest(client, { userId, gameMode, theme }) {
     const receiverSocketId = this.sockets.get(userId);
-    // const matchId = v4();
-    const srcId = '622f9743-20c2-4251-9c34-341ee717b007'; //게임 요청을 보낸 사람의 아이디
+		const user = await getUserFromSocket(client, this.usersService);
+		if (!user) return;
+    const srcId = user.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     //만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
     //이전에 할당된 매칭 큐를 확인해서 pop해준다.
     //MAP으로, 새로운 requestId할당.
     //객체 == [{requestId, userA, userB, theme} ...]
     //두명의 유저에게 gameStart를 동시에 emit해준다.
+		const destUser= await this.userUseCase.findOne(userId);
     const matchId = srcId + destId;
     this.requestQueue.set(matchId, { srcId, destId, gameMode, theme });
     console.log(this.requestQueue);
-    // const useInfo = getUserInfo(srcId);
-    //TODO : 유저 정보를 가져올 것
+
     console.log('socket gameRequest', 'userId: ', userId, gameMode, theme);
-    const userInfo = {
-      name: 'joushin',
-      profileImage: 'http://localhost:8080/resources/sloth_health.svg',
-    };
+
     this.server.to(receiverSocketId).emit('gameRequest', {
-      profileImage: userInfo.profileImage,
-      userName: userInfo.name,
+      profileImage: destUser.profileImage,
+      userName: destUser.name,
       matchId: matchId,
       gameMode: gameMode,
       theme: theme,
