@@ -1,4 +1,7 @@
+import { UsersService } from '../../users/users.service';
+
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
+
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -9,7 +12,6 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-
 type gameMode = 'normal' | 'ladder';
 type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
 type gameRequest = {
@@ -58,7 +60,7 @@ type MatchStore = {
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor() {}
+  constructor(private readonly usersService: UsersService) {}
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
@@ -67,8 +69,13 @@ export class NotificationGateway
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
    */
+  // @UseGuards(AuthGuard('jwt'))
   async handleConnection(@ConnectedSocket() socket: Socket) {
     // const user = getUserFromSocket(socket, this.userFactory);
+    // const intraId = req.user.sub;
+    // const user = await this.usersService.findOneByIntraId('joushin');
+    // console.log(user);
+    // console.log(intraId);
     //유저가 없는 경우는 끊어버린다.(있어선 안되는 상황)
     // if (!user) {
     // socket.disconnect();
