@@ -24,6 +24,7 @@ export class CreateFriendRequestUseCase {
     if (await this.hasExistingFriendRequest({ primaryUserId, targetUserId })) {
       return;
     }
+    // TODO: 이미 친구 여부 or Block 된 사람인 지 확인
 
     const targetUser = await this.userRepository.findOneById(targetUserId);
 
