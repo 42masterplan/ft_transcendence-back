@@ -36,7 +36,6 @@ export class FriendsController {
   @UseGuards(AuthGuard('jwt'))
   @Get('')
   async getFriends(@Request() req) {
-    //TODO: add user decorator
     this.logger.log('getFriends');
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
@@ -50,7 +49,6 @@ export class FriendsController {
     @Request() req,
     @Param('friendId') friendId: string,
   ): Promise<boolean> {
-    //TODO: change to user decorator
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
     await this.friendUseCase.delete({
@@ -66,7 +64,6 @@ export class FriendsController {
   async getFriendsRequest(
     @Request() req,
   ): Promise<FindFriendsRequestToMeViewModel[]> {
-    //TODO change to user decorator
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
 
