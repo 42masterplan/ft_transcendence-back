@@ -30,8 +30,10 @@ export class UsersController {
     private readonly usersUseCase: UsersUseCase,
   ) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('')
-  async getAll(@Query('status') status: string) {
+  async getAll(@Request() req, @Query('status') status: string) {
+    const intraId = req.user.sub;
     if (
       status !== undefined &&
       status !== 'on-line' &&
@@ -39,9 +41,11 @@ export class UsersController {
       status !== 'in-game'
     )
       return new BadRequestException();
-    const users = (await this.usersUseCase.findAll()).map(
-      (user) => new FindUsersViewModel(user),
+    const usersExceptMe = (await this.usersUseCase.findAll()).filter(
+      (user) => user.intraId !== intraId,
     );
+    const users = usersExceptMe.map((user) => new FindUsersViewModel(user));
+
     return users.filter((user) =>
       status === undefined || status === null
         ? true
