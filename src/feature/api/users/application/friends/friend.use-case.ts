@@ -1,14 +1,11 @@
 import { Friend } from '../../domain/friend/friend';
 import { FriendRepository } from '../../domain/friend/interface/friend.repository';
-import { UserRepository } from '../../domain/user.repository';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class FriendUseCase {
   constructor(
     @Inject(FriendRepository) private readonly repository: FriendRepository,
-    @Inject(UserRepository)
-    private readonly userRepository: UserRepository,
   ) {}
 
   create({
