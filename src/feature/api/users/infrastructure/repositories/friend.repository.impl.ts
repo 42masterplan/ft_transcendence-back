@@ -26,12 +26,12 @@ export class FriendRepositoryImpl implements FriendRepository {
     friendId: string;
   }): Promise<Friend> {
     if (
-      (await this.repository.findAndCount({
+      (await this.repository.count({
         myId,
         friendId,
         isDeleted: false,
       })) ||
-      (await this.repository.findAndCount({
+      (await this.repository.count({
         myId: friendId,
         friendId: myId,
         isDeleted: false,
