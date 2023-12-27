@@ -20,16 +20,19 @@ export class FindAcceptableFriendRequestUseCase {
       (myFriendRequest) => myFriendRequest.isAccepted === null,
     );
 
-    this.setTargetUser(myAcceptableFriendsRequest);
-
+    await this.setTargetUser(myAcceptableFriendsRequest);
     return myAcceptableFriendsRequest;
   }
 
   private async setTargetUser(friendsRequest: FriendRequest[]) {
-    friendsRequest.map(async (friendRequest) =>
-      friendRequest.connectTargetUser(
-        await this.usersUsecase.findOne(friendRequest.targetUserId),
-      ),
+    await Promise.all(
+      friendsRequest.map(async (friendRequest) => {
+        friendRequest.connectTargetUser(
+          await this.usersUsecase.findOne(friendRequest.targetUserId),
+        );
+      }),
     );
+    console.log('xxxx');
+    console.log(friendsRequest);
   }
 }
