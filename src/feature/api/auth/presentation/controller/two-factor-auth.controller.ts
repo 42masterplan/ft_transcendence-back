@@ -72,7 +72,7 @@ export class TwoFactorAuthController {
     const code = Math.floor(Math.random() * 899999) + 100000;
     const email = await this.twoFactorAuthUseCase.update2faCode(intraId, code);
     await this.mailService.sendMail(email, code);
-    return true;
+    return { email: email };
   }
 
   @UseGuards(AuthGuard('email'))
@@ -95,12 +95,7 @@ export class TwoFactorAuthController {
       twoFactorAuthEmailValidate.code.toString(),
       user.verificationCode,
     );
-    if (isMatch) {
-      const email = await this.twoFactorAuthUseCase.validate2fa(intraId);
-      return {
-        email: email,
-      };
-    }
+    if (isMatch) await this.twoFactorAuthUseCase.validate2fa(intraId);
 
     return isMatch;
   }
