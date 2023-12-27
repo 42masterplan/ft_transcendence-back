@@ -1,8 +1,8 @@
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
-import { DeleteFriendUseCase } from '../../application/friends/delete-friend.use-case';
 import { FindAcceptableFriendRequestUseCase } from '../../application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
+import { FriendUseCase } from '../../application/friends/friend.use-case';
 import { UsersService } from '../../users.service';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 import { FindFriendsRequestToMeViewModel } from '../view-models/friends-request/find-friends-request-to-me.vm';
@@ -29,7 +29,7 @@ export class FriendsController {
     private readonly findUseCase: FindFriendsUseCase,
     private readonly createRequestUseCase: CreateFriendRequestUseCase,
     private readonly friendRequestUseCase: FriendRequestUseCase,
-    private readonly deleteUseCase: DeleteFriendUseCase,
+    private readonly friendUseCase: FriendUseCase,
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
     private readonly userService: UsersService,
   ) {}
@@ -53,7 +53,7 @@ export class FriendsController {
     //TODO: change to user decorator
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
-    await this.deleteUseCase.execute({
+    await this.friendUseCase.delete({
       myId: user.id,
       friendId,
     });

@@ -1,6 +1,6 @@
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
-import { CreateFriendUseCase } from './create-friend.use-case';
+import { FriendUseCase } from './friend.use-case';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class FriendRequestUseCase {
   constructor(
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
-    private readonly createFriendUseCase: CreateFriendUseCase,
+    private readonly friendUseCase: FriendUseCase,
   ) {}
 
   async acceptFriendRequest({ requestId }: { requestId: number }) {
@@ -21,7 +21,7 @@ export class FriendRequestUseCase {
     }
 
     friendRequest.updateIsAccepted(true);
-    await this.createFriendUseCase.execute({
+    await this.friendUseCase.create({
       myId: friendRequest.targetUserId,
       friendId: friendRequest.primaryUserId,
     });
