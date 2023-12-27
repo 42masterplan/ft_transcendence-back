@@ -24,7 +24,6 @@ export class FriendRequest {
 
   isAcceptedNull(): boolean {
     if ((this, this.isAccepted === null)) {
-      console.log('으악');
       return true;
     }
 
