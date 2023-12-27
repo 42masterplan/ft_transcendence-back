@@ -10,15 +10,14 @@ export class DmUsecase {
     private readonly dmMessageRepository: DmMessageRepository,
   ) {}
 
-  async getDmMessages(
-    user1Id: string,
-    user2Id: string,
-  ): Promise<{ dmId: string; messages: DmMessage[] }> {
+  async getDmMessages(user1Id: string, user2Id: string): Promise<DmMessage[]> {
     const dm = await this.dmRepository.findOneByUserIds(user1Id, user2Id);
-    return {
-      dmId: dm.id,
-      messages: await this.dmMessageRepository.findAllByDmId(dm.id),
-    };
+    return await this.dmMessageRepository.findAllByDmId(dm.id);
+  }
+
+  async getDmIdByUserIds(user1Id: string, user2Id: string): Promise<string> {
+    const dm = await this.dmRepository.findOneByUserIds(user1Id, user2Id);
+    return dm.id;
   }
 
   async saveNewMessage({ dmId, content, participantId }) {
