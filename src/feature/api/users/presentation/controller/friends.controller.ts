@@ -99,17 +99,9 @@ export class FriendsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Put('request')
-  async acceptFriendRequest(
-    @Request() req,
-    @Body('friend-id') friendId: string,
-  ) {
-    //TODO: change to user decorator
-    const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
-
+  async acceptFriendRequest(@Body('requestId') requestId: number) {
     await this.friendRequestUseCase.acceptFriendRequest({
-      primaryUserId: user.id,
-      targetUserId: friendId,
+      requestId: requestId,
     });
     //TODO:  양쪽으로 해줘야하는지 재고해보기
     return true;
@@ -117,18 +109,10 @@ export class FriendsController {
 
   //TODO: change interface
   @UseGuards(AuthGuard('jwt'))
-  @Delete('request/:friendId')
-  async rejectFriendRequest(
-    @Request() req,
-    @Param('friendId') friendId: string,
-  ) {
-    //TODO: change to user decorator
-    const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
-
+  @Delete('request/:requestId')
+  async rejectFriendRequest(@Param('requestId') requestId: number) {
     await this.friendRequestUseCase.rejectFriendRequest({
-      primaryUserId: user.id,
-      targetUserId: friendId,
+      requestId: requestId,
     });
 
     return true;

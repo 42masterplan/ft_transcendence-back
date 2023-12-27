@@ -7,6 +7,7 @@ export interface FriendRequestRepository {
     primaryUserId,
     targetUserId,
   }): Promise<FriendRequest[]>;
+  findOneByRequestId({ requestId }): Promise<FriendRequest>;
   update(friendRequest: FriendRequest): Promise<FriendRequest>;
 }
 

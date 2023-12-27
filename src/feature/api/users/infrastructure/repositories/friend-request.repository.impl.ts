@@ -54,6 +54,13 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
 
+  async findOneByRequestId({ requestId }): Promise<FriendRequest> {
+    const friendRequest = await this.repository.findOne({
+      id: requestId,
+    });
+    return this.toDomain(friendRequest);
+  }
+
   async update(friendRequest: FriendRequest): Promise<FriendRequest> {
     const entity = await this.repository.findOneOrFail(friendRequest.id);
 
