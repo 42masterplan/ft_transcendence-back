@@ -45,7 +45,7 @@ export class FriendsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Delete(':friendId')
+  @Delete('/:friendId')
   async deleteFriends(
     @Request() req,
     @Param('friendId') friendId: string,
