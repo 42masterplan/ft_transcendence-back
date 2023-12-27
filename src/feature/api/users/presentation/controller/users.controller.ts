@@ -436,9 +436,11 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Delete('block')
-  async unblock(@Request() req, @Param(':id') targetId: string) {
+  @Delete('block/:id')
+  async unblock(@Request() req, @Param('id') targetId: string) {
     const intraId = req.user.sub;
+    console.log('unblock');
+    console.log(targetId);
     const user = await this.usersService.findOneByIntraId(intraId);
     await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
 

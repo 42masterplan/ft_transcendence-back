@@ -26,4 +26,13 @@ export class BlockedUserUseCase {
     if (!(await this.repository.alreadyBlock({ myId, targetId }))) return;
     await this.repository.unblock({ myId, targetId });
   }
+
+  async someoneBlocked({ myId, targetId }: { myId: string; targetId: string }) {
+    if (
+      (await this.repository.alreadyBlock({ myId, targetId })) ||
+      (await this.repository.alreadyBlock({ myId: targetId, targetId: myId }))
+    )
+      return true;
+    return false;
+  }
 }
