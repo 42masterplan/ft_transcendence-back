@@ -3,6 +3,7 @@ import { FindAcceptableFriendRequestUseCase } from '../../application/friends/fi
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
 import { FriendUseCase } from '../../application/friends/friend.use-case';
+import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 import { FindFriendsRequestToMeViewModel } from '../view-models/friends-request/find-friends-request-to-me.vm';
@@ -18,6 +19,7 @@ import {
   Put,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -32,6 +34,7 @@ export class FriendsController {
     private readonly friendUseCase: FriendUseCase,
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
     private readonly userService: UsersService,
+    private readonly userUseCase: UsersUseCase,
   ) {}
   @UseGuards(AuthGuard('jwt'))
   @Get('')
@@ -41,6 +44,21 @@ export class FriendsController {
     const user = await this.userService.findOneByIntraId(intraId);
     const friends = await this.findUseCase.execute(user.id);
     return friends.map((friend) => new FindFriendViewModel(friend));
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('isFriend')
+  async isFriend(@Request() req, @Query('id') friendId: string) {
+    const intraId = req.user.sub;
+    const user = await this.userUseCase.findOneByIntraId(intraId);
+    const friend = await this.userUseCase.findOne(friendId);
+    const isFriend = await this.friendUseCase.isFriend({
+      myId: user.id,
+      friendId: friend.id,
+    });
+    return {
+      isFriends: isFriend,
+    };
   }
 
   @UseGuards(AuthGuard('jwt'))
