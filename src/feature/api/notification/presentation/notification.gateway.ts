@@ -1,7 +1,7 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
-import { DmUseCases } from '../application/dm.use-case';
+import { DmUsecase } from '../application/dm.use-case';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
@@ -55,7 +55,7 @@ export class NotificationGateway
   constructor(
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
-    private readonly dmUseCase: DmUseCases,
+    private readonly dmUseCase: DmUsecase,
   ) {}
   @WebSocketServer()
   private readonly server: Server;

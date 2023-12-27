@@ -4,7 +4,7 @@ import { DmRepository } from '../domain/repositories/dm.repository';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class DmUseCases {
+export class DmUsecase {
   constructor(
     private readonly dmRepository: DmRepository,
     private readonly dmMessageRepository: DmMessageRepository,
