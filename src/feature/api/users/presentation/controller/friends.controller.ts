@@ -89,7 +89,6 @@ export class FriendsController {
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
 
-    console.log('userId:', user.id, 'friendId:', friendId);
     await this.createRequestUseCase.execute({
       primaryUserId: user.id,
       targetUserId: friendId,
@@ -107,7 +106,6 @@ export class FriendsController {
     return true;
   }
 
-  //TODO: change interface
   @UseGuards(AuthGuard('jwt'))
   @Delete('request/:requestId')
   async rejectFriendRequest(@Param('requestId') requestId: number) {

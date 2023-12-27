@@ -20,6 +20,7 @@ export class CreateFriendRequestUseCase {
     primaryUserId: string;
     targetUserId: string;
   }): Promise<void> {
+    if (primaryUserId === targetUserId) return;
     if (await this.hasExistingFriendRequest({ primaryUserId, targetUserId })) {
       return;
     }

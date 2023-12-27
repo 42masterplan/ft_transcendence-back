@@ -19,7 +19,6 @@ export class FriendRequestUseCase {
     }
 
     friendRequest.updateIsAccepted(true);
-    // TODO: Friend Request update;
     // TODO: Freind 2개 생성;
     // TODO: DM 방 생성
 
