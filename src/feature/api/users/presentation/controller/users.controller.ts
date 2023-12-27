@@ -53,6 +53,8 @@ export class UsersController {
     );
   }
 
+  //TODO: Get users/isFreind?id=Frienduuid
+
   @UseGuards(AuthGuard('signIn'))
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
