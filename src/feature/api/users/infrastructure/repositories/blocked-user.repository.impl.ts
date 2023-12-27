@@ -12,6 +12,14 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
     private readonly repository: EntityRepository<BlockedUserEntity>,
   ) {}
 
+  async findManyByMyId(myId: string): Promise<BlockedUser[]> {
+    const blocked = await this.repository.find({
+      primaryUserId: myId,
+      isDeleted: false,
+    });
+    return blocked.map((block) => this.toDomain(block));
+  }
+
   async block({
     myId,
     targetId,
@@ -19,15 +27,34 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
     myId: string;
     targetId: string;
   }): Promise<BlockedUser> {
-    const blockedUser = await this.repository.create({
+    const block = await this.repository.create({
       primaryUserId: myId,
       targetUserId: targetId,
     });
     await this.repository.getEntityManager().flush();
-    return this.toDomain(blockedUser);
+    return this.toDomain(block);
   }
 
-  async isBlocked({
+  async unblock({
+    myId,
+    targetId,
+  }: {
+    myId: string;
+    targetId: string;
+  }): Promise<BlockedUser> {
+    const block = await this.repository.findOneOrFail({
+      primaryUserId: myId,
+      targetUserId: targetId,
+      isDeleted: false,
+    });
+
+    block.isDeleted = true;
+
+    await this.repository.getEntityManager().flush();
+    return this.toDomain(block);
+  }
+
+  async alreadyBlock({
     myId,
     targetId,
   }: {

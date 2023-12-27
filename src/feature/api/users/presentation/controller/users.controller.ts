@@ -1,7 +1,10 @@
 import path from 'node:path';
+import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
+import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { FindBlockedUserViewModel } from '../view-models/users/find-blocked-user.vm';
 import { FindUsersViewModel } from '../view-models/users/find-users.vm';
 import {
   BadRequestException,
@@ -28,6 +31,8 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly usersUseCase: UsersUseCase,
+    private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
+    private readonly blockedUserUseCase: BlockedUserUseCase,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -381,8 +386,13 @@ export class UsersController {
   }
 
   /* BLOCK */
+  @UseGuards(AuthGuard('jwt'))
   @Get('block')
-  getBlockedUser() {
+  async getBlockedUser(@Request() req) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    const blocked = await this.findBlockedUserUseCase.execute(user.id);
+    return blocked.map((block) => new FindBlockedUserViewModel(block));
     return [
       {
         id: '9',
@@ -415,15 +425,23 @@ export class UsersController {
     ];
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('block')
-  block(@Body('id') id: string) {
-    console.log(id);
+  async block(@Request() req, @Body('id') targetId: string) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    await this.blockedUserUseCase.block({ myId: user.id, targetId });
+
     return true;
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete('block')
-  unblock(@Param(':id') id: string) {
-    console.log(id);
+  async unblock(@Request() req, @Param(':id') targetId: string) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
+
     return true;
   }
 }

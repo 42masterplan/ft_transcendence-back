@@ -1,7 +1,15 @@
 import { BlockedUser } from '../../blocked-user';
 
 export interface BlockedUserRepository {
+  findManyByMyId(myId: string): Promise<BlockedUser[]>;
   block({
+    myId,
+    targetId,
+  }: {
+    myId: string;
+    targetId: string;
+  }): Promise<BlockedUser>;
+  unblock({
     myId,
     targetId,
   }: {
