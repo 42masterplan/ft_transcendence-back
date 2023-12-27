@@ -11,20 +11,20 @@ services:
     env_file:
       - .env.postgres
 
-  backend:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    restart: always
-    container_name: backend
-    ports:
-      - '8080:8080'
-    env_file:
-      - .env.develop
-    depends_on:
-      - postgres
-    networks:
-      - tcen
+  # backend:
+  #   build:
+  #     context: ./
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   container_name: backend
+  #   ports:
+  #     - '8080:8080'
+  #   env_file:
+  #     - .env.develop
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - tcen
 
 networks:
   tcen:

@@ -9,7 +9,7 @@ export class FindAcceptableFriendRequestUseCase {
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
     @Inject(UsersUseCase)
-    private readonly usersUseCases: UsersUseCase,
+    private readonly usersUsecase: UsersUseCase,
   ) {}
 
   async findMyFriendsRequests(myId: string): Promise<FriendRequest[]> {
@@ -28,7 +28,7 @@ export class FindAcceptableFriendRequestUseCase {
   private async setTargetUser(friendsRequest: FriendRequest[]) {
     friendsRequest.map(async (friendRequest) =>
       friendRequest.connectTargetUser(
-        await this.usersUseCases.findOne(friendRequest.targetUserId),
+        await this.usersUsecase.findOne(friendRequest.targetUserId),
       ),
     );
   }
