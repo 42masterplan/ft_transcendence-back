@@ -23,12 +23,11 @@ export class TwoFactorAuthUseCase {
     return user.email;
   }
 
-  async validate2fa(intraId: string): Promise<string> {
-    const user = await this.repository.updateTwoFactorAuth(
+  async validate2fa(intraId: string): Promise<void> {
+    await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({ code: null, is2faValidated: true }),
     );
-    return user.email;
   }
 
   async updateEmailWithCode(
