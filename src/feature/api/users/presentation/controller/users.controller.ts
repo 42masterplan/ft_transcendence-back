@@ -1,6 +1,8 @@
 import path from 'node:path';
+import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { FindUsersViewModel } from '../view-models/users/find-users.vm';
 import {
   BadRequestException,
   Body,
@@ -20,13 +22,13 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { UsersUseCase } from '../../application/use-case/users.use-case';
-import { FindUsersViewModel } from '../view-models/users/find-users.vm';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService,
-    private readonly usersUseCase: UsersUseCase) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
+  ) {}
 
   @Get('')
   async getAll(@Query('status') status: string) {
@@ -37,12 +39,14 @@ export class UsersController {
       status !== 'in-game'
     )
       return new BadRequestException();
-    const users = (await this.usersUseCase.findAll()).map((user) => (new FindUsersViewModel(user)));
+    const users = (await this.usersUseCase.findAll()).map(
+      (user) => new FindUsersViewModel(user),
+    );
     return users.filter((user) =>
-    status === undefined || status === null
-      ? true
-      : user.currentStatus === status,
-  );
+      status === undefined || status === null
+        ? true
+        : user.currentStatus === status,
+    );
   }
 
   @UseGuards(AuthGuard('signIn'))
