@@ -1,5 +1,6 @@
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
+import { CreateFriendUseCase } from './create-friend.use-case';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -7,6 +8,7 @@ export class FriendRequestUseCase {
   constructor(
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
+    private readonly createFriendUseCase: CreateFriendUseCase,
   ) {}
 
   async acceptFriendRequest({ requestId }: { requestId: number }) {
@@ -19,7 +21,10 @@ export class FriendRequestUseCase {
     }
 
     friendRequest.updateIsAccepted(true);
-    // TODO: Freind 2개 생성;
+    await this.createFriendUseCase.execute({
+      myId: friendRequest.targetUserId,
+      friendId: friendRequest.primaryUserId,
+    });
     // TODO: DM 방 생성
 
     return await this.repository.update(friendRequest);

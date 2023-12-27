@@ -3,7 +3,7 @@ import { FriendRepository } from '../../domain/friend/interface/friend.repositor
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
-export class DeleteFriendUseCase {
+export class CreateFriendUseCase {
   constructor(
     @Inject(FriendRepository) private readonly repository: FriendRepository,
   ) {}
@@ -15,7 +15,7 @@ export class DeleteFriendUseCase {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    return this.repository.deleteFriend({
+    return this.repository.createFriend({
       myId,
       friendId,
     });

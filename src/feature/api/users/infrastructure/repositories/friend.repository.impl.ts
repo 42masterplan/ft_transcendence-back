@@ -18,23 +18,49 @@ export class FriendRepositoryImpl implements FriendRepository {
     return friends.map((friend) => this.toDomain(friend));
   }
 
-  async deleteMyFriend({
+  async createFriend({
     myId,
     friendId,
   }: {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    const friend = await this.repository.findOneOrFail({
+    const meAndFriend = await this.repository.create({
       myId,
       friendId,
     });
-
-    friend.isDeleted = true;
+    await this.repository.create({
+      myId: friendId,
+      friendId: myId,
+    });
 
     this.repository.getEntityManager().flush();
 
-    return this.toDomain(friend);
+    return this.toDomain(meAndFriend);
+  }
+
+  async deleteFriend({
+    myId,
+    friendId,
+  }: {
+    myId: string;
+    friendId: string;
+  }): Promise<Friend> {
+    const meAndFriend = await this.repository.findOneOrFail({
+      myId,
+      friendId,
+    });
+    const friendAndMe = await this.repository.findOneOrFail({
+      myId: friendId,
+      friendId: myId,
+    });
+
+    meAndFriend.isDeleted = true;
+    friendAndMe.isDeleted = true;
+
+    this.repository.getEntityManager().flush();
+
+    return this.toDomain(meAndFriend);
   }
 
   private toDomain(entity: FriendEntity): Friend {

@@ -53,7 +53,7 @@ export class FriendsController {
     //TODO: change to user decorator
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
-    this.deleteUseCase.execute({
+    await this.deleteUseCase.execute({
       myId: user.id,
       friendId,
     });
