@@ -25,6 +25,19 @@ export class FriendRepositoryImpl implements FriendRepository {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
+    if (
+      (await this.repository.findAndCount({
+        myId,
+        friendId,
+        isDeleted: false,
+      })) ||
+      (await this.repository.findAndCount({
+        myId: friendId,
+        friendId: myId,
+        isDeleted: false,
+      }))
+    )
+      return;
     const meAndFriend = await this.repository.create({
       myId,
       friendId,
@@ -49,10 +62,12 @@ export class FriendRepositoryImpl implements FriendRepository {
     const meAndFriend = await this.repository.findOneOrFail({
       myId,
       friendId,
+      isDeleted: false,
     });
     const friendAndMe = await this.repository.findOneOrFail({
       myId: friendId,
       friendId: myId,
+      isDeleted: false,
     });
 
     meAndFriend.isDeleted = true;
