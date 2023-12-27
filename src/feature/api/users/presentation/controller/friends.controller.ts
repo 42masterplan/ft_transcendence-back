@@ -5,7 +5,7 @@ import { FindFriendsUseCase } from '../../application/friends/find-friends.use-c
 import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
 import { UsersService } from '../../users.service';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
-import { FindFriendsRequestViewModel } from '../view-models/friends-request/find-friends-request.vm';
+import { FindFriendsRequestToMeViewModel } from '../view-models/friends-request/find-friends-request-to-me.vm';
 
 import {
   Body,
@@ -65,18 +65,18 @@ export class FriendsController {
   @Get('request')
   async getFriendsRequest(
     @Request() req,
-  ): Promise<FindFriendsRequestViewModel[]> {
+  ): Promise<FindFriendsRequestToMeViewModel[]> {
     //TODO change to user decorator
     const intraId = req.user.sub;
     const user = await this.userService.findOneByIntraId(intraId);
 
     const friendsRequest =
-      await this.findAcceptableFriendRequestUseCase.findMyFriendsRequests(
+      await this.findAcceptableFriendRequestUseCase.findFriendsRequestsToMe(
         user.id,
       );
 
     return friendsRequest.map(
-      (friendRequest) => new FindFriendsRequestViewModel(friendRequest),
+      (friendRequest) => new FindFriendsRequestToMeViewModel(friendRequest),
     );
   }
 

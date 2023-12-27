@@ -7,6 +7,7 @@ export class FriendRequest {
   private readonly _targetUserId: string;
 
   targetUser?: User | null;
+  primaryUser?: User | null;
 
   // TODO: implement validation
   constructor(props: {
@@ -23,6 +24,7 @@ export class FriendRequest {
 
   isAcceptedNull(): boolean {
     if ((this, this.isAccepted === null)) {
+      console.log('으악');
       return true;
     }
 
@@ -35,6 +37,10 @@ export class FriendRequest {
 
   connectTargetUser(user: User): void {
     this.targetUser = user;
+  }
+
+  connectPrimaryUser(user: User): void {
+    this.primaryUser = user;
   }
 
   get id(): number {

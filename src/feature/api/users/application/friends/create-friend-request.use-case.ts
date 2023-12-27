@@ -49,8 +49,8 @@ export class CreateFriendRequestUseCase {
         targetUserId,
       });
     this.logger.log(friendRequests);
-    const friendRequest = friendRequests.filter(
-      (friendRequest) => friendRequest.isAcceptedNull,
+    const friendRequest = friendRequests.filter((friendRequest) =>
+      friendRequest.isAcceptedNull(),
     );
 
     if (friendRequest.length > 0) {

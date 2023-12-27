@@ -39,6 +39,12 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
 
+  async findManyByTargetUserId(targetUserId: string): Promise<FriendRequest[]> {
+    const friendRequest = await this.repository.find({ targetUserId });
+
+    return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
+  }
+
   async findManyByPrimaryUserIdTargetUserId({
     primaryUserId,
     targetUserId,
