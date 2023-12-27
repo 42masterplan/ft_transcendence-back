@@ -29,6 +29,11 @@ export class DmRepository {
     return this.toDomain(dm);
   }
 
+  async findOneById(id: string): Promise<Dm> {
+    const dm = await this.repository.findOne({ id });
+    return this.toDomain(dm);
+  }
+
   toDomain(entity: DmEntity): Dm {
     if (entity === null) return null;
     return new Dm(entity);

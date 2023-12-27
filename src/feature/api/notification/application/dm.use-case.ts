@@ -1,3 +1,4 @@
+import { DmMessage } from '../domain/dm-message';
 import { DmMessageRepository } from '../domain/repositories/dm-message.repository';
 import { DmRepository } from '../domain/repositories/dm.repository';
 import { Injectable } from '@nestjs/common';
@@ -9,11 +10,24 @@ export class DmUseCases {
     private readonly dmMessageRepository: DmMessageRepository,
   ) {}
 
-  async getDmMessages(dmId: string) {
-    return this.dmMessageRepository.findAllByDmId(dmId);
+  async getDmMessages(
+    user1Id: string,
+    user2Id: string,
+  ): Promise<{ dmId: string; messages: DmMessage[] }> {
+    const dm = await this.dmRepository.findOneByUserIds(user1Id, user2Id);
+    return {
+      dmId: dm.id,
+      messages: await this.dmMessageRepository.findAllByDmId(dm.id),
+    };
   }
 
-  async newMessage({ dmId, content, participantId }) {
+  async saveNewMessage({ dmId, content, participantId }) {
     return this.dmMessageRepository.saveOne({ dmId, content, participantId });
+  }
+
+  async getRecieverId(dmId: string, senderId: string): Promise<string> {
+    const dm = await this.dmRepository.findOneById(dmId);
+    if (dm.user1Id === senderId) return dm.user2Id;
+    else return dm.user1Id;
   }
 }

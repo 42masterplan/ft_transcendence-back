@@ -1,6 +1,7 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
+import { DmUseCases } from '../application/dm.use-case';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
@@ -54,6 +55,7 @@ export class NotificationGateway
   constructor(
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
+    private readonly dmUseCase: DmUseCases,
   ) {}
   @WebSocketServer()
   private readonly server: Server;
@@ -163,18 +165,43 @@ export class NotificationGateway
   @SubscribeMessage('DmHistory')
   async handleDMHistory(client, { userId }) {
     console.log('socket DmHistory');
-    const userSocketId = this.sockets.get(userId);
-    this.server.to(userSocketId).emit('DMHistory', { userId });
-    return 'DmHistory Success!';
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return 'DmHistory Fail!';
+    const receiverSocketId = this.sockets.get(user.id);
+
+    const user1Id = userId > user.id ? user.id : userId;
+    const user2Id = userId > user.id ? userId : user.id;
+    try {
+      const DmHistory = await this.dmUseCase.getDmMessages(user1Id, user2Id);
+      this.server.to(receiverSocketId).emit('DMHistory', DmHistory);
+      return 'DmHistory Success!';
+    } catch (e) {
+      console.log(e);
+      return 'DmHistory Fail!';
+    }
   }
 
+  /**
+   * dmId : 디엠 방 ID
+   * participantId : 메세지를 보낸 유저의 ID
+   * content : 보낼 메시지
+   */
   @SubscribeMessage('DmNewMessage')
-  async handleDMNewMessage(client, { userId, message, matchId }) {
+  async handleDMNewMessage(client, { dmId, participantId, content }) {
     console.log('socket DmNewMessage');
-    const userSocketId = this.sockets.get(userId);
-    this.server
-      .to(userSocketId)
-      .emit('DMNewMessage', { userId, message, matchId });
-    return 'DmNewMessage Success!';
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return 'DmNewMessage Fail!';
+    try {
+      this.dmUseCase.saveNewMessage({ dmId, participantId, content });
+      const receiverId = await this.dmUseCase.getRecieverId(dmId, user.id);
+      const receiverSocketId = this.sockets.get(receiverId);
+      this.server
+        .to(receiverSocketId)
+        .emit('DMNewMessage', { dmId, participantId, content });
+      return 'DmNewMessage Success!';
+    } catch (e) {
+      console.log(e);
+      return 'DmNewMessage Fail!';
+    }
   }
 }
