@@ -13,7 +13,7 @@ import {
   DEBOUNCING_TIME,
   SCORE_LIMIT,
   state,
-} from './util';
+} from './presentation/util';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -55,7 +55,7 @@ export class GameService {
     };
   }
 
-  updateGameState(state: state, io: any) {
+  updateGameState(state: state) {
     state.ball.x += state.ball.velocity.x;
     state.ball.y += state.ball.velocity.y;
     if (
@@ -82,7 +82,7 @@ export class GameService {
     }
   }
 
-  resetBall(isA: boolean, state: state, io: any) {
+  resetBall(isA: boolean, state: state) {
     if (isA) state.score.playerA++;
     else state.score.playerB++;
     io.to(state.matchId).emit('updateScore', state);

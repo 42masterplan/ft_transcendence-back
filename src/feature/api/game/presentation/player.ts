@@ -4,7 +4,7 @@ import {
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
   ball,
-} from '../util';
+} from './util';
 
 export class Player {
   private _id: string;
