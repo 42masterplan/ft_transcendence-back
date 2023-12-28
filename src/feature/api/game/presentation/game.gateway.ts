@@ -43,10 +43,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: any, ...args: any[]) {
     console.log("It's get connected!");
     client.join(this.currentGameKey.toString());
-    if (client.rooms[this.currentGameKey.toString()].length === 2) {
-      this.currentGameKey++;
-      // 두명찼으면 방게임키 업
-    }
     client.emit('joinedRoom', this.currentGameKey);
     // TODO: game 참가 로직 변경
     if (!this.gameStates[this.currentGameKey]) {
@@ -207,7 +203,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     state.ball.x = SCREEN_WIDTH / 2;
     state.ball.y = SCREEN_HEIGHT / 2;
-    state.ball.velocity = { x: 0, y: 0 };
+    state.ball.velocity.x = 0;
+    state.ball.velocity.y = 0;
     setTimeout(() => {
       const x = !isA
         ? state.playerA.x + PLAYER_WIDTH / 2
@@ -218,7 +215,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const speed = Math.sqrt(dx * dx + dy * dy);
       const ret_x = (dx / speed) * state.ball.speed;
       const ret_y = (dy / speed) * state.ball.speed;
-      state.ball.velocity = { x: ret_x, y: ret_y };
+      state.ball.velocity.x = ret_x;
+      state.ball.velocity.y = ret_y;
       this.server.to(state.matchId).emit('updateBall', state);
     }, 3000);
   }
