@@ -63,20 +63,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: any) {
     console.log("It's get disconnected!");
-    const roomId = Object.keys(this.gameStates).find((id) => {
+    const matchId = Object.keys(this.gameStates).find((id) => {
       const state: GameState = this.gameStates[id];
       if (state.playerA.id === client.id || state.playerB.id === client.id)
         return true;
       return false;
     });
-    if (!roomId) console.error('this should not happen'); // 게임 룸을 찾지 못하면 에러를 출력합니다. (로직상 불가능합니다 ;)..
-    if (!this.gameStates[roomId].ready) {
+    if (!matchId) console.error('this should not happen'); // 게임 룸을 찾지 못하면 에러를 출력합니다. (로직상 불가능합니다 ;)..
+    if (!this.gameStates[matchId].ready) {
       // 1명이 들어왔는데 두 번째 플레이어가 들어오기 전에 연결이 끊긴 경우 게임 상태를 삭제합니다.
-      delete this.gameStates[roomId];
+      delete this.gameStates[matchId];
       return;
     }
     // 플레이어 A가 연결을 끊으면 플레이어 B가 기권승합니다.
-    const state: GameState = this.gameStates[roomId];
+    const state: GameState = this.gameStates[matchId];
     if (state.playerA.id === client.id) {
       state.score.playerB = SCORE_LIMIT;
       state.isForfeit = true;
@@ -225,8 +225,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   updateGameStateCron() {
     const gameStateCronJob = () => {
-      Object.keys(this.gameStates).forEach((roomId) => {
-        const state: GameState = this.gameStates[roomId];
+      Object.keys(this.gameStates).forEach((matchId) => {
+        const state: GameState = this.gameStates[matchId];
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
         this.updateGameState(state);
         this.server.to(state.matchId).emit('updatePlayers', state); // 플레이어의 위치를 업데이트합니다.
