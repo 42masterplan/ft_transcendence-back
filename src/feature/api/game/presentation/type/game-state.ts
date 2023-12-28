@@ -17,8 +17,8 @@ export class GameState {
   private readonly _ball: Ball;
   private readonly _score: Score;
   private readonly _time: number;
-  private readonly _isReady: boolean;
-  private readonly _isForfeit: boolean;
+  private _isReady: boolean;
+  private _isForfeit: boolean;
   private readonly _isDeuce: boolean;
 
   constructor(matchId: number) {
@@ -41,5 +41,33 @@ export class GameState {
     this._time = GAME_TIME_LIMIT;
     this._isForfeit = false;
     this._isDeuce = false;
+  }
+
+  get matchId(): number {
+    return this._matchId;
+  }
+
+  get playerA(): Player {
+    return this._playerA;
+  }
+
+  get playerB(): Player {
+    return this._playerB;
+  }
+
+  get score(): Score {
+    return this._score;
+  }
+
+  get isForfeit(): boolean {
+    return this._isForfeit;
+  }
+
+  set isReady(isReady: boolean) {
+    this._isReady = isReady;
+  }
+
+  set isForfeit(isForfeit: boolean) {
+    this._isForfeit = isForfeit;
   }
 }
