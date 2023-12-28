@@ -15,6 +15,12 @@ export class UserRepositoryImpl implements UserRepository {
     private readonly userRepository: EntityRepository<UserEntity>,
   ) {}
 
+  async findAll(): Promise<User[]> {
+    const users = await this.userRepository.find({ isDeleted: false });
+    if (!users) return [];
+    return users.map((user) => this.toDomain(user));
+  }
+
   async findOneById(id: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ id, isDeleted: false });
     if (!user) return null;
@@ -70,6 +76,16 @@ export class UserRepositoryImpl implements UserRepository {
       user.email = null;
       user.verificationCode = null;
     }
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
+  }
+
+  async updateStatus(intraId: string, status: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      intraId,
+      isDeleted: false,
+    });
+    user.currentStatus = status;
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }

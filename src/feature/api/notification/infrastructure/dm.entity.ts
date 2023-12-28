@@ -1,19 +1,16 @@
 import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
-import { bool } from 'joi';
+import { v4 } from 'uuid';
 
-@Entity({ tableName: 'banned_user' })
-export class BannedUserEntity {
-  @PrimaryKey()
-  id: number;
-
-  @Property({ type: 'uuid' })
-  primaryUserId: string;
+@Entity({ tableName: 'dm' })
+export class DmEntity {
+  @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
+  id: string = v4();
 
   @Property({ type: 'uuid' })
-  targetUserId: string;
+  user1Id: string;
 
-  @Property({ type: bool, default: false })
-  isDeleted: boolean;
+  @Property({ type: 'uuid' })
+  user2Id: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();

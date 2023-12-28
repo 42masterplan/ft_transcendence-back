@@ -1,6 +1,6 @@
 import { FriendRequest } from '../../../domain/friend/friend-request';
 
-export class FindFriendsRequestViewModel {
+export class FindFriendsRequestToMeViewModel {
   readonly id: number;
   readonly friend: {
     id: string;
@@ -12,10 +12,10 @@ export class FindFriendsRequestViewModel {
   constructor(param: FriendRequest) {
     this.id = param.id;
     this.friend = {
-      id: param.targetUser.id,
-      profileImage: param.targetUser.profileImage,
-      name: param.targetUser.name,
-      introduction: param.targetUser.introduction,
+      id: param.primaryUser.id,
+      profileImage: param.primaryUser.profileImage,
+      name: param.primaryUser.name,
+      introduction: param.primaryUser.introduction,
     };
   }
 }

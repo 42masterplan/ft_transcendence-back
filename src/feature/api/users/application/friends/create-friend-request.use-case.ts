@@ -1,5 +1,7 @@
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { UserRepository } from '../../domain/user.repository';
+import { BlockedUserUseCase } from '../use-case/blocked-user.use-case';
+import { FriendUseCase } from './friend.use-case';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
@@ -11,6 +13,8 @@ export class CreateFriendRequestUseCase {
     private readonly repository: FriendRequestRepository,
     @Inject(UserRepository)
     private readonly userRepository: UserRepository,
+    private readonly friendUseCase: FriendUseCase,
+    private readonly blockedUserUseCase: BlockedUserUseCase,
   ) {}
 
   async execute({
@@ -20,9 +24,24 @@ export class CreateFriendRequestUseCase {
     primaryUserId: string;
     targetUserId: string;
   }): Promise<void> {
+    if (primaryUserId === targetUserId) return;
     if (await this.hasExistingFriendRequest({ primaryUserId, targetUserId })) {
       return;
     }
+    if (
+      await this.friendUseCase.isFriend({
+        myId: primaryUserId,
+        friendId: targetUserId,
+      })
+    )
+      return;
+    if (
+      await this.blockedUserUseCase.someoneBlocked({
+        myId: primaryUserId,
+        targetId: targetUserId,
+      })
+    )
+      return;
 
     const targetUser = await this.userRepository.findOneById(targetUserId);
 
@@ -49,8 +68,8 @@ export class CreateFriendRequestUseCase {
         targetUserId,
       });
     this.logger.log(friendRequests);
-    const friendRequest = friendRequests.filter(
-      (friendRequest) => friendRequest.isAcceptedNull,
+    const friendRequest = friendRequests.filter((friendRequest) =>
+      friendRequest.isAcceptedNull(),
     );
 
     if (friendRequest.length > 0) {

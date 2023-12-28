@@ -11,7 +11,11 @@ export class UsersUseCase {
     private readonly repository: UserRepository,
   ) {}
 
-  findOne(id: string): Promise<User> {
+  async findAll(): Promise<User[]> {
+    return this.repository.findAll();
+  }
+
+  async findOne(id: string): Promise<User> {
     return this.repository.findOneById(id);
   }
 
@@ -28,6 +32,9 @@ export class UsersUseCase {
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
     return await this.repository.updateOne(intraId, updateUserDto);
+  }
+  async updateStatus(intraId: string, status: string): Promise<User> {
+    return await this.repository.updateStatus(intraId, status);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {

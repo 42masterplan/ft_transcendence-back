@@ -1,6 +1,11 @@
 import path from 'node:path';
+import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
+import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
+import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { FindBlockedUserViewModel } from '../view-models/users/find-blocked-user.vm';
+import { FindUsersViewModel } from '../view-models/users/find-users.vm';
 import {
   BadRequestException,
   Body,
@@ -23,10 +28,17 @@ import { diskStorage } from 'multer';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
+    private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
+    private readonly blockedUserUseCase: BlockedUserUseCase,
+  ) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('')
-  getAll(@Query('status') status: string) {
+  async getAll(@Request() req, @Query('status') status: string) {
+    const intraId = req.user.sub;
     if (
       status !== undefined &&
       status !== 'on-line' &&
@@ -34,92 +46,12 @@ export class UsersController {
       status !== 'in-game'
     )
       return new BadRequestException();
-    return [
-      {
-        id: '1',
-        profileImage: 'http://localhost:8080/resources/cat_kickBoard.svg',
-        name: 'OnlineUser1',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User1. Nice to meet you!",
-      },
-      {
-        id: '2',
-        profileImage: 'http://localhost:8080/resources/sloth_health.svg',
-        name: 'OfflineUser1',
-        currentStatus: 'off-line',
-        introduction: "Hello, I'm User2. Nice to meet you!",
-      },
-      {
-        id: '3',
-        profileImage: 'http://localhost:8080/resources/crocodile_health.svg',
-        name: 'InGameUser3',
-        currentStatus: 'in-game',
-        introduction: "Hello, I'm User3. Nice to meet you!",
-      },
-      {
-        id: '4',
-        profileImage: 'http://localhost:8080/resources/dog_body.svg',
-        name: 'OnlineUser4',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User4. Nice to meet you!",
-      },
-      {
-        id: '5',
-        profileImage: 'http://localhost:8080/resources/dog_boxing.svg',
-        name: 'User5',
-        currentStatus: 'off-line',
-        introduction: "Hello, I'm User5. Nice to meet you!",
-      },
-      {
-        id: '6',
-        profileImage: 'http://localhost:8080/resources/dog_stateBoard.svg',
-        name: 'User6',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User6. Nice to meet you!",
-      },
-      {
-        id: '7',
-        profileImage: 'http://localhost:8080/resources/gorilla_baseBall.svg',
-        name: 'User7',
-        currentStatus: 'in-game',
-        introduction: "Hello, I'm User7. Nice to meet you!",
-      },
-      {
-        id: '8',
-        profileImage: 'http://localhost:8080/resources/kangaroo_boxing.svg',
-        name: 'User8',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User8. Nice to meet you!",
-      },
-      {
-        id: '9',
-        profileImage: 'http://localhost:8080/resources/koala_health.svg',
-        name: 'User9',
-        currentStatus: 'off-line',
-        introduction: "Hello, I'm User9. Nice to meet you!",
-      },
-      {
-        id: '10',
-        profileImage: 'http://localhost:8080/resources/polarbear_ski.svg',
-        name: 'User10',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User10. Nice to meet you!",
-      },
-      {
-        id: '11',
-        profileImage: 'http://localhost:8080/resources/rhino_health.svg',
-        name: 'User11',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User11. Nice to meet you!",
-      },
-      {
-        id: '12',
-        profileImage: 'http://localhost:8080/resources/shark_health.svg',
-        name: 'User12',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User12. Nice to meet you!",
-      },
-    ].filter((user) =>
+    const usersExceptMe = (await this.usersUseCase.findAll()).filter(
+      (user) => user.intraId !== intraId,
+    );
+    const users = usersExceptMe.map((user) => new FindUsersViewModel(user));
+
+    return users.filter((user) =>
       status === undefined || status === null
         ? true
         : user.currentStatus === status,
@@ -452,8 +384,13 @@ export class UsersController {
   }
 
   /* BLOCK */
+  @UseGuards(AuthGuard('jwt'))
   @Get('block')
-  getBlockedUser() {
+  async getBlockedUser(@Request() req) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    const blocked = await this.findBlockedUserUseCase.execute(user.id);
+    return blocked.map((block) => new FindBlockedUserViewModel(block));
     return [
       {
         id: '9',
@@ -486,15 +423,25 @@ export class UsersController {
     ];
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('block')
-  block(@Body('id') id: string) {
-    console.log(id);
+  async block(@Request() req, @Body('id') targetId: string) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    await this.blockedUserUseCase.block({ myId: user.id, targetId });
+
     return true;
   }
 
-  @Delete('block')
-  unblock(@Param(':id') id: string) {
-    console.log(id);
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('block/:id')
+  async unblock(@Request() req, @Param('id') targetId: string) {
+    const intraId = req.user.sub;
+    console.log('unblock');
+    console.log(targetId);
+    const user = await this.usersService.findOneByIntraId(intraId);
+    await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
+
     return true;
   }
 }

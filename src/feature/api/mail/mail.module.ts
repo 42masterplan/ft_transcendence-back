@@ -1,7 +1,7 @@
+import { MailService } from './mail.service';
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
-import { MailService } from './mail.service';
 
 @Module({
   imports: [
