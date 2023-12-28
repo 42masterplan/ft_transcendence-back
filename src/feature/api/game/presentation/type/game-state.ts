@@ -11,7 +11,7 @@ import { Player } from './player';
 import { Score } from './score';
 
 export class GameState {
-  private readonly _matchId: number;
+  private readonly _matchId: string;
   private readonly _playerA: Player;
   private readonly _playerB: Player;
   private readonly _ball: Ball;
@@ -21,7 +21,7 @@ export class GameState {
   private _isForfeit: boolean;
   private _isDeuce: boolean;
 
-  constructor(matchId: number) {
+  constructor(matchId: string) {
     this._matchId = matchId;
     this._isReady = false;
     this._playerA = new Player({
@@ -43,7 +43,7 @@ export class GameState {
     this._isDeuce = false;
   }
 
-  get matchId(): number {
+  get matchId(): string {
     return this._matchId;
   }
 

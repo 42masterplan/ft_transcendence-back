@@ -8,8 +8,8 @@ import { Ball } from './ball';
 
 export class Player {
   private _id: string;
-  private readonly _x: number;
-  private readonly _y: number;
+  private _x: number;
+  private _y: number;
   private readonly _width: number;
   private readonly _height: number;
   private readonly _color: string;
@@ -55,6 +55,14 @@ export class Player {
 
   set id(id: string) {
     this._id = id;
+  }
+
+  set x(x: number) {
+    this._x = x;
+  }
+
+  set y(y: number) {
+    this._y = y;
   }
 
   set dx(dx: number) {
