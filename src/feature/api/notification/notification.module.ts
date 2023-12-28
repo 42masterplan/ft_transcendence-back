@@ -1,5 +1,5 @@
 import { UsersModule } from '../users/users.module';
-import { DmUsecase } from './application/dm.use-case';
+import { DmUseCase } from './application/dm.use-case';
 import { DmMessageRepository } from './domain/repositories/dm-message.repository';
 import { DmRepository } from './domain/repositories/dm.repository';
 import { DmMessageEntity } from './infrastructure/dm-message.entity';
@@ -15,7 +15,7 @@ import { Module } from '@nestjs/common';
   ],
   providers: [
     NotificationGateway,
-    DmUsecase,
+    DmUseCase,
     DmRepository,
     DmMessageRepository,
   ],

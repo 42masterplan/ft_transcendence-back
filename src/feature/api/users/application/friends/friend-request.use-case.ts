@@ -1,3 +1,4 @@
+import { DmUseCase } from '../../../notification/application/dm.use-case';
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { FriendUseCase } from './friend.use-case';
@@ -9,9 +10,11 @@ export class FriendRequestUseCase {
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
     private readonly friendUseCase: FriendUseCase,
+    private readonly dmUseCase: DmUseCase,
   ) {}
 
   async acceptFriendRequest({ requestId }: { requestId: number }) {
+    // TODO: jwt
     const friendRequest = await this.repository.findOneByRequestId({
       requestId,
     });
@@ -21,11 +24,14 @@ export class FriendRequestUseCase {
     }
 
     friendRequest.updateIsAccepted(true);
+
+    const myId = friendRequest.targetUserId;
+    const friendId = friendRequest.primaryUserId;
     await this.friendUseCase.create({
-      myId: friendRequest.targetUserId,
-      friendId: friendRequest.primaryUserId,
+      myId,
+      friendId,
     });
-    // TODO: DM 방 생성
+    await this.dmUseCase.createDm(myId, friendId);
 
     return await this.repository.update(friendRequest);
   }

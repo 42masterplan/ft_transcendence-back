@@ -1,7 +1,7 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
-import { DmUsecase } from '../application/dm.use-case';
+import { DmUseCase } from '../application/dm.use-case';
 import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
@@ -55,7 +55,7 @@ export class NotificationGateway
   constructor(
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
-    private readonly dmUseCase: DmUsecase,
+    private readonly dmUseCase: DmUseCase,
   ) {}
   @WebSocketServer()
   private readonly server: Server;
@@ -193,7 +193,7 @@ export class NotificationGateway
     if (!user) return 'DmNewMessage Fail!';
     try {
       this.dmUseCase.saveNewMessage({ dmId, participantId, content });
-      const receiverId = await this.dmUseCase.getRecieverId(dmId, user.id);
+      const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
       const receiverSocketId = this.sockets.get(receiverId);
       this.server
         .to(receiverSocketId)
