@@ -5,12 +5,17 @@ import { FindAcceptableFriendRequestUseCase } from './application/friends/find-a
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from './application/friends/friend-request.use-case';
 import { FriendUseCase } from './application/friends/friend.use-case';
+import { BlockedUserUseCase } from './application/use-case/blocked-user.use-case';
+import { FindBlockedUserUseCase } from './application/use-case/find-blocked-user.use-case';
 import { UsersUseCase } from './application/use-case/users.use-case';
+import { BlockedUserRepository } from './domain/friend/interface/blocked-user.repository';
 import { FriendRequestRepository } from './domain/friend/interface/friend-request.repository';
 import { FriendRepository } from './domain/friend/interface/friend.repository';
 import { UserRepository } from './domain/user.repository';
+import { BlockedUserEntity } from './infrastructure/blocked-user.entity';
 import { FriendRequestEntity } from './infrastructure/friend-request.entity';
 import { FriendEntity } from './infrastructure/friend.entity';
+import { BlockedUserRepositoryImpl } from './infrastructure/repositories/blocked-user.repository.impl';
 import { FriendRequestRepositoryImpl } from './infrastructure/repositories/friend-request.repository.impl';
 import { FriendRepositoryImpl } from './infrastructure/repositories/friend.repository.impl';
 import { UserEntity } from './infrastructure/user.entity';
@@ -23,7 +28,12 @@ import { Module, forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([UserEntity, FriendEntity, FriendRequestEntity]),
+    MikroOrmModule.forFeature([
+      UserEntity,
+      FriendEntity,
+      FriendRequestEntity,
+      BlockedUserEntity,
+    ]),
     MailModule,
     forwardRef(() => NotificationModule),
   ],
@@ -33,8 +43,11 @@ import { Module, forwardRef } from '@nestjs/common';
     UsersUseCase,
     UsersService,
 
-    FindFriendsUseCase,
+    BlockedUserUseCase,
+    FindBlockedUserUseCase,
+
     FriendUseCase,
+    FindFriendsUseCase,
 
     CreateFriendRequestUseCase,
     FriendRequestUseCase,
@@ -53,6 +66,10 @@ import { Module, forwardRef } from '@nestjs/common';
     {
       provide: FriendRequestRepository,
       useClass: FriendRequestRepositoryImpl,
+    },
+    {
+      provide: BlockedUserRepository,
+      useClass: BlockedUserRepositoryImpl,
     },
   ],
   exports: [UsersUseCase, UsersService, UserRepository],
