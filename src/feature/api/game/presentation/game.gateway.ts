@@ -41,7 +41,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor() {}
 
   handleConnection(client: any, ...args: any[]) {
-    console.log("It's get connected!");
+    console.log('Game is get connected!');
     client.join(this.currentGameKey.toString());
     client.emit('joinedRoom', this.currentGameKey);
     // TODO: game 참가 로직 변경
@@ -58,7 +58,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: any) {
-    console.log("It's get disconnected!");
+    console.log('Game is get disconnected!');
     const matchId = Object.keys(this.gameStates).find((id) => {
       const state: GameState = this.gameStates[id];
       if (state.playerA.id === client.id || state.playerB.id === client.id)
