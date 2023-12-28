@@ -3,16 +3,16 @@ import {
   PLAYER_A_COLOR,
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
-  ball,
-} from './util';
+} from '../util';
+import { Ball } from './ball';
 
 export class Player {
-  private _id: string;
-  private _x: number;
-  private _y: number;
-  private _width: number;
-  private _height: number;
-  private _color: string;
+  private readonly _id: string;
+  private readonly _x: number;
+  private readonly _y: number;
+  private readonly _width: number;
+  private readonly _height: number;
+  private readonly _color: string;
   private _dx: number;
 
   constructor(props: { id: string; x: number; y: number; color: string }) {
@@ -57,7 +57,7 @@ export class Player {
     this._dx = dx;
   }
 
-  isCollided(ball: ball) {
+  isCollided(ball: Ball) {
     const offsetX = ball.x - this._x + ball.radius;
     if (this._color === PLAYER_A_COLOR) {
       const offsetY = ball.y - this._y + ball.radius - this._height;
@@ -78,7 +78,7 @@ export class Player {
     }
   }
 
-  handleCollision(ball: ball, now: number) {
+  handleCollision(ball: Ball, now: number) {
     ball.lastCollision = now;
     const reflectedAngle = -Math.atan2(ball.velocity.y, ball.velocity.x);
     ball.velocity.x = Math.cos(reflectedAngle) * BALL_SPEED;
@@ -86,7 +86,7 @@ export class Player {
     this.applySpin(ball);
   }
 
-  applySpin(ball: ball) {
+  applySpin(ball: Ball) {
     const spinFactor = 0.4;
     ball.velocity.x += this._dx * spinFactor;
     let speed = Math.sqrt(

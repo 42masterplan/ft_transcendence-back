@@ -1,4 +1,4 @@
-import { Player } from './presentation/player';
+import { Player } from './presentation/type/player';
 import {
   SCREEN_WIDTH,
   SCREEN_HEIGHT,
