@@ -1,4 +1,4 @@
-export class BannedUser {
+export class BlockedUser {
   private readonly _id: number;
   private readonly _isDeleted: boolean;
   private readonly _primaryUserId: string;

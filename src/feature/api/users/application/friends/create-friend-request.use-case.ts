@@ -1,5 +1,6 @@
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { UserRepository } from '../../domain/user.repository';
+import { BlockedUserUseCase } from '../use-case/blocked-user.use-case';
 import { FriendUseCase } from './friend.use-case';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
@@ -13,6 +14,7 @@ export class CreateFriendRequestUseCase {
     @Inject(UserRepository)
     private readonly userRepository: UserRepository,
     private readonly friendUseCase: FriendUseCase,
+    private readonly blockedUserUseCase: BlockedUserUseCase,
   ) {}
 
   async execute({
@@ -33,7 +35,13 @@ export class CreateFriendRequestUseCase {
       })
     )
       return;
-    // TODO: Block 된 사람인 지 확인
+    if (
+      await this.blockedUserUseCase.someoneBlocked({
+        myId: primaryUserId,
+        targetId: targetUserId,
+      })
+    )
+      return;
 
     const targetUser = await this.userRepository.findOneById(targetUserId);
 
