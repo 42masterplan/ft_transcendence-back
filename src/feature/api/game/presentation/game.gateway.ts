@@ -47,12 +47,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // TODO: game 참가 로직 변경
     if (!this.gameStates[this.currentGameKey]) {
       // 현재 게임 키에 해당하는 게임 상태가 없으면 새로 생성합니다. (2명 중 1명이 들어온 경우)
+      console.log('create new match');
       this.gameStates[this.currentGameKey] = new GameState(this.currentGameKey);
       this.gameStates[this.currentGameKey].playerA.id = client.id; // 플레이어 A의 소켓 ID를 초기화합니다.
     } else {
       // 현재 게임 키에 해당하는 게임 상태가 있으면 플레이어 B의 소켓 ID를 초기화합니다.
+      console.log('you join the match');
       this.gameStates[this.currentGameKey].playerB.id = client.id; // 플레이어 A의 소켓 ID를 초기화합니다.
       this.gameStates[this.currentGameKey].isReady = true;
+      this.updateGameStateCron();
+      this.updateGameTimeCron();
       this.currentGameKey++; // 다음 게임 키를 위해 게임 키를 1 증가시킵니다.
     }
   }
@@ -66,7 +70,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return false;
     });
     if (!matchId) console.error('this should not happen'); // 게임 룸을 찾지 못하면 에러를 출력합니다. (로직상 불가능합니다 ;)..
-    if (!this.gameStates[matchId].ready) {
+    if (!this.gameStates[matchId].isReady) {
       // 1명이 들어왔는데 두 번째 플레이어가 들어오기 전에 연결이 끊긴 경우 게임 상태를 삭제합니다.
       delete this.gameStates[matchId];
       return;
@@ -222,11 +226,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   updateGameStateCron() {
+    console.log('start update game state cron');
     const gameStateCronJob = () => {
       Object.keys(this.gameStates).forEach((matchId) => {
         const state: GameState = this.gameStates[matchId];
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+        console.log(state);
         this.updateGameState(state);
+        console.log(state);
         this.server.to(state.matchId).emit('updatePlayers', state); // 플레이어의 위치를 업데이트합니다.
         this.server.to(state.matchId).emit('updateBall', state); // 공의 위치를 업데이트합니다.
       });
@@ -237,6 +244,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   updateGameTimeCron() {
+    console.log('start update game time cron');
     const timerId = setTimeout(() => {
       Object.keys(this.gameStates).forEach((matchId) => {
         const state: GameState = this.gameStates[matchId];
