@@ -1,6 +1,7 @@
 import {
   BALL_COLOR,
   BALL_RADIUS,
+  BALL_SPEED,
   BALL_VELOCITY_X,
   BALL_VELOCITY_Y,
   SCREEN_HEIGHT,
@@ -8,12 +9,13 @@ import {
 } from '../util';
 
 export class Ball {
-  private readonly _x: number;
-  private readonly _y: number;
+  private _x: number;
+  private _y: number;
   private readonly _radius: number;
-  private readonly _velocity: VelocityType;
+  private _velocity: VelocityType;
   private readonly _color: string;
   private _lastCollision: number;
+  private _speed: number;
 
   constructor() {
     this._x = SCREEN_WIDTH / 2;
@@ -23,6 +25,7 @@ export class Ball {
     this._radius = BALL_RADIUS;
     this._color = BALL_COLOR;
     this._lastCollision = 0;
+    this._speed = BALL_SPEED;
   }
 
   get x(): number {
@@ -49,8 +52,28 @@ export class Ball {
     return this._lastCollision;
   }
 
+  get speed(): number {
+    return this._speed;
+  }
+
+  set x(x: number) {
+    this._x = x;
+  }
+
+  set y(y: number) {
+    this._y = y;
+  }
+
+  set velocity(velocity: VelocityType) {
+    this._velocity = velocity;
+  }
+
   set lastCollision(lastCollision: number) {
     this._lastCollision = lastCollision;
+  }
+
+  set speed(speed: number) {
+    this._speed = speed;
   }
 }
 

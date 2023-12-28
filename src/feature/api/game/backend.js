@@ -11,7 +11,7 @@ class Player {
     width = PLAYER_WIDTH,
     height = PLAYER_HEIGHT,
     color,
-    dx = 0
+    dx = 0,
   }) {
     this.id = id;
     this.x = x;
@@ -69,14 +69,14 @@ class Player {
     const spinFactor = 0.4;
     ball.velocity.x += this.dx * spinFactor;
     let speed = Math.sqrt(
-      ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y
+      ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
     );
     ball.velocity.x = BALL_SPEED * (ball.velocity.x / speed);
     ball.velocity.y = BALL_SPEED * (ball.velocity.y / speed);
     if (ball.velocity.x > 0.75) ball.velocity.x = 0.75;
     else if (ball.velocity.x < -0.75) ball.velocity.x = -0.75;
     speed = Math.sqrt(
-      ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y
+      ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
     );
     ball.velocity.x = BALL_SPEED * (ball.velocity.x / speed);
     ball.velocity.y = BALL_SPEED * (ball.velocity.y / speed);
@@ -98,7 +98,7 @@ BALL_RADIUS = 5;
 BALL_COLOR = 'white';
 BALL_SPEED = 5 / 3;
 // ball velocity's speed is 5
-BALL_VELOCITY = {x: 1.1785, y: 1.1785};
+BALL_VELOCITY = { x: 1.1785, y: 1.1785 };
 PADDLE_OFFSET = SCREEN_WIDTH / 100;
 SCORE_LIMIT = 10;
 GAME_TIME_LIMIT = 180;
@@ -109,13 +109,13 @@ RENDERING_RATE = 5;
   next.js를 사용하여 프론트엔드 서버와 연결합니다.
   이 부분은 next.js에 맞게 수정해야 합니다.
 */
+const http = require('http');
 const express = require('express');
 const next = require('next');
-const http = require('http');
 const socketIO = require('socket.io');
 const port = 4242;
 const dev = process.env.NODE_ENV !== 'production';
-const nextApp = next({dev});
+const nextApp = next({ dev });
 const nextHandler = nextApp.getRequestHandler();
 const gameStates = {};
 
@@ -136,7 +136,7 @@ function createNewGameState(roomId) {
         y: SCREEN_HEIGHT - 45,
         width: PLAYER_WIDTH,
         height: PLAYER_HEIGHT,
-        color: PLAYER_A_COLOR
+        color: PLAYER_A_COLOR,
       }),
       //B
       new Player({
@@ -145,8 +145,8 @@ function createNewGameState(roomId) {
         y: 30,
         width: PLAYER_WIDTH,
         height: PLAYER_HEIGHT,
-        color: PLAYER_B_COLOR
-      })
+        color: PLAYER_B_COLOR,
+      }),
     ],
     ball: {
       x: SCREEN_WIDTH / 2,
@@ -154,15 +154,15 @@ function createNewGameState(roomId) {
       velocity: BALL_VELOCITY,
       radius: BALL_RADIUS,
       color: BALL_COLOR,
-      lastCollision: 0
+      lastCollision: 0,
     },
     score: {
       playerA: 0,
-      playerB: 0
+      playerB: 0,
     },
     time: GAME_TIME_LIMIT,
     forfeit: false,
-    isDeuce: false
+    isDeuce: false,
   };
 }
 
@@ -196,7 +196,7 @@ function resetBall(isA, state, io) {
   }
   state.ball.x = SCREEN_WIDTH / 2;
   state.ball.y = SCREEN_HEIGHT / 2;
-  state.ball.velocity = {x: 0, y: 0};
+  state.ball.velocity = { x: 0, y: 0 };
   setTimeout(() => {
     x = !isA
       ? state.players[0].x + PLAYER_WIDTH / 2
@@ -207,7 +207,7 @@ function resetBall(isA, state, io) {
     const speed = Math.sqrt(dx * dx + dy * dy);
     const ret_x = (dx / speed) * BALL_SPEED;
     const ret_y = (dy / speed) * BALL_SPEED;
-    state.ball.velocity = {x: ret_x, y: ret_y};
+    state.ball.velocity = { x: ret_x, y: ret_y };
     io.to(state.roomId).emit('updateBall', state);
   }, 3000);
 }
@@ -266,8 +266,8 @@ nextApp.prepare().then(() => {
     pingTimeout: 5000,
     cors: {
       origin: 'http://localhost:3000',
-      methods: ['GET', 'POST']
-    }
+      methods: ['GET', 'POST'],
+    },
   });
 
   let currentGameKey = 0; // 소켓 룸 아이디에 해당하는 '게임 키'가 필요합니다. 플레이어 짝이 지어질 때마다 게임 키를 1씩 증가시킵니다.
@@ -326,7 +326,7 @@ nextApp.prepare().then(() => {
         return state.players.some((player) => player.id === socket.id);
       });
       const targetPlayer = gameStates[roomId].players.find(
-        (player) => player.id === socket.id
+        (player) => player.id === socket.id,
       );
       if (!targetPlayer) return;
       const isA = targetPlayer.color === PLAYER_A_COLOR;
@@ -379,7 +379,7 @@ nextApp.prepare().then(() => {
         return state.players.some((player) => player.id === socket.id);
       });
       const targetPlayer = gameStates[roomId].players.find(
-        (player) => player.id === socket.id
+        (player) => player.id === socket.id,
       );
       if (!targetPlayer) return;
       targetPlayer.dx = 0;

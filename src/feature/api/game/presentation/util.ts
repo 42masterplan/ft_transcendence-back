@@ -13,4 +13,4 @@ export const PADDLE_OFFSET = SCREEN_WIDTH / 100;
 export const SCORE_LIMIT = 10;
 export const GAME_TIME_LIMIT = 180;
 export const DEBOUNCING_TIME = 500;
-export const RENDERING_RATE = 5;
+export const GAME_STATE_UPDATE_RATE = 5000;

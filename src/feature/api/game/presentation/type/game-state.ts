@@ -16,10 +16,10 @@ export class GameState {
   private readonly _playerB: Player;
   private readonly _ball: Ball;
   private readonly _score: Score;
-  private readonly _time: number;
+  private _time: number;
   private _isReady: boolean;
   private _isForfeit: boolean;
-  private readonly _isDeuce: boolean;
+  private _isDeuce: boolean;
 
   constructor(matchId: number) {
     this._matchId = matchId;
@@ -55,12 +55,28 @@ export class GameState {
     return this._playerB;
   }
 
+  get ball(): Ball {
+    return this._ball;
+  }
+
   get score(): Score {
     return this._score;
   }
 
+  get time(): number {
+    return this._time;
+  }
+
   get isForfeit(): boolean {
     return this._isForfeit;
+  }
+
+  get isDeuce(): boolean {
+    return this._isDeuce;
+  }
+
+  set time(time: number) {
+    this._time = time;
   }
 
   set isReady(isReady: boolean) {
@@ -69,5 +85,9 @@ export class GameState {
 
   set isForfeit(isForfeit: boolean) {
     this._isForfeit = isForfeit;
+  }
+
+  set isDeuce(isDeuce: boolean) {
+    this._isDeuce = isDeuce;
   }
 }
