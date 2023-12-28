@@ -251,8 +251,9 @@ export class UsersController {
     ]
   }
   
-  @Get('match')
+  @Get('matches')
   getMatch(@Param(':id') id: string) {
+    console.log('matches');
     return [
       {
         createdAt: '2021-05-01',
@@ -536,7 +537,7 @@ export class UsersController {
   async getMyName(@Request() req) {
     const intraId = req.user.sub;
     const user = await this.usersService.findOneByIntraId(intraId);
-    return user.name;
+    return { name: user.name };
   }
 
   /* BLOCK */
