@@ -228,6 +228,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     state.ball.x = SCREEN_WIDTH / 2;
     state.ball.y = SCREEN_HEIGHT / 2;
+    // state.ball.velocity.x = 0;
+    // state.ball.velocity.y = 0;
     setTimeout(() => {
       const x = !isA
         ? state.playerA.x + PLAYER_WIDTH / 2
