@@ -9,6 +9,7 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from './util';
+import { BallViewModel } from './view-model/ball.vm';
 import { GameStateViewModel } from './view-model/game-state.vm';
 import { UsePipes } from '@nestjs/common';
 import {
@@ -227,8 +228,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     state.ball.x = SCREEN_WIDTH / 2;
     state.ball.y = SCREEN_HEIGHT / 2;
-    state.ball.velocity.x = 0;
-    state.ball.velocity.y = 0;
     setTimeout(() => {
       const x = !isA
         ? state.playerA.x + PLAYER_WIDTH / 2
@@ -253,6 +252,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.gameStates.forEach((state) => {
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
         this.updateGameState(state);
+        console.log(new BallViewModel(state.ball));
         this.server
           .to(state.matchId)
           .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.
