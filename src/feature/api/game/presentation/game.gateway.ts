@@ -9,6 +9,7 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from './util';
+import { GameStateViewModel } from './view-model/game-state.vm';
 import { UsePipes } from '@nestjs/common';
 import {
   OnGatewayConnection,
@@ -72,6 +73,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (matchIndex === -1) console.error('this should not happen'); // 게임 룸을 찾지 못하면 에러를 출력합니다. (로직상 불가능합니다 ;)..
     if (!this.gameStates[matchIndex].isReady) {
       // 1명이 들어왔는데 두 번째 플레이어가 들어오기 전에 연결이 끊긴 경우 게임 상태를 삭제합니다.
+      // TODO: 로직 확인
       delete this.gameStates[matchIndex];
       return;
     }
@@ -81,15 +83,23 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       state.score.playerB = SCORE_LIMIT;
       state.isForfeit = true;
 
-      this.server.to(state.matchId).emit('updateScore', state);
-      this.server.to(state.matchId).emit('gameOver', state);
+      this.server
+        .to(state.matchId)
+        .emit('updateScore', new GameStateViewModel(state));
+      this.server
+        .to(state.matchId)
+        .emit('gameOver', new GameStateViewModel(state));
     }
     // 플레이어 B가 연결을 끊으면 플레이어 A가 기권승합니다.
     else if (state.playerB.id === client.id) {
       state.score.playerA = SCORE_LIMIT;
       state.isForfeit = true;
-      this.server.to(state.matchId).emit('updateScore', state);
-      this.server.to(state.matchId).emit('gameOver', state);
+      this.server
+        .to(state.matchId)
+        .emit('updateScore', new GameStateViewModel(state));
+      this.server
+        .to(state.matchId)
+        .emit('gameOver', new GameStateViewModel(state));
     }
   }
 
@@ -193,19 +203,25 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private resetBall(isA: boolean, state: GameState) {
     if (isA) state.score.playerA++;
     else state.score.playerB++;
-    this.server.to(state.matchId).emit('updateScore', state);
+    this.server
+      .to(state.matchId)
+      .emit('updateScore', new GameStateViewModel(state));
     if (
       (!state.isDeuce && state.score.playerA === SCORE_LIMIT) ||
       state.score.playerB === SCORE_LIMIT
     ) {
-      this.server.to(state.matchId).emit('gameOver', state);
+      this.server
+        .to(state.matchId)
+        .emit('gameOver', new GameStateViewModel(state));
       this.server.socketsLeave(state.matchId);
       return;
     } else if (
       state.isDeuce &&
       Math.abs(state.score.playerA - state.score.playerB) >= 2
     ) {
-      this.server.to(state.matchId).emit('gameOver', state);
+      this.server
+        .to(state.matchId)
+        .emit('gameOver', new GameStateViewModel(state));
       this.server.socketsLeave(state.matchId);
       return;
     }
@@ -225,7 +241,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const ret_y = (dy / speed) * state.ball.speed;
       state.ball.velocity.x = ret_x;
       state.ball.velocity.y = ret_y;
-      this.server.to(state.matchId).emit('updateBall', state);
+      this.server
+        .to(state.matchId)
+        .emit('updateBall', new GameStateViewModel(state));
     }, 3000);
   }
 
@@ -235,8 +253,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.gameStates.forEach((state) => {
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
         this.updateGameState(state);
-        this.server.to(state.matchId).emit('updatePlayers', state); // 플레이어의 위치를 업데이트합니다.
-        this.server.to(state.matchId).emit('updateBall', state);
+        this.server
+          .to(state.matchId)
+          .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.
+        this.server
+          .to(state.matchId)
+          .emit('updateBall', new GameStateViewModel(state));
       });
       setTimeout(gameStateCronJob, GAME_STATE_UPDATE_RATE);
     };
@@ -252,16 +274,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!state.isReady) return;
         if (state.time <= 0) {
           if (state.score.playerA > state.score.playerB)
-            this.server.to(state.matchId).emit('gameOver', state);
+            this.server
+              .to(state.matchId)
+              .emit('gameOver', new GameStateViewModel(state));
           else if (state.score.playerA < state.score.playerB)
-            this.server.to(state.matchId).emit('gameOver', state);
+            this.server
+              .to(state.matchId)
+              .emit('gameOver', new GameStateViewModel(state));
           else {
             // 듀스!! 공의 속력이 1.5배로 증가합니다. 먼저 2점차를 만들면 승리합니다.
             state.isDeuce = true;
             state.ball.velocity.x *= 1.5;
             state.ball.velocity.y *= 1.5;
             state.ball.speed *= 1.5;
-            this.server.to(state.matchId).emit('deuce', state);
+            this.server
+              .to(state.matchId)
+              .emit('deuce', new GameStateViewModel(state));
             clearInterval(timerId);
             return;
           }
@@ -270,7 +298,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           return;
         }
 
-        this.server.to(state.matchId).emit('updateTime', state);
+        this.server
+          .to(state.matchId)
+          .emit('updateTime', new GameStateViewModel(state));
       });
     }, 1000);
   }
