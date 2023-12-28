@@ -231,9 +231,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       Object.keys(this.gameStates).forEach((matchId) => {
         const state: GameState = this.gameStates[matchId];
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-        console.log(state);
         this.updateGameState(state);
-        console.log(state);
         this.server.to(state.matchId).emit('updatePlayers', state); // 플레이어의 위치를 업데이트합니다.
         this.server.to(state.matchId).emit('updateBall', state); // 공의 위치를 업데이트합니다.
       });

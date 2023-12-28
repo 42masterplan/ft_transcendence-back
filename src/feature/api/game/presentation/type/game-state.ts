@@ -67,6 +67,10 @@ export class GameState {
     return this._time;
   }
 
+  get isReady(): boolean {
+    return this._isReady;
+  }
+
   get isForfeit(): boolean {
     return this._isForfeit;
   }
