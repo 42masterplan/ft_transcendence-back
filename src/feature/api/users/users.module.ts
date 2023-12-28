@@ -1,4 +1,5 @@
 import { MailModule } from '../mail/mail.module';
+import { NotificationModule } from '../notification/notification.module';
 import { CreateFriendRequestUseCase } from './application/friends/create-friend-request.use-case';
 import { FindAcceptableFriendRequestUseCase } from './application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from './application/friends/find-friends.use-case';
@@ -18,12 +19,13 @@ import { FriendsController } from './presentation/controller/friends.controller'
 import { UsersController } from './presentation/controller/users.controller';
 import { UsersService } from './users.service';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
     MikroOrmModule.forFeature([UserEntity, FriendEntity, FriendRequestEntity]),
     MailModule,
+    forwardRef(() => NotificationModule),
   ],
   controllers: [UsersController, FriendsController],
   providers: [

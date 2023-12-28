@@ -6,11 +6,11 @@ import { DmMessageEntity } from './infrastructure/dm-message.entity';
 import { DmEntity } from './infrastructure/dm.entity';
 import { NotificationGateway } from './presentation/notification.gateway';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
-    UsersModule,
+    forwardRef(() => UsersModule),
     MikroOrmModule.forFeature([DmEntity, DmMessageEntity]),
   ],
   providers: [
@@ -19,5 +19,6 @@ import { Module } from '@nestjs/common';
     DmRepository,
     DmMessageRepository,
   ],
+  exports: [DmUseCase],
 })
 export class NotificationModule {}
