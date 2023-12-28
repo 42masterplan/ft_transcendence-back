@@ -109,137 +109,285 @@ export class UsersController {
   }
 
   @Get('info')
-  getInfo(@Param(':id') id: string) {
+  async getInfo(@Param(':id') id: string) {
     console.log(id);
+    const user = await this.usersService.findOneByIntraId(id);
     return {
       id: '1',
       name: 'Seoyoo',
-      profileImage: 'http://localhost:8080/resources/crocodile_health.svg',
+      profileImage: 'https://www.w3schools.com/howto/img_avatar.png',
       currentStatus: 'on-line',
-      introduction:
-        'Hello, I am User1 and this is a very very very very long long long long long long introduction. ',
-      rank: {
-        win: 10,
-        lose: 5,
-        tier: 'Silver',
-      },
-      challenges: [
-        {
-          name: 'Challenge1',
-          description: 'This is challenge1',
-          progressRate: 25,
-          achieveRatio: 0.5,
-        },
-        {
-          name: 'Challenge2',
-          description: 'This is challenge2',
-          progressRate: 0,
-          achieveRatio: 0.5,
-        },
-        {
-          name: 'Challenge3',
-          description: 'This is challenge3',
-          progressRate: 14,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge4',
-          description: 'This is challenge4',
-          progressRate: 23,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge5',
-          description: 'This is challenge5',
-          progressRate: 33,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge6',
-          description: 'This is challenge6',
-          progressRate: 44,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge7',
-          description: 'This is challenge7',
-          progressRate: 55,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge8',
-          description: 'This is challenge8',
-          progressRate: 66,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge9',
-          description: 'This is challenge9',
-          progressRate: 77,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge10',
-          description: 'This is challenge10',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge11',
-          description: 'This is challenge11',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge12',
-          description: 'This is challenge12',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge13',
-          description: 'This is challenge13',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge14',
-          description: 'This is challenge14',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge15',
-          description: 'This is challenge15',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge16',
-          description: 'This is challenge16',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge17',
-          description: 'This is challenge17',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge18',
-          description: 'This is challenge18',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-        {
-          name: 'Challenge19',
-          description: 'This is challenge19',
-          progressRate: 100,
-          achieveRatio: 1,
-        },
-      ],
+      introduction: 'Hello, I am User1 and this is a very very very very long long long long long long introduction. ',
+    }
+  };
+
+  @Get('rank')
+  getRank(@Param(':id') id:string) {
+
+    return {
+      win: 10,
+      lose: 5,
+      tier: 'Silver'
     };
+  }
+
+  @Get('challenges')
+  getChallenges(@Param(':id') id: string) {
+    return [
+      {
+        name: 'Challenge1',
+        description: 'This is challenge1',
+        progressRate: 25,
+        achieveRatio: 0.5
+      },
+      {
+        name: 'Challenge2',
+        description: 'This is challenge2',
+        progressRate: 0,
+        achieveRatio: 0.5
+      },
+      {
+        name: 'Challenge3',
+        description: 'This is challenge3',
+        progressRate: 14,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge4',
+        description: 'This is challenge4',
+        progressRate: 23,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge5',
+        description: 'This is challenge5',
+        progressRate: 33,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge6',
+        description: 'This is challenge6',
+        progressRate: 44,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge7',
+        description: 'This is challenge7',
+        progressRate: 55,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge8',
+        description: 'This is challenge8',
+        progressRate: 66,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge9',
+        description: 'This is challenge9',
+        progressRate: 77,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge10',
+        description: 'This is challenge10',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge11',
+        description: 'This is challenge11',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge12',
+        description: 'This is challenge12',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge13',
+        description: 'This is challenge13',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge14',
+        description: 'This is challenge14',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge15',
+        description: 'This is challenge15',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge16',
+        description: 'This is challenge16',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge17',
+        description: 'This is challenge17',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge18',
+        description: 'This is challenge18',
+        progressRate: 100,
+        achieveRatio: 1
+      },
+      {
+        name: 'Challenge19',
+        description: 'This is challenge19',
+        progressRate: 100,
+        achieveRatio: 1
+      }
+    ]
+  }
+  
+  @Get('match')
+  getMatch(@Param(':id') id: string) {
+    return [
+      {
+        createdAt: '2021-05-01',
+        playerAName: 'User1',
+        playerBName: 'User2',
+        playerAScore: 0,
+        playerBScore: 0
+      },
+      {
+        createdAt: '2021-05-02',
+        playerAName: 'User1',
+        playerBName: 'User3',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-03',
+        playerAName: 'User1',
+        playerBName: 'User4',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-04',
+        playerAName: 'User1',
+        playerBName: 'User5',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-05',
+        playerAName: 'User1',
+        playerBName: 'User6',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-06',
+        playerAName: 'User1',
+        playerBName: 'User7',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-07',
+        playerAName: 'User1',
+        playerBName: 'User8',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-08',
+        playerAName: 'User1',
+        playerBName: 'User9',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-09',
+        playerAName: 'User1',
+        playerBName: 'User10',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-10',
+        playerAName: 'User1',
+        playerBName: 'User11',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-11',
+        playerAName: 'User1',
+        playerBName: 'User12',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-12',
+        playerAName: 'User1',
+        playerBName: 'User13',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-13',
+        playerAName: 'User1',
+        playerBName: 'User14',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-14',
+        playerAName: 'User1',
+        playerBName: 'User15',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-15',
+        playerAName: 'User1',
+        playerBName: 'User16',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-16',
+        playerAName: 'User1',
+        playerBName: 'User17',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-17',
+        playerAName: 'User1',
+        playerBName: 'User18',
+        playerAScore: 10,
+        playerBScore: 5
+      },
+      {
+        createdAt: '2021-05-18',
+        playerAName: 'User1',
+        playerBName: 'User19',
+        playerAScore: 5,
+        playerBScore: 10
+      },
+      {
+        createdAt: '2021-05-19',
+        playerAName: 'User1',
+        playerBName: 'User20',
+        playerAScore: 10,
+        playerBScore: 5
+      }
+    ];
   }
 
   @Get('game-history')
@@ -381,6 +529,14 @@ export class UsersController {
         player2Score: 5,
       },
     ];
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('myName')
+  async getMyName(@Request() req) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    return user.name;
   }
 
   /* BLOCK */
