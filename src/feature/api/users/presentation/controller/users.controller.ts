@@ -260,133 +260,152 @@ export class UsersController {
         playerAName: 'User1',
         playerBName: 'User2',
         playerAScore: 0,
-        playerBScore: 0
+        playerBScore: 0,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-02',
         playerAName: 'User1',
         playerBName: 'User3',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-03',
         playerAName: 'User1',
         playerBName: 'User4',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-04',
         playerAName: 'User1',
         playerBName: 'User5',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-05',
         playerAName: 'User1',
         playerBName: 'User6',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-06',
         playerAName: 'User1',
         playerBName: 'User7',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-07',
         playerAName: 'User1',
         playerBName: 'User8',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-08',
         playerAName: 'User1',
         playerBName: 'User9',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-09',
         playerAName: 'User1',
         playerBName: 'User10',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-10',
         playerAName: 'User1',
         playerBName: 'User11',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-11',
         playerAName: 'User1',
         playerBName: 'User12',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-12',
         playerAName: 'User1',
         playerBName: 'User13',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-13',
         playerAName: 'User1',
         playerBName: 'User14',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-14',
         playerAName: 'User1',
         playerBName: 'User15',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-15',
         playerAName: 'User1',
         playerBName: 'User16',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-16',
         playerAName: 'User1',
         playerBName: 'User17',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-17',
         playerAName: 'User1',
         playerBName: 'User18',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-18',
         playerAName: 'User1',
         playerBName: 'User19',
         playerAScore: 5,
-        playerBScore: 10
+        playerBScore: 10,
+		    gameId: 'blablabla'
       },
       {
         createdAt: '2021-05-19',
         playerAName: 'User1',
         playerBName: 'User20',
         playerAScore: 10,
-        playerBScore: 5
+        playerBScore: 5,
+		    gameId: 'blablabla'
       }
     ];
   }
