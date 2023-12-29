@@ -170,7 +170,7 @@ export class GameService {
     return false;
   }
 
-  setDuece(state: GameState) {
+  setDeuce(state: GameState) {
     // 듀스!! 공의 속력이 1.5배로 증가합니다. 먼저 2점차를 만들면 승리합니다.
     state.isDeuce = true;
     state.ball.velocity.x *= 1.5;

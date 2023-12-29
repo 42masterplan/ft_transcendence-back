@@ -111,15 +111,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   updateGameStateCron() {
     console.log('start update game state cron');
-    setInterval((state) => {
-      if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-      this.updateGameState(state);
-      this.server
-        .to(state.matchId)
-        .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.
-      this.server
-        .to(state.matchId)
-        .emit('updateBall', new GameStateViewModel(state));
+    setInterval(() => {
+      this.gameStates.forEach((state) => {
+        if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+        this.updateGameState(state);
+        this.server
+          .to(state.matchId)
+          .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.
+        this.server
+          .to(state.matchId)
+          .emit('updateBall', new GameStateViewModel(state));
+      });
     }, GAME_STATE_UPDATE_RATE);
   }
 
