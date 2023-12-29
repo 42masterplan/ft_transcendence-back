@@ -1,7 +1,16 @@
-import { IsBoolean, IsOptional, IsString, IsUrl } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  NotContains,
+} from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
+  @IsNotEmpty()
+  @NotContains(' ')
   @IsOptional()
   name?: string;
 
