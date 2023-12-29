@@ -138,9 +138,14 @@ export class NotificationGateway
       return 'gameResponse Fail!';
     }
     const userSocketId = this.sockets.get(matchInfo.srcId);
+    const destSocketId = this.sockets.get(matchInfo.destId);
     // 	const userA,B;
     if (isAccept) {
       this.server.to(userSocketId).emit('gameStart', {
+        matchId: matchId,
+        theme: matchInfo.theme,
+      });
+      this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
         theme: matchInfo.theme,
       });
