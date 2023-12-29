@@ -13,28 +13,69 @@ export class FriendRepositoryImpl implements FriendRepository {
   ) {}
 
   async findManyByMyId(myId: string): Promise<Friend[]> {
-    const friends = await this.repository.find({ myId });
+    const friends = await this.repository.find({ myId, isDeleted: false });
 
     return friends.map((friend) => this.toDomain(friend));
   }
 
-  async deleteMyFriend({
+  async createFriend({
     myId,
     friendId,
   }: {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    const friend = await this.repository.findOneOrFail({
+    if (
+      (await this.repository.count({
+        myId,
+        friendId,
+        isDeleted: false,
+      })) ||
+      (await this.repository.count({
+        myId: friendId,
+        friendId: myId,
+        isDeleted: false,
+      }))
+    )
+      return;
+    const meAndFriend = await this.repository.create({
       myId,
       friendId,
     });
-
-    friend.isDeleted = true;
+    await this.repository.create({
+      myId: friendId,
+      friendId: myId,
+    });
 
     this.repository.getEntityManager().flush();
 
-    return this.toDomain(friend);
+    return this.toDomain(meAndFriend);
+  }
+
+  async deleteFriend({
+    myId,
+    friendId,
+  }: {
+    myId: string;
+    friendId: string;
+  }): Promise<Friend> {
+    const meAndFriend = await this.repository.findOneOrFail({
+      myId,
+      friendId,
+      isDeleted: false,
+    });
+    const friendAndMe = await this.repository.findOneOrFail({
+      myId: friendId,
+      friendId: myId,
+      isDeleted: false,
+    });
+
+    meAndFriend.isDeleted = true;
+    friendAndMe.isDeleted = true;
+
+    this.repository.getEntityManager().flush();
+
+    return this.toDomain(meAndFriend);
   }
 
   private toDomain(entity: FriendEntity): Friend {

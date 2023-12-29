@@ -12,7 +12,13 @@ export class DmRepository {
     private readonly repository: EntityRepository<DmEntity>,
   ) {}
 
-  async saveOne({ user1Id, user2Id }): Promise<Dm> {
+  async saveOne({
+    user1Id,
+    user2Id,
+  }: {
+    user1Id: string;
+    user2Id: string;
+  }): Promise<Dm> {
     const newDm = this.repository.create({
       user1Id,
       user2Id,
@@ -21,7 +27,13 @@ export class DmRepository {
     return this.toDomain(newDm);
   }
 
-  async findOneByUserIds(user1Id: string, user2Id: string): Promise<Dm> {
+  async findOneByUserIds({
+    user1Id,
+    user2Id,
+  }: {
+    user1Id: string;
+    user2Id: string;
+  }): Promise<Dm> {
     const dm = await this.repository.findOne({
       user1Id,
       user2Id,

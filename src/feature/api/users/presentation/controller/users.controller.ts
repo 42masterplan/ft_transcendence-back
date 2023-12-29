@@ -1,6 +1,11 @@
 import path from 'node:path';
+import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
+import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
+import { UsersUseCase } from '../../application/use-case/users.use-case';
 import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { FindBlockedUserViewModel } from '../view-models/users/find-blocked-user.vm';
+import { FindUsersViewModel } from '../view-models/users/find-users.vm';
 import {
   BadRequestException,
   Body,
@@ -20,16 +25,20 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { UsersUseCase } from '../../application/use-case/users.use-case';
-import { FindUsersViewModel } from '../view-models/users/find-users.vm';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService,
-    private readonly usersUseCase: UsersUseCase) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
+    private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
+    private readonly blockedUserUseCase: BlockedUserUseCase,
+  ) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('')
-  async getAll(@Query('status') status: string) {
+  async getAll(@Request() req, @Query('status') status: string) {
+    const intraId = req.user.sub;
     if (
       status !== undefined &&
       status !== 'on-line' &&
@@ -37,12 +46,16 @@ export class UsersController {
       status !== 'in-game'
     )
       return new BadRequestException();
-    const users = (await this.usersUseCase.findAll()).map((user) => (new FindUsersViewModel(user)));
+    const usersExceptMe = (await this.usersUseCase.findAll()).filter(
+      (user) => user.intraId !== intraId,
+    );
+    const users = usersExceptMe.map((user) => new FindUsersViewModel(user));
+
     return users.filter((user) =>
-    status === undefined || status === null
-      ? true
-      : user.currentStatus === status,
-  );
+      status === undefined || status === null
+        ? true
+        : user.currentStatus === status,
+    );
   }
 
   @UseGuards(AuthGuard('signIn'))
@@ -371,8 +384,13 @@ export class UsersController {
   }
 
   /* BLOCK */
+  @UseGuards(AuthGuard('jwt'))
   @Get('block')
-  getBlockedUser() {
+  async getBlockedUser(@Request() req) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    const blocked = await this.findBlockedUserUseCase.execute(user.id);
+    return blocked.map((block) => new FindBlockedUserViewModel(block));
     return [
       {
         id: '9',
@@ -405,15 +423,25 @@ export class UsersController {
     ];
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('block')
-  block(@Body('id') id: string) {
-    console.log(id);
+  async block(@Request() req, @Body('id') targetId: string) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    await this.blockedUserUseCase.block({ myId: user.id, targetId });
+
     return true;
   }
 
-  @Delete('block')
-  unblock(@Param(':id') id: string) {
-    console.log(id);
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('block/:id')
+  async unblock(@Request() req, @Param('id') targetId: string) {
+    const intraId = req.user.sub;
+    console.log('unblock');
+    console.log(targetId);
+    const user = await this.usersService.findOneByIntraId(intraId);
+    await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
+
     return true;
   }
 }

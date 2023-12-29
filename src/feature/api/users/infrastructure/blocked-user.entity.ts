@@ -1,8 +1,8 @@
 import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { bool } from 'joi';
 
-@Entity({ tableName: 'banned_user' })
-export class BannedUserEntity {
+@Entity({ tableName: 'blocked_user' })
+export class BlockedUserEntity {
   @PrimaryKey()
   id: number;
 

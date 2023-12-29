@@ -1,5 +1,7 @@
+import { DmUseCase } from '../../../notification/application/dm.use-case';
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
+import { FriendUseCase } from './friend.use-case';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -7,59 +9,45 @@ export class FriendRequestUseCase {
   constructor(
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
+    private readonly friendUseCase: FriendUseCase,
+    private readonly dmUseCase: DmUseCase,
   ) {}
 
-  async acceptFriendRequest({
-    primaryUserId,
-    targetUserId,
-  }: {
-    primaryUserId: string;
-    targetUserId: string;
-  }) {
-    const friendRequests =
-      await this.repository.findManyByPrimaryUserIdTargetUserId({
-        primaryUserId,
-        targetUserId,
-      });
+  async acceptFriendRequest({ requestId }: { requestId: number }) {
+    // TODO: jwt
+    const friendRequest = await this.repository.findOneByRequestId({
+      requestId,
+    });
 
-    const acceptedFriendRequest =
-      this.getAcceptableFriendRequest(friendRequests);
-
-    if (!acceptedFriendRequest) {
+    if (!friendRequest) {
       throw new Error('Friend request not found');
     }
 
-    acceptedFriendRequest.updateIsAccepted(true);
+    friendRequest.updateIsAccepted(true);
 
-    // TODO: Friend Request update;
-    // TODO: Freind 2개 생성;
-    // TODO: DM 방 생성
-    return await this.repository.update(acceptedFriendRequest);
+    const myId = friendRequest.targetUserId;
+    const friendId = friendRequest.primaryUserId;
+    await this.friendUseCase.create({
+      myId,
+      friendId,
+    });
+    await this.dmUseCase.createDm(myId, friendId);
+
+    return await this.repository.update(friendRequest);
   }
 
-  async rejectFriendRequest({
-    primaryUserId,
-    targetUserId,
-  }: {
-    primaryUserId: string;
-    targetUserId: string;
-  }) {
-    const friendRequests =
-      await this.repository.findManyByPrimaryUserIdTargetUserId({
-        primaryUserId,
-        targetUserId,
-      });
+  async rejectFriendRequest({ requestId }: { requestId: number }) {
+    const friendRequest = await this.repository.findOneByRequestId({
+      requestId,
+    });
 
-    const acceptedFriendRequest =
-      this.getAcceptableFriendRequest(friendRequests);
-
-    if (!acceptedFriendRequest) {
+    if (!friendRequest) {
       throw new Error('Friend request not found');
     }
 
-    acceptedFriendRequest.updateIsAccepted(false);
+    friendRequest.updateIsAccepted(false);
 
-    return await this.repository.update(acceptedFriendRequest);
+    return await this.repository.update(friendRequest);
   }
 
   getAcceptableFriendRequest(
