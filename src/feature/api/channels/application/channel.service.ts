@@ -9,11 +9,6 @@ import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { UsersUseCase } from 'src/feature/api/users/application/use-case/users.use-case';
 
-const hkong = '730f18d5-ffc2-495d-a148-dbf5ec12cf36';
-const joushin = '622f9743-20c2-4251-9c34-341ee717b007';
-const yejinam = '6df1c752-654e-4d40-b8b2-b842e0e85169';
-const userName = 'joushin';
-const userId = joushin;
 @Injectable()
 export class ChannelService {
   constructor(
@@ -24,10 +19,11 @@ export class ChannelService {
     private readonly usersUseCase: UsersUseCase,
   ) {}
 
-  async getMyChannels() {
-    console.log('channel myChannels');
+  async getMyChannels(userId: string) {
+    console.log('channel myChannels', userId);
     const myChannelList =
       await this.channelParticipantRepository.findAllByUserId(userId);
+    console.log('myChannelList', myChannelList);
     return await Promise.all(
       myChannelList.map(async (participants) => ({
         id: participants.channelId,
@@ -42,7 +38,7 @@ export class ChannelService {
     );
   }
 
-  async getPublicChannels(): Promise<PublicChannelDto[]> {
+  async getPublicChannels(userId: string): Promise<PublicChannelDto[]> {
     console.log('service publicChannels');
     const myChannels = (
       await this.channelParticipantRepository.findAllByUserId(userId)
@@ -56,7 +52,7 @@ export class ChannelService {
     return channelsDto;
   }
 
-  async getMyRole(channelId: string): Promise<string> {
+  async getMyRole(userId: string, channelId: string): Promise<string> {
     console.log('service myRole');
     const myRole =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
@@ -68,7 +64,7 @@ export class ChannelService {
     return myRole.role;
   }
 
-  async joinChannel({ id, password }): Promise<string> {
+  async joinChannel(userId: string, { id, password }): Promise<string> {
     console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
     password = this.hashPassword(password);
@@ -104,7 +100,7 @@ export class ChannelService {
     return 'joinChannel Success!';
   }
 
-  async newMessage(content: string, channelId: string): Promise<any> {
+  async newMessage(userId: string, content: string, channelId: string): Promise<any> {
     const user = await this.usersUseCase.findOne(userId);
     const participant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
@@ -132,7 +128,7 @@ export class ChannelService {
     };
   }
 
-  async getChannelHistory(channelId: string) {
+  async getChannelHistory(userId: string, channelId: string) {
     console.log('service channelHistory');
     const message =
       await this.channelMessageRepository.findAllByChannelId(channelId);
@@ -140,7 +136,7 @@ export class ChannelService {
     return history;
   }
 
-  async createChannel(client, createChannelDto: CreateChannelDto) {
+  async createChannel(userId: string, client, createChannelDto: CreateChannelDto) {
     console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름을 입력해주세요.');
@@ -154,7 +150,7 @@ export class ChannelService {
     return channel.id;
   }
 
-  async getParticipants(channelId: string): Promise<any[]> {
+  async getParticipants(userId: string, channelId: string): Promise<any[]> {
     const channelParticipant =
       await this.channelParticipantRepository.findAllByChannelId(channelId);
     const participants = [];
@@ -188,7 +184,7 @@ export class ChannelService {
     return bannedUsers;
   }
 
-  async leaveChannel(channelId: string) {
+  async leaveChannel(userId: string, channelId: string) {
     const channel = await this.channelRepository.findOneById(channelId);
     if (!channel || channel.isDeleted) return 'There is no channel';
 
@@ -239,7 +235,7 @@ export class ChannelService {
     return adminUsers;
   }
 
-  async banUser(channelId: string, targetId: string) {
+  async banUser(userId: string, channelId: string, targetId: string) {
     if (targetId === userId) return 'Cannot ban yourself';
 
     const participant =
@@ -272,7 +268,7 @@ export class ChannelService {
     return 'success';
   }
 
-  async unBanUser(channelId: string, targetId: string) {
+  async unBanUser(userId: string, channelId: string, targetId: string) {
     if (userId === targetId) return 'Cannot unBan yourself';
 
     const participant =
@@ -305,7 +301,7 @@ export class ChannelService {
     return 'unBanUser Success!';
   }
 
-  async kickUser(channelId: string, targetId: string): Promise<string> {
+  async kickUser(userId: string, channelId: string, targetId: string): Promise<string> {
     if (userId === targetId) return 'Cannot kick yourself';
 
     const participant =
@@ -333,7 +329,7 @@ export class ChannelService {
     return 'kickUser Success!';
   }
 
-  async muteUser(channelId: string, targetId: string): Promise<string> {
+  async muteUser(userId: string, channelId: string, targetId: string): Promise<string> {
     if (userId === targetId) return 'Cannot mute yourself';
 
     const participant =
@@ -360,7 +356,7 @@ export class ChannelService {
     return 'muteUser Success!';
   }
 
-  async changeAdmin(
+  async changeAdmin(userId: string, 
     channelId: string,
     targetId: string,
     types: string,
@@ -390,7 +386,7 @@ export class ChannelService {
     return 'changeAdmin Success!';
   }
 
-  async changePassword(channelId: string, password: string): Promise<string> {
+  async changePassword(userId: string, channelId: string, password: string): Promise<string> {
     const participant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
