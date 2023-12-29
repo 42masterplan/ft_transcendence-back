@@ -26,7 +26,6 @@ import { Socket } from 'socket.io';
 // }),
 // DTO를 검증하는 ValidationPipe를 사용할 수 있다.
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  private currentGameKey: number = 0;
   private gameStates: GameState[] = [];
 
   @WebSocketServer()
@@ -38,6 +37,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: any, ...args: any[]) {
     console.log('Game is get connected!');
+    console.log(client);
     const matchId = this.gameService.getNewMatchId(this.gameStates);
     client.join(matchId);
     client.emit('joinedRoom', matchId);
