@@ -12,7 +12,7 @@ export class BallViewModel {
 
   constructor(param: Ball) {
     this.x = param.x;
-    this.y = param.x;
+    this.y = param.y;
     this.radius = param.radius;
     this.velocity = new VelocityViewModel(param.velocity);
     this.color = param.color;

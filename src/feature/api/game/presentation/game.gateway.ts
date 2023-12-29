@@ -1,3 +1,4 @@
+import { GameService } from '../application/game.service';
 import { GameState } from './type/game-state';
 import {
   DEBOUNCING_TIME,
@@ -9,7 +10,6 @@ import {
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
 } from './util';
-import { BallViewModel } from './view-model/ball.vm';
 import { GameStateViewModel } from './view-model/game-state.vm';
 import { UsePipes } from '@nestjs/common';
 import {
@@ -40,11 +40,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer()
   server;
-  constructor() {}
+  constructor(private readonly gameService: GameService) {
+    this.updateGameStateCron();
+    this.updateGameTimeCron();
+  }
 
   handleConnection(client: any, ...args: any[]) {
     console.log('Game is get connected!');
-    const matchId = this.currentGameKey.toString();
+    const matchId = this.gameService.getMatchId(this.gameStates);
     client.join(matchId);
     client.emit('joinedRoom', matchId);
     // TODO: game 참가 로직 변경
@@ -58,8 +61,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log('you join the match');
       this.gameStates[this.currentGameKey].playerB.id = client.id; // 플레이어 A의 소켓 ID를 초기화합니다.
       this.gameStates[this.currentGameKey].isReady = true;
-      this.updateGameStateCron();
-      this.updateGameTimeCron();
       this.currentGameKey++; // 다음 게임 키를 위해 게임 키를 1 증가시킵니다.
     }
   }
@@ -105,7 +106,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('keyDown')
-  playerKeyDown(client: Socket, { keycode }) {
+  playerKeyDown(client: Socket, keycode: string) {
     const matchIndex = this.gameStates.findIndex((state) => {
       if (state.playerA.id === client.id || state.playerB.id === client.id)
         return true;
@@ -155,6 +156,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('keyUp')
   playerKeyUp(client: Socket) {
+    console.log('key up');
     const matchIndex = this.gameStates.findIndex((state) => {
       if (state.playerA.id === client.id || state.playerB.id === client.id)
         return true;
@@ -202,6 +204,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private resetBall(isA: boolean, state: GameState) {
+    console.log('reset');
     if (isA) state.score.playerA++;
     else state.score.playerB++;
     this.server
@@ -230,6 +233,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     state.ball.y = SCREEN_HEIGHT / 2;
     state.ball.velocity.x = 0;
     state.ball.velocity.y = 0;
+    console.log('reset fin');
+    console.log(state.ball);
     setTimeout(() => {
       const x = !isA
         ? state.playerA.x + PLAYER_WIDTH / 2
@@ -242,6 +247,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const ret_y = (dy / speed) * state.ball.speed;
       state.ball.velocity.x = ret_x;
       state.ball.velocity.y = ret_y;
+      console.log('game re-start');
+      console.log(state.ball);
       this.server
         .to(state.matchId)
         .emit('updateBall', new GameStateViewModel(state));
@@ -254,7 +261,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.gameStates.forEach((state) => {
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
         this.updateGameState(state);
-        console.log(new BallViewModel(state.ball));
         this.server
           .to(state.matchId)
           .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.

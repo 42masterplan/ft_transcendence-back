@@ -1,4 +1,4 @@
-import { GameService } from './game.service';
+import { GameService } from './application/game.service';
 import { GameGateway } from './presentation/game.gateway';
 import { Module } from '@nestjs/common';
 
