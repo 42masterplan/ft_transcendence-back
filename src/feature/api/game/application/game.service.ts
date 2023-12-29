@@ -2,6 +2,7 @@ import { Ball } from '../presentation/type/ball';
 import { GameState } from '../presentation/type/game-state';
 import { Player } from '../presentation/type/player';
 import {
+  DEBOUNCING_TIME,
   PADDLE_OFFSET,
   PLAYER_WIDTH,
   SCORE_LIMIT,
@@ -151,5 +152,29 @@ export class GameService {
     const ret_y = (dy / speed) * ball.speed;
     ball.velocity.x = ret_x;
     ball.velocity.y = ret_y;
+  }
+
+  handleCollision(ball: Ball, playerA: Player, playerB: Player) {
+    if (playerA.isCollided(ball) || playerB.isCollided(ball)) {
+      const now = Date.now();
+      if (ball.lastCollision && now - ball.lastCollision < DEBOUNCING_TIME)
+        return;
+      if (playerA.isCollided(ball)) playerA.handleCollision(ball, now);
+      else if (playerB.isCollided(ball)) playerB.handleCollision(ball, now);
+    }
+  }
+
+  updateTimeAndCheckFinish(state: GameState): boolean {
+    state.time--;
+    if (state.time <= 0) return true;
+    return false;
+  }
+
+  setDuece(state: GameState) {
+    // 듀스!! 공의 속력이 1.5배로 증가합니다. 먼저 2점차를 만들면 승리합니다.
+    state.isDeuce = true;
+    state.ball.velocity.x *= 1.5;
+    state.ball.velocity.y *= 1.5;
+    state.ball.speed *= 1.5;
   }
 }

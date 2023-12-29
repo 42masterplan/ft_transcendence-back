@@ -1,10 +1,6 @@
 import { GameService } from '../application/game.service';
 import { GameState } from './type/game-state';
-import {
-  DEBOUNCING_TIME,
-  GAME_STATE_UPDATE_RATE,
-  PLAYER_A_COLOR,
-} from './util';
+import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
 import { UsePipes } from '@nestjs/common';
 import {
@@ -110,49 +106,29 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }, 3000);
       }
     }
-    if (
-      state.playerA.isCollided(state.ball) ||
-      state.playerB.isCollided(state.ball)
-    ) {
-      const now = Date.now();
-      if (
-        state.ball.lastCollision &&
-        now - state.ball.lastCollision < DEBOUNCING_TIME
-      )
-        return;
-      if (state.playerA.isCollided(state.ball))
-        state.playerA.handleCollision(state.ball, now);
-      else if (state.playerB.isCollided(state.ball))
-        state.playerB.handleCollision(state.ball, now);
-    }
+    this.gameService.handleCollision(state.ball, state.playerA, state.playerB);
   }
 
   updateGameStateCron() {
     console.log('start update game state cron');
-    const gameStateCronJob = () => {
-      this.gameStates.forEach((state) => {
-        if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-        this.updateGameState(state);
-        this.server
-          .to(state.matchId)
-          .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.
-        this.server
-          .to(state.matchId)
-          .emit('updateBall', new GameStateViewModel(state));
-      });
-      setTimeout(gameStateCronJob, GAME_STATE_UPDATE_RATE);
-    };
-    // 초기 실행
-    setTimeout(gameStateCronJob, GAME_STATE_UPDATE_RATE);
+    setInterval((state) => {
+      if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+      this.updateGameState(state);
+      this.server
+        .to(state.matchId)
+        .emit('updatePlayers', new GameStateViewModel(state)); // 플레이어의 위치를 업데이트합니다.
+      this.server
+        .to(state.matchId)
+        .emit('updateBall', new GameStateViewModel(state));
+    }, GAME_STATE_UPDATE_RATE);
   }
 
   updateGameTimeCron() {
     console.log('start update game time cron');
     const timerId = setInterval(() => {
       this.gameStates.forEach((state) => {
-        state.time--;
         if (!state.isReady) return;
-        if (state.time <= 0) {
+        if (this.gameService.updateTimeAndCheckFinish(state)) {
           if (state.score.playerA > state.score.playerB)
             this.server
               .to(state.matchId)
@@ -162,11 +138,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               .to(state.matchId)
               .emit('gameOver', new GameStateViewModel(state));
           else {
-            // 듀스!! 공의 속력이 1.5배로 증가합니다. 먼저 2점차를 만들면 승리합니다.
-            state.isDeuce = true;
-            state.ball.velocity.x *= 1.5;
-            state.ball.velocity.y *= 1.5;
-            state.ball.speed *= 1.5;
+            this.gameService.setDeuce(state);
             this.server
               .to(state.matchId)
               .emit('deuce', new GameStateViewModel(state));
