@@ -1,4 +1,5 @@
 import { GameService } from './application/game.service';
+import { GameUseCase } from './application/game.use-case';
 import { GameRepository } from './domain/interface/game.repository';
 import { PlayerScoreRepository } from './domain/interface/player-score.repository';
 import { PlayerTierRepository } from './domain/interface/player-tier.repository';
@@ -23,6 +24,8 @@ import { Module } from '@nestjs/common';
   providers: [
     GameService,
     GameGateway,
+
+    GameUseCase,
 
     {
       provide: GameRepository,

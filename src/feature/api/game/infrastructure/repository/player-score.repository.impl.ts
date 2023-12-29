@@ -12,6 +12,28 @@ export class PlayerScoreRepositoryImpl implements PlayerScoreRepository {
     private readonly repository: EntityRepository<PlayerScoreEntity>,
   ) {}
 
+  async createOne({
+    playerId,
+    gameId,
+    value,
+    status,
+  }: {
+    playerId: string;
+    gameId: number;
+    value: number;
+    status: GAME_STATUS;
+  }): Promise<PlayerScore> {
+    const score = await this.repository.create({
+      playerId,
+      gameId,
+      value,
+      status,
+    });
+
+    await this.repository.getEntityManager().flush();
+    return this.toDomain(score);
+  }
+
   private toDomain(entity: PlayerScoreEntity): PlayerScore {
     return new PlayerScore({
       playerId: entity.playerId,

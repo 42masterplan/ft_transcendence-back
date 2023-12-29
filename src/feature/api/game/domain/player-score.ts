@@ -2,7 +2,7 @@ export class PlayerScore {
   private readonly _playerId: string;
   private readonly _gameId: number;
   private readonly _value: number;
-  private readonly _status: string;
+  private readonly _status: GAME_STATUS;
 
   constructor(props: {
     playerId: string;
@@ -13,7 +13,7 @@ export class PlayerScore {
     this._playerId = props.playerId;
     this._gameId = props.gameId;
     this._value = props.value;
-    this._status = props.status;
+    this._status = GAME_STATUS[props.status];
   }
 
   get playerId(): string {
