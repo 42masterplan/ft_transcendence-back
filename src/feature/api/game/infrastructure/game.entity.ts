@@ -6,9 +6,6 @@ export class GameEntity {
   @PrimaryKey()
   id: number;
 
-  @Property({ length: 64 })
-  theme: string;
-
   @Property({ type: bool, default: false })
   isLadder: boolean;
 }

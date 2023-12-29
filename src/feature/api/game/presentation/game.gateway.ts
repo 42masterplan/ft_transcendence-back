@@ -65,6 +65,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (this.gameService.canJoin(match)) {
       this.gameService.joinMatch(match, client.id);
       client.join(matchId);
+      client.emit('joinedRoom');
     } else {
       client.emit('gameFull');
       client.disconnect();
@@ -94,11 +95,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (winnerStr !== '') {
       if (winnerStr === 'A') state.score.playerA++;
       if (winnerStr === 'B') state.score.playerB++;
-      const winner = winnerStr === 'A' ? state.playerA : state.playerB;
       this.server
         .to(state.matchId)
         .emit('updateScore', new GameStateViewModel(state));
 
+      const winner = winnerStr === 'A' ? state.playerA : state.playerB;
       if (this.gameService.isGameOver(state)) {
         this.server
           .to(state.matchId)

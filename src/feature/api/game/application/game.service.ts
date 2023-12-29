@@ -29,13 +29,6 @@ export class GameService {
     return false;
   }
 
-  getNewMatchId(gameStates: GameState[]): string {
-    const matchIndex = gameStates.length - 1;
-    if (!gameStates.length) return '0';
-    if (gameStates[matchIndex].playerB.id === '') return matchIndex.toString();
-    return (matchIndex + 1).toString();
-  }
-
   createMatch(matchId: string): GameState {
     console.log('create new match');
     return new GameState(matchId);
@@ -61,30 +54,6 @@ export class GameService {
       state.isReady = true;
     }
   }
-
-  joinMatchOld(
-    gameStates: GameState[],
-    matchId: string,
-    clientId: string,
-  ): GameState[] {
-    // TODO: game 참가 로직 변경
-    let gameState = gameStates.at(-1);
-
-    if (!gameStates.length || gameState.playerB.id !== '') {
-      console.log('create new match');
-      gameStates.push(new GameState(matchId));
-      gameState = gameStates.at(-1);
-      gameState.playerA.id = clientId;
-    } else {
-      // 현재 게임 키에 해당하는 게임 상태가 있으면 플레이어 B의 소켓 ID를 초기화합니다.
-      console.log('you join the match');
-      gameState.playerB.id = clientId;
-      gameState.isReady = true;
-    }
-    return gameStates;
-  }
-
-  startMatch() {}
 
   getMatch(gameStates: GameState[], clientId: string): GameState {
     const matchIndex = gameStates.findIndex((state) => {
