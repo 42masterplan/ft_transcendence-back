@@ -1,19 +1,12 @@
-import {
-  GAME_TIME_LIMIT,
-  PLAYER_A_COLOR,
-  PLAYER_B_COLOR,
-  PLAYER_WIDTH,
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
-} from '../util';
+import { GAME_TIME_LIMIT } from '../util';
 import { Ball } from './ball';
 import { Player } from './player';
 import { Score } from './score';
 
 export class GameState {
   private readonly _matchId: string;
-  private readonly _playerA: Player;
-  private readonly _playerB: Player;
+  private _playerA: Player | null;
+  private _playerB: Player | null;
   private readonly _ball: Ball;
   private readonly _score: Score;
   private _time: number;
@@ -24,18 +17,8 @@ export class GameState {
   constructor(matchId: string) {
     this._matchId = matchId;
     this._isReady = false;
-    this._playerA = new Player({
-      id: '',
-      x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
-      y: SCREEN_HEIGHT - 45,
-      color: PLAYER_A_COLOR,
-    });
-    this._playerB = new Player({
-      id: '',
-      x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
-      y: 30,
-      color: PLAYER_B_COLOR,
-    });
+    this._playerA = null;
+    this._playerB = null;
     this._ball = new Ball();
     this._score = new Score();
     this._time = GAME_TIME_LIMIT;
@@ -77,6 +60,14 @@ export class GameState {
 
   get isDeuce(): boolean {
     return this._isDeuce;
+  }
+
+  set playerA(player: Player) {
+    this._playerA = player;
+  }
+
+  set playerB(player: Player) {
+    this._playerB = player;
   }
 
   set time(time: number) {

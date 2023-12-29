@@ -4,6 +4,8 @@ import { Player } from '../presentation/type/player';
 import {
   DEBOUNCING_TIME,
   PADDLE_OFFSET,
+  PLAYER_A_COLOR,
+  PLAYER_B_COLOR,
   PLAYER_WIDTH,
   SCORE_LIMIT,
   SCREEN_HEIGHT,
@@ -13,6 +15,20 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GameService {
+  findOneByMatchId(gameStates: GameState[], matchId: string) {
+    let match = gameStates.find((state) => state.matchId === matchId);
+    if (!match) {
+      match = this.createMatch(matchId);
+      gameStates.push(match);
+    }
+    return match;
+  }
+
+  canJoin(state: GameState) {
+    if (state.playerA === null || state.playerB === null) return true;
+    return false;
+  }
+
   getNewMatchId(gameStates: GameState[]): string {
     const matchIndex = gameStates.length - 1;
     if (!gameStates.length) return '0';
@@ -20,7 +36,33 @@ export class GameService {
     return (matchIndex + 1).toString();
   }
 
-  joinMatch(
+  createMatch(matchId: string): GameState {
+    console.log('create new match');
+    return new GameState(matchId);
+  }
+
+  joinMatch(state: GameState, clientId: string) {
+    if (state.playerA === null) {
+      console.log('join as playerA');
+      state.playerA = new Player({
+        id: clientId,
+        x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
+        y: SCREEN_HEIGHT - 45,
+        color: PLAYER_A_COLOR,
+      });
+    } else if (state.playerB === null) {
+      console.log('join as playerB');
+      state.playerB = new Player({
+        id: clientId,
+        x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
+        y: 30,
+        color: PLAYER_B_COLOR,
+      });
+      state.isReady = true;
+    }
+  }
+
+  joinMatchOld(
     gameStates: GameState[],
     matchId: string,
     clientId: string,
