@@ -137,10 +137,15 @@ export class NotificationGateway
     if (!matchInfo && isAccept == true) {
       return 'gameResponse Fail!';
     }
+    const destSocketId = this.sockets.get(matchInfo.destId);
     const userSocketId = this.sockets.get(matchInfo.srcId);
     // 	const userA,B;
     if (isAccept) {
       this.server.to(userSocketId).emit('gameStart', {
+        matchId: matchId,
+        theme: matchInfo.theme,
+      });
+      this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
         theme: matchInfo.theme,
       });
@@ -177,16 +182,11 @@ export class NotificationGateway
     const user2Id = friend.id > user.id ? friend.id : user.id;
     try {
       const DmHistory = await this.dmUseCase.getDmMessages(user1Id, user2Id);
-      const DmId = await this.dmUseCase.getDmIdByUserIds(user1Id, user2Id);
       return {
-        dmId: DmId,
+        ...DmHistory,
         profileImage: friend.profileImage,
         name: friend.name,
-        message: DmHistory,
       };
-
-      // this.server.to(receiverSocketId).emit('DMHistory', DmHistory);
-      // return 'DmHistory Success!';
     } catch (e) {
       console.log(e);
       return 'DmHistory Fail!';
@@ -207,9 +207,11 @@ export class NotificationGateway
       this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
       const receiverSocketId = this.sockets.get(receiverId);
-      this.server
-        .to(receiverSocketId)
-        .emit('DMNewMessage', { dmId, participantId, content });
+      if (receiverSocketId) {
+        this.server
+          .to(receiverSocketId)
+          .emit('DMNewMessage', { dmId, participantId, content });
+      }
       return 'DmNewMessage Success!';
     } catch (e) {
       console.log(e);
