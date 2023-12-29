@@ -1,4 +1,5 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
@@ -56,6 +57,7 @@ export class NotificationGateway
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
+    private readonly friendUseCase: FriendUseCase,
   ) {}
   @WebSocketServer()
   private readonly server: Server;
@@ -177,9 +179,17 @@ export class NotificationGateway
     console.log('socket DmHistory');
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return 'DmHistory Fail!';
+
     const friend = await this.userUseCase.findOneByName(userName);
     const user1Id = friend.id > user.id ? user.id : friend.id;
     const user2Id = friend.id > user.id ? friend.id : user.id;
+    if (
+      (await this.friendUseCase.isFriend({
+        myId: user1Id,
+        friendId: user2Id,
+      })) === false
+    )
+      return 'Not Friend!';
     try {
       const DmHistory = await this.dmUseCase.getDmMessages(user1Id, user2Id);
       return {
@@ -206,6 +216,13 @@ export class NotificationGateway
     try {
       this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
+      if (
+        (await this.friendUseCase.isFriend({
+          myId: user.id,
+          friendId: receiverId,
+        })) === false
+      )
+        return 'Not Friend!';
       const receiverSocketId = this.sockets.get(receiverId);
       if (receiverSocketId) {
         this.server
