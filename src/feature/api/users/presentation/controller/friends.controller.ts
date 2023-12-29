@@ -48,10 +48,10 @@ export class FriendsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('isFriend')
-  async isFriend(@Request() req, @Query('id') friendId: string) {
+  async isFriend(@Request() req, @Query('name') friendName: string) {
     const intraId = req.user.sub;
     const user = await this.userUseCase.findOneByIntraId(intraId);
-    const friend = await this.userUseCase.findOne(friendId);
+    const friend = await this.userUseCase.findOneByName(friendName);
     const isFriend = await this.friendUseCase.isFriend({
       myId: user.id,
       friendId: friend.id,
