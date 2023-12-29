@@ -746,16 +746,6 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "theme": {
-          "name": "theme",
-          "type": "varchar(64)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 64,
-          "mappedType": "string"
-        },
         "is_ladder": {
           "name": "is_ladder",
           "type": "boolean",
