@@ -137,10 +137,15 @@ export class NotificationGateway
     if (!matchInfo && isAccept == true) {
       return 'gameResponse Fail!';
     }
+    const destSocketId = this.sockets.get(matchInfo.destId);
     const userSocketId = this.sockets.get(matchInfo.srcId);
     // 	const userA,B;
     if (isAccept) {
       this.server.to(userSocketId).emit('gameStart', {
+        matchId: matchId,
+        theme: matchInfo.theme,
+      });
+      this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
         theme: matchInfo.theme,
       });
@@ -162,19 +167,26 @@ export class NotificationGateway
     console.log(this.requestQueue);
     return 'gameCancel Success!';
   }
+
+  /**
+   *
+   * userName: 받는 사람의 유저 이름
+   */
   @SubscribeMessage('DmHistory')
-  async handleDMHistory(client, { userId }) {
+  async handleDMHistory(client, userName: string) {
     console.log('socket DmHistory');
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return 'DmHistory Fail!';
-    const receiverSocketId = this.sockets.get(user.id);
-
-    const user1Id = userId > user.id ? user.id : userId;
-    const user2Id = userId > user.id ? userId : user.id;
+    const friend = await this.userUseCase.findOneByName(userName);
+    const user1Id = friend.id > user.id ? user.id : friend.id;
+    const user2Id = friend.id > user.id ? friend.id : user.id;
     try {
       const DmHistory = await this.dmUseCase.getDmMessages(user1Id, user2Id);
-      this.server.to(receiverSocketId).emit('DMHistory', DmHistory);
-      return 'DmHistory Success!';
+      return {
+        ...DmHistory,
+        profileImage: friend.profileImage,
+        name: friend.name,
+      };
     } catch (e) {
       console.log(e);
       return 'DmHistory Fail!';
@@ -195,13 +207,29 @@ export class NotificationGateway
       this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
       const receiverSocketId = this.sockets.get(receiverId);
-      this.server
-        .to(receiverSocketId)
-        .emit('DMNewMessage', { dmId, participantId, content });
+      if (receiverSocketId) {
+        this.server
+          .to(receiverSocketId)
+          .emit('DMNewMessage', { dmId, participantId, content });
+      }
       return 'DmNewMessage Success!';
     } catch (e) {
       console.log(e);
       return 'DmNewMessage Fail!';
     }
+  }
+
+  @SubscribeMessage('myInfo')
+  async handleMyInfo(client) {
+    console.log('socket myInfo');
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return 'myInfo Fail!';
+    return {
+      profileImage: user.profileImage,
+      name: user.name,
+      id: user.id,
+      introduction: user.introduction,
+      currentStatus: user.currentStatus,
+    };
   }
 }
