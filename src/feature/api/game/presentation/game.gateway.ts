@@ -37,11 +37,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: any, ...args: any[]) {
     console.log('Game is get connected!');
-    console.log(client);
-    const matchId = this.gameService.getNewMatchId(this.gameStates);
-    client.join(matchId);
-    client.emit('joinedRoom', matchId);
-    this.gameService.joinMatch(this.gameStates, matchId, client.id);
+    // const matchId = this.gameService.getNewMatchId(this.gameStates);
+    // client.join(matchId);
+    // client.emit('joinedRoom', matchId);
+    // this.gameService.joinMatch(this.gameStates, matchId, client.id);
   }
 
   handleDisconnect(client: any) {
@@ -61,6 +60,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(match.matchId)
       .emit('gameOver', new GameStateViewModel(match));
+  }
+
+  @SubscribeMessage('joinRoom')
+  joinRoom(client: Socket, { matchId }: { matchId: string }) {
+    console.log('join room !!!');
+    console.log(client);
+    console.log(matchId);
   }
 
   @SubscribeMessage('keyDown')

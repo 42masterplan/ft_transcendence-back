@@ -1,7 +1,7 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 
 @Entity({ tableName: 'player_tier' })
-export class PlayerScoreEntity {
+export class PlayerTierEntity {
   @PrimaryKey({ type: 'uuid' })
   id: string;
 
