@@ -12,18 +12,11 @@ import {
   SCREEN_WIDTH,
 } from '../presentation/util';
 import { Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class GameService {
-  findOneByMatchId(gameStates: GameState[], matchId: string, gameMode: string) {
-    let match = gameStates.find((state) => state.matchId === matchId);
-    if (!match) {
-      match = this.createMatch(matchId, gameMode);
-      gameStates.push(match);
-    }
-    if (match.gameMode !== gameMode)
-      throw new WsException('Invalid Join Game Request');
+  findOneByMatchId(gameStates: GameState[], matchId: string) {
+    const match = gameStates.find((state) => state.matchId === matchId);
     return match;
   }
 
@@ -32,9 +25,20 @@ export class GameService {
     return false;
   }
 
-  createMatch(matchId: string, gameMode: string): GameState {
+  createMatchOld(matchId: string, gameMode: string): GameState {
     console.log('create new match');
     return new GameState(matchId, gameMode);
+  }
+
+  createMatch(
+    gameStates: GameState[],
+    matchId: string,
+    gameMode: string,
+  ): GameState {
+    console.log('create new match');
+    const match = new GameState(matchId, gameMode);
+    gameStates.push(match);
+    return match;
   }
 
   joinMatch(state: GameState, socketId: string, userId: string) {
@@ -60,7 +64,7 @@ export class GameService {
     }
   }
 
-  getMatch(gameStates: GameState[], socketId: string): GameState {
+  getMatchOld(gameStates: GameState[], socketId: string): GameState {
     const matchIndex = gameStates.findIndex((state) => {
       if (
         state.playerA.socketId === socketId ||
@@ -71,6 +75,20 @@ export class GameService {
     });
     if (matchIndex === -1) console.error('this should not happen'); // 게임 룸을 찾지 못하면 에러를 출력합니다. (로직상 불가능합니다 ;)..
     return gameStates[matchIndex];
+  }
+
+  getMyMatchId(
+    gameStates: Map<string, GameState>,
+    socketId: string,
+  ): string | null {
+    for (const [matchId, match] of gameStates) {
+      if (
+        match.playerA.socketId === socketId ||
+        match.playerB.socketId === socketId
+      )
+        return matchId;
+    }
+    return null;
   }
 
   getMe(gameState: GameState, socketId: string): Player {

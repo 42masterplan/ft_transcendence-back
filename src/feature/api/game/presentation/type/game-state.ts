@@ -65,7 +65,7 @@ export class GameState {
     return this._isDeuce;
   }
 
-  get gameMode(): string {
+  get gameMode(): GAME_MODE {
     return this._gameMode;
   }
 
