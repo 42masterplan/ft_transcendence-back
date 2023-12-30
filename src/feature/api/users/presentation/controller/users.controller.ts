@@ -137,38 +137,32 @@ export class UsersController {
       {
         name: 'Challenge1',
         description: 'This is challenge1',
-        progressRate: 25,
-        achieveRatio: 0.5
+        progressRate: 25
       },
       {
         name: 'Challenge2',
         description: 'This is challenge2',
-        progressRate: 0,
-        achieveRatio: 0.5
+        progressRate: 0
       },
       {
         name: 'Challenge3',
         description: 'This is challenge3',
-        progressRate: 14,
-        achieveRatio: 1
+        progressRate: 14
       },
       {
         name: 'Challenge4',
         description: 'This is challenge4',
-        progressRate: 23,
-        achieveRatio: 1
+        progressRate: 23
       },
       {
         name: 'Challenge5',
         description: 'This is challenge5',
-        progressRate: 33,
-        achieveRatio: 1
+        progressRate: 33
       },
       {
         name: 'Challenge6',
         description: 'This is challenge6',
-        progressRate: 44,
-        achieveRatio: 1
+        progressRate: 44
       },
       {
         name: 'Challenge7',
@@ -179,74 +173,62 @@ export class UsersController {
       {
         name: 'Challenge8',
         description: 'This is challenge8',
-        progressRate: 66,
-        achieveRatio: 1
+        progressRate: 66
       },
       {
         name: 'Challenge9',
         description: 'This is challenge9',
-        progressRate: 77,
-        achieveRatio: 1
+        progressRate: 77
       },
       {
         name: 'Challenge10',
         description: 'This is challenge10',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge11',
         description: 'This is challenge11',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge12',
         description: 'This is challenge12',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge13',
         description: 'This is challenge13',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge14',
         description: 'This is challenge14',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge15',
         description: 'This is challenge15',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge16',
         description: 'This is challenge16',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge17',
         description: 'This is challenge17',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge18',
         description: 'This is challenge18',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       },
       {
         name: 'Challenge19',
         description: 'This is challenge19',
-        progressRate: 100,
-        achieveRatio: 1
+        progressRate: 100
       }
     ]
   }
@@ -261,7 +243,7 @@ export class UsersController {
         playerBName: 'User2',
         playerAScore: 0,
         playerBScore: 0,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla1'
       },
       {
         createdAt: '2021-05-02',
@@ -269,7 +251,7 @@ export class UsersController {
         playerBName: 'User3',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla2'
       },
       {
         createdAt: '2021-05-03',
@@ -277,7 +259,7 @@ export class UsersController {
         playerBName: 'User4',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla3'
       },
       {
         createdAt: '2021-05-04',
@@ -285,7 +267,7 @@ export class UsersController {
         playerBName: 'User5',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla4'
       },
       {
         createdAt: '2021-05-05',
@@ -293,7 +275,7 @@ export class UsersController {
         playerBName: 'User6',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla5'
       },
       {
         createdAt: '2021-05-06',
@@ -301,7 +283,7 @@ export class UsersController {
         playerBName: 'User7',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla6'
       },
       {
         createdAt: '2021-05-07',
@@ -309,7 +291,7 @@ export class UsersController {
         playerBName: 'User8',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla7'
       },
       {
         createdAt: '2021-05-08',
@@ -317,7 +299,7 @@ export class UsersController {
         playerBName: 'User9',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla8'
       },
       {
         createdAt: '2021-05-09',
@@ -325,7 +307,7 @@ export class UsersController {
         playerBName: 'User10',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla9'
       },
       {
         createdAt: '2021-05-10',
@@ -333,7 +315,7 @@ export class UsersController {
         playerBName: 'User11',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla10'
       },
       {
         createdAt: '2021-05-11',
@@ -341,7 +323,7 @@ export class UsersController {
         playerBName: 'User12',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla11'
       },
       {
         createdAt: '2021-05-12',
@@ -349,7 +331,7 @@ export class UsersController {
         playerBName: 'User13',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla12'
       },
       {
         createdAt: '2021-05-13',
@@ -357,7 +339,7 @@ export class UsersController {
         playerBName: 'User14',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla13'
       },
       {
         createdAt: '2021-05-14',
@@ -365,7 +347,7 @@ export class UsersController {
         playerBName: 'User15',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla14'
       },
       {
         createdAt: '2021-05-15',
@@ -373,7 +355,7 @@ export class UsersController {
         playerBName: 'User16',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla15'
       },
       {
         createdAt: '2021-05-16',
@@ -381,7 +363,7 @@ export class UsersController {
         playerBName: 'User17',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla16'
       },
       {
         createdAt: '2021-05-17',
@@ -389,7 +371,7 @@ export class UsersController {
         playerBName: 'User18',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla17'
       },
       {
         createdAt: '2021-05-18',
@@ -397,7 +379,7 @@ export class UsersController {
         playerBName: 'User19',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla18'
       },
       {
         createdAt: '2021-05-19',
@@ -405,149 +387,8 @@ export class UsersController {
         playerBName: 'User20',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla'
+		    gameId: 'blablabla19'
       }
-    ];
-  }
-
-  @Get('game-history')
-  getGameHistory(@Param(':id') id: string, @Query('page') page: number) {
-    console.log('id:' + id);
-    console.log('page:' + page);
-    return [
-      {
-        createdAt: '2021-05-01',
-        player1Name: 'User1',
-        player2Name: 'User2',
-        player1Score: 0,
-        player2Score: 0,
-      },
-      {
-        createdAt: '2021-05-02',
-        player1Name: 'User1',
-        player2Name: 'User3',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-03',
-        player1Name: 'User1',
-        player2Name: 'User4',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-04',
-        player1Name: 'User1',
-        player2Name: 'User5',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-05',
-        player1Name: 'User1',
-        player2Name: 'User6',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-06',
-        player1Name: 'User1',
-        player2Name: 'User7',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-07',
-        player1Name: 'User1',
-        player2Name: 'User8',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-08',
-        player1Name: 'User1',
-        player2Name: 'User9',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-09',
-        player1Name: 'User1',
-        player2Name: 'User10',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-10',
-        player1Name: 'User1',
-        player2Name: 'User11',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-11',
-        player1Name: 'User1',
-        player2Name: 'User12',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-12',
-        player1Name: 'User1',
-        player2Name: 'User13',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-13',
-        player1Name: 'User1',
-        player2Name: 'User14',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-14',
-        player1Name: 'User1',
-        player2Name: 'User15',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-15',
-        player1Name: 'User1',
-        player2Name: 'User16',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-16',
-        player1Name: 'User1',
-        player2Name: 'User17',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-17',
-        player1Name: 'User1',
-        player2Name: 'User18',
-        player1Score: 10,
-        player2Score: 5,
-      },
-      {
-        createdAt: '2021-05-18',
-        player1Name: 'User1',
-        player2Name: 'User19',
-        player1Score: 5,
-        player2Score: 10,
-      },
-      {
-        createdAt: '2021-05-19',
-        player1Name: 'User1',
-        player2Name: 'User20',
-        player1Score: 10,
-        player2Score: 5,
-      },
     ];
   }
 
@@ -567,36 +408,6 @@ export class UsersController {
     const user = await this.usersService.findOneByIntraId(intraId);
     const blocked = await this.findBlockedUserUseCase.execute(user.id);
     return blocked.map((block) => new FindBlockedUserViewModel(block));
-    return [
-      {
-        id: '9',
-        profileImage: 'http://localhost:8080/resources/koala_health.svg',
-        name: 'User9',
-        currentStatus: 'off-line',
-        introduction: "Hello, I'm User9. Nice to meet you!",
-      },
-      {
-        id: '10',
-        profileImage: 'http://localhost:8080/resources/polarbear_ski.svg',
-        name: 'User10',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User10. Nice to meet you!",
-      },
-      {
-        id: '11',
-        profileImage: 'http://localhost:8080/resources/rhino_health.svg',
-        name: 'User11',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User11. Nice to meet you!",
-      },
-      {
-        id: '12',
-        profileImage: 'http://localhost:8080/resources/shark_health.svg',
-        name: 'User12',
-        currentStatus: 'on-line',
-        introduction: "Hello, I'm User12. Nice to meet you!",
-      },
-    ];
   }
 
   @UseGuards(AuthGuard('jwt'))
