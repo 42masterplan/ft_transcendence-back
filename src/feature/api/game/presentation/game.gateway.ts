@@ -1,4 +1,7 @@
+import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
+import { GameUseCase } from '../application/game.use-case';
 import { GameState } from './type/game-state';
 import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
@@ -30,25 +33,31 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer()
   server;
-  constructor(private readonly gameService: GameService) {
+  constructor(
+    private readonly gameService: GameService,
+    private readonly usersService: UsersService,
+    private readonly gameUseCase: GameUseCase,
+  ) {
     this.updateGameStateCron();
     this.updateGameTimeCron();
   }
+
+  //TODO: match, state 혼용한거 합치기
 
   handleConnection(client: any, ...args: any[]) {
     console.log('Game is get connected!');
   }
 
-  handleDisconnect(client: any) {
+  async handleDisconnect(client: any) {
     console.log('Game is get disconnected!');
     const match = this.gameService.getMatch(this.gameStates, client.id);
+    if (!match) return;
     if (!match.isReady) {
       // 1명이 들어왔는데 두 번째 플레이어가 들어오기 전에 연결이 끊긴 경우 게임 상태를 삭제합니다.
       // TODO: 로직 확인
       this.gameService.deleteMatch(this.gameStates, match);
       return;
     }
-    // 플레이어 A가 연결을 끊으면 플레이어 B가 기권승합니다.
     this.gameService.matchForfeit(match, client.id);
     this.server
       .to(match.matchId)
@@ -56,14 +65,31 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(match.matchId)
       .emit('gameOver', new GameStateViewModel(match));
+    // await this.gameUseCase.saveGame({
+    //   playerAId: match.playerA.id,
+    //   playerBId: match.playerB.id,
+    //   playerAScore: match.score.playerA,
+    //   playerBScore: match.score.playerB,
+    //   isLadder: match.gameMode === GAME_MODE.normal ? false : true,
+    // });
+    this.gameService.deleteMatch(this.gameStates, match);
   }
 
   @SubscribeMessage('joinRoom')
-  joinRoom(client: Socket, { matchId }: { matchId: string }) {
-    console.log('join room');
-    const match = this.gameService.findOneByMatchId(this.gameStates, matchId);
+  async joinRoom(
+    client: Socket,
+    { matchId, gameMode }: { matchId: string; gameMode: string },
+  ) {
+    console.log('join room' + gameMode);
+    const match = this.gameService.findOneByMatchId(
+      this.gameStates,
+      matchId,
+      gameMode,
+    );
+    console.log(match);
+    const user = await getUserFromSocket(client, this.usersService);
     if (this.gameService.canJoin(match)) {
-      this.gameService.joinMatch(match, client.id);
+      this.gameService.joinMatch(match, client.id, user.id);
       client.join(matchId);
       client.emit('joinedRoom');
     } else {
@@ -89,7 +115,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     targetPlayer.dx = 0;
   }
 
-  private updateGameState(state: GameState) {
+  private async updateGameState(state: GameState) {
     // 현재 속도에 따라 공의 위치를 업데이트합니다.
     const winnerStr = this.gameService.moveBall(state.ball);
     if (winnerStr !== '') {
@@ -104,6 +130,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server
           .to(state.matchId)
           .emit('gameOver', new GameStateViewModel(state));
+        await this.gameUseCase.saveGame({
+          playerAId: state.playerA.id,
+          playerBId: state.playerB.id,
+          playerAScore: state.score.playerA,
+          playerBScore: state.score.playerB,
+          isLadder: state.gameMode === 'normal' ? false : true,
+        });
+        this.gameService.deleteMatch(this.gameStates, state);
         this.server.socketsLeave(state.matchId);
       } else {
         this.gameService.resetBall(state.ball);
@@ -121,7 +155,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   updateGameStateCron() {
     console.log('start update game state cron');
     setInterval(() => {
-      this.gameStates.forEach((state) => {
+      this.gameStates.forEach((state: GameState) => {
         if (!state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
         this.updateGameState(state);
         this.server
@@ -137,7 +171,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   updateGameTimeCron() {
     console.log('start update game time cron');
     const timerId = setInterval(() => {
-      this.gameStates.forEach((state) => {
+      this.gameStates.forEach((state: GameState) => {
         if (!state.isReady) return;
         if (this.gameService.updateTimeAndCheckFinish(state)) {
           if (state.score.playerA > state.score.playerB)

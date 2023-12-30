@@ -7,7 +7,8 @@ import {
 import { Ball } from './ball';
 
 export class Player {
-  private _id: string;
+  private readonly _id: string;
+  private _socketId: string;
   private _x: number;
   private _y: number;
   private readonly _width: number;
@@ -15,8 +16,15 @@ export class Player {
   private readonly _color: string;
   private _dx: number;
 
-  constructor(props: { id: string; x: number; y: number; color: string }) {
+  constructor(props: {
+    id: string;
+    socketId: string;
+    x: number;
+    y: number;
+    color: string;
+  }) {
     this._id = props.id;
+    this._socketId = props.socketId;
     this._x = props.x;
     this._y = props.y;
     this._width = PLAYER_WIDTH;
@@ -27,6 +35,10 @@ export class Player {
 
   get id(): string {
     return this._id;
+  }
+
+  get socketId(): string {
+    return this._socketId;
   }
 
   get x(): number {
@@ -54,7 +66,7 @@ export class Player {
   }
 
   set id(id: string) {
-    this._id = id;
+    this._socketId = id;
   }
 
   set x(x: number) {
