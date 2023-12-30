@@ -139,15 +139,27 @@ export class NotificationGateway
     }
     const userSocketId = this.sockets.get(matchInfo.srcId);
     const destSocketId = this.sockets.get(matchInfo.destId);
+    const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
+    const destUser = await this.userUseCase.findOne(matchInfo.destId);
     // 	const userA,B;
     if (isAccept) {
       this.server.to(userSocketId).emit('gameStart', {
         matchId: matchId,
+        aName: srcUser.name,
+        aProfileImage: srcUser.profileImage,
+        bName: destUser.name,
+        bProfileImage: destUser.profileImage,
+        side: 'A',
         theme: matchInfo.theme,
         gameMode: 'normal',
       });
       this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
+        aName: srcUser.name,
+        aProfileImage: srcUser.profileImage,
+        bName: destUser.name,
+        bProfileImage: destUser.profileImage,
+        side: 'B',
         theme: matchInfo.theme,
         gameMode: 'normal',
       });
