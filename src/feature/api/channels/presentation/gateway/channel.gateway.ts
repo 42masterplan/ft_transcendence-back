@@ -1,4 +1,3 @@
-import { Socket } from 'dgram';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
@@ -11,10 +10,9 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
 import { getUserFromSocket } from '../../../auth/tools/socketTools';
 import { UsersService } from '../../../users/users.service';
-import { User } from '../../../users/domain/user';
+import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UsePipes(
@@ -38,6 +36,7 @@ export class ChannelGateway
   private userToSocket: Map<string, string> = new Map();
   constructor(
     private readonly channelService: ChannelService,
+    private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
     private readonly usersService: UsersService,
   ) {}
@@ -47,6 +46,8 @@ export class ChannelGateway
     const user = await getUserFromSocket(client, this.usersService);
     // 소켓 토큰으로 유저정보 저장하기
     // 유저가 가지고있는 모든 채널에 조인하기
+    if (!user)
+      return;
     this.socketToUser.set(client.id, user.id);
     this.userToSocket.set(user.id, client.id);
     const channels = await this.channelService.getMyChannels(this.socketToUser.get(client.id));
@@ -67,7 +68,7 @@ export class ChannelGateway
         content,
         channelId,
       );
-      this.server.to(channelId).emit('newMessage', newMessage);
+      await this.newMessageInRoom(channelId, newMessage);
     } catch (e) {
       return e.message;
     }
@@ -80,6 +81,37 @@ export class ChannelGateway
     console.log('socket: myChannels', myId);
     const list = await this.channelService.getMyChannels(myId);
     client.emit('myChannels', list);
+  }
+
+  async getMyChannelsInRoom(room: string) {
+    const clients = this.server.adapter.rooms.get(room);
+    console.log("클라이언츠", clients);
+    if (clients) {
+      for (const client of clients) {
+          const myId = this.socketToUser.get(client);
+          const list = await this.channelService.getMyChannels(myId);
+          this.server.to(client).emit('myChannels', list);
+      }
+    }
+  }
+
+  async newMessageInRoom(room: string, newMessage) {
+    const clients = this.server.adapter.rooms.get(room);
+    console.log(clients);
+    if (clients) {
+      for (const client of clients) {
+          const myId = this.socketToUser.get(client);
+          if (await this.blockedUserUseCase.isBlocked({  myId: (await this.usersUseCase.findOne(myId)).id , targetId: newMessage.userId }))
+          {
+            console.log("왜와이")
+            console.log({  myId: (await this.usersUseCase.findOne(myId)).id , targetId: newMessage.userId })
+            console.log('blockedUser');
+            continue;
+          }
+          console.log( (await this.usersUseCase.findOne(myId)).id, newMessage.userId);
+          this.server.to(client).emit('newMessage', newMessage);
+      }
+    }
   }
 
   @SubscribeMessage('getPublicChannels')
@@ -97,12 +129,12 @@ export class ChannelGateway
     const ret = await this.channelService.joinChannel(myId, { id, password });
     if (ret != 'joinChannel Success!') return ret;
     client.join(id);
+    await this.getMyChannelsInRoom(id);
     const newMessage = await this.channelService.newMessage( myId,
-      '[system]' + (await this.usersUseCase.findOne(myId)).intraId + '참가함.',
+      '[system] ' + (await this.usersUseCase.findOne(myId)).name + ' 참가했습니다.',
       id,
     );
     client.to(id).emit('newMessage', newMessage);
-    client.emit('myChannels', await this.channelService.getMyChannels(myId));
     return ret;
   }
 
@@ -124,12 +156,21 @@ export class ChannelGateway
         client,
         createChannelDto,
       );
+      console.log("초대", createChannelDto.invitedFriendIds);
+
+      for (const invitedUser of createChannelDto.invitedFriendIds) {
+        console.log(this.userToSocket);
+        const socket = this.userToSocket.get(invitedUser);
+        console.log('음',socket, invitedUser);
+        if (socket)
+          this.server.get(socket).join(channelId);
+      }
       client.join(channelId);
+      await this.getMyChannelsInRoom(channelId);
     } catch (e) {
       console.log(e.message);
       return '이미 존재하는 방입니다.';
     }
-    client.emit('myChannels', await this.channelService.getMyChannels(myId));
     return 'createChannel Success!';
   }
 
@@ -165,15 +206,15 @@ export class ChannelGateway
     console.log('socket: leaveChannel', channelId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.leaveChannel(myId, channelId);
-    if (result != 'leaveChannel Success!') return result;
+    if (result != 'leaveChannel Success!')  return result;
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system]' + (await this.usersUseCase.findOne(myId)).intraId + '나감.',
+      '[system]' + (await this.usersUseCase.findOne(myId)).name + ' 떠났습니다.',
       channelId,
     );
     client.to(channelId).emit('newMessage', newMessage);
+    await this.getMyChannelsInRoom(channelId);
     client.leave(channelId);
-    client.emit('myChannels', await this.channelService.getMyChannels(myId));
     return result;
   }
 
@@ -193,18 +234,10 @@ export class ChannelGateway
         '님이 밴되었습니다.',
       channelId,
     );
-    // this.server.to(channelId).emit('newMessage', newMessage);
     this.channelService.kickUser(myId, channelId, userId);
-
-    this.server.in(channelId).clients(async(error, clients) => {
-      if (error) throw error;
-        for (const clientId of clients) {
-        const myId = this.socketToUser.get(clientId);
-        const customizedData = await this.channelService.getMyChannels(myId);
-        console.log(myId);
-        this.server.to(clientId).emit('myChannels', customizedData);
-      }
-    });
+    this.server.to(channelId).emit('newMessage', newMessage);
+    await this.getMyChannelsInRoom(channelId);
+    client.leave(channelId);
     // client
     //   .to(channelId)
     //   .emit('myChannels', await this.channelService.getMyChannels(myId));
@@ -230,9 +263,7 @@ export class ChannelGateway
     );
 
     this.server.to(channelId).emit('newMessage', newMessage);
-    client
-      .to(channelId)
-      .emit('myChannels', await this.channelService.getMyChannels(myId));
+    await this.getMyChannelsInRoom(channelId);
     return 'kickUser Success!';
   }
 
