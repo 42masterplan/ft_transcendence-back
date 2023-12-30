@@ -91,6 +91,7 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     console.log('socket: myChannels', myId);
     const list = await this.channelService.getMyChannels(myId);
+    client.emit('myChannels', list);
   }
 
   async getMyChannelsInRoom(room: string) {
