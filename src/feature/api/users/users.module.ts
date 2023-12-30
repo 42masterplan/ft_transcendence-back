@@ -72,6 +72,6 @@ import { Module, forwardRef } from '@nestjs/common';
       useClass: BlockedUserRepositoryImpl,
     },
   ],
-  exports: [UsersUseCase, UsersService, UserRepository, FriendUseCase, FriendRepository],
+  exports: [UsersUseCase, UsersService, FindBlockedUserUseCase, BlockedUserUseCase, UserRepository, FriendUseCase],
 })
 export class UsersModule {}
