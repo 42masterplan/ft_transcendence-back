@@ -41,8 +41,14 @@ export class GameService {
     return match;
   }
 
-  joinMatch(state: GameState, socketId: string, userId: string) {
-    if (state.playerA === null) {
+  joinMatch(
+    state: GameState,
+    socketId: string,
+    userId: string,
+    side: string,
+  ): boolean {
+    if (side === 'A') {
+      if (state.playerA !== null) return false;
       console.log(socketId + ' join as playerA ' + state.matchId);
       state.playerA = new Player({
         id: userId,
@@ -51,7 +57,8 @@ export class GameService {
         y: SCREEN_HEIGHT - 45,
         color: PLAYER_A_COLOR,
       });
-    } else if (state.playerB === null) {
+    } else if (side === 'B') {
+      if (state.playerB !== null) return false;
       console.log(socketId + ' join as playerB ' + state.matchId);
       state.playerB = new Player({
         id: userId,
@@ -60,8 +67,9 @@ export class GameService {
         y: 30,
         color: PLAYER_B_COLOR,
       });
-      state.isReady = true;
     }
+    if (state.playerA !== null && state.playerB !== null) state.isReady = true;
+    return true;
   }
 
   getMatchOld(gameStates: GameState[], socketId: string): GameState {

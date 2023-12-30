@@ -15,6 +15,7 @@ export class GameState {
   private _isForfeit: boolean;
   private _isDeuce: boolean;
   private _gameMode: GAME_MODE;
+  private _resetTimeout: ReturnType<typeof setTimeout> | null;
 
   constructor(matchId: string, gameMode: string) {
     this._matchId = matchId;
@@ -27,6 +28,7 @@ export class GameState {
     this._isForfeit = false;
     this._isDeuce = false;
     this._gameMode = GAME_MODE[gameMode];
+    this._resetTimeout = null;
   }
 
   get matchId(): string {
@@ -69,6 +71,10 @@ export class GameState {
     return this._gameMode;
   }
 
+  get resetTimeout(): ReturnType<typeof setTimeout> | null {
+    return this._resetTimeout;
+  }
+
   set playerA(player: Player) {
     this._playerA = player;
   }
@@ -91,5 +97,9 @@ export class GameState {
 
   set isDeuce(isDeuce: boolean) {
     this._isDeuce = isDeuce;
+  }
+
+  set resetTimeout(timeoutId: ReturnType<typeof setTimeout> | null) {
+    this._resetTimeout = timeoutId;
   }
 }
