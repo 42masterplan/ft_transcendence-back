@@ -141,7 +141,9 @@ export class ChannelService {
   async createChannel(userId: string, client, createChannelDto: CreateChannelDto) {
     console.log('service createChannel');
     if (createChannelDto.name === '')
-      client.emit('error_exist', '방 이름을 입력해주세요.');
+      client.emit('error_exist', '방 이름이 비었습니다.');
+    if (await (this.channelRepository.findOneByName(createChannelDto.name)))
+      throw new ForbiddenException('Already exist channel name');
     createChannelDto.password = this.hashPassword(createChannelDto.password);
     const channel = await this.channelRepository.saveOne(createChannelDto);
     await this.channelParticipantRepository.saveOne({
@@ -149,7 +151,9 @@ export class ChannelService {
       participantId: userId,
       channelId: channel.id,
     });
-    for(const invitedUserId of createChannelDto.invitedFriendIds) {
+    for await (const invitedUserId of createChannelDto.invitedFriendIds) {
+      if (!invitedUserId)
+        continue;
       await this.channelParticipantRepository.saveOne({
         role: 'user',
         participantId: invitedUserId,
@@ -272,8 +276,13 @@ export class ChannelService {
     if (!target) return 'Target is not in this channel';
     if (participant.role !== 'owner' && target.role !== 'user')
       return 'Admin can only ban user';
-
-    this.channelUserBannedRepository.saveOne(targetId, channelId);
+    if (isTargetBanned)
+    {
+      isTargetBanned.updatedIsDeleted(false);
+      this.channelUserBannedRepository.updateOne(isTargetBanned);
+    }
+    else
+      this.channelUserBannedRepository.saveOne(targetId, channelId);
     return 'success';
   }
 
