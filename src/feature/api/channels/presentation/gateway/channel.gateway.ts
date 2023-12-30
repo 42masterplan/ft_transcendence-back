@@ -56,7 +56,18 @@ export class ChannelGateway
     client.emit('myChannels', channels);
   }
 
-  handleDisconnect(client: any) {}
+  async handleDisconnect(client: any) {
+    console.log("It's get disconnected!");
+    // 소켓 토큰으로 유저정보 삭제하기
+    // 유저가 가지고있는 모든 채널에서 나가기
+    const myId = this.socketToUser.get(client.id);
+    this.socketToUser.delete(client.id);
+    this.userToSocket.delete(myId);
+    const channels = await this.channelService.getMyChannels(
+      this.socketToUser.get(client.id),
+    );
+    client.leave(channels.map((channel) => channel.id));
+  }
 
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
