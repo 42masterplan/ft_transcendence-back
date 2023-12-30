@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { FindBlockedUserUseCase } from '../../users/application/use-case/find-blocked-user.use-case';
 import { Channel } from '../domain/channel';
 import { ChannelMessage } from '../domain/channel-message';
@@ -101,7 +102,11 @@ export class ChannelService {
     return 'joinChannel Success!';
   }
 
-  async newMessage(userId: string, content: string, channelId: string): Promise<any> {
+  async newMessage(
+    userId: string,
+    content: string,
+    channelId: string,
+  ): Promise<any> {
     const user = await this.usersUseCase.findOne(userId);
     const participant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
@@ -131,18 +136,26 @@ export class ChannelService {
 
   async getChannelHistory(userId: string, channelId: string) {
     console.log('service channelHistory');
-    const blockedUsers = (await this.findBlockedUserUseCase.execute(userId)).map(user => user.id);
-    const message =
-      await this.channelMessageRepository.findAllByChannelId(channelId, blockedUsers);
+    const blockedUsers = (
+      await this.findBlockedUserUseCase.execute(userId)
+    ).map((user) => user.id);
+    const message = await this.channelMessageRepository.findAllByChannelId(
+      channelId,
+      blockedUsers,
+    );
     const history = await this.messageToHistory(message);
     return history;
   }
 
-  async createChannel(userId: string, client, createChannelDto: CreateChannelDto) {
+  async createChannel(
+    userId: string,
+    client,
+    createChannelDto: CreateChannelDto,
+  ) {
     console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름이 비었습니다.');
-    if (await (this.channelRepository.findOneByName(createChannelDto.name)))
+    if (await this.channelRepository.findOneByName(createChannelDto.name))
       throw new ForbiddenException('Already exist channel name');
     createChannelDto.password = this.hashPassword(createChannelDto.password);
     const channel = await this.channelRepository.saveOne(createChannelDto);
@@ -152,8 +165,7 @@ export class ChannelService {
       channelId: channel.id,
     });
     for await (const invitedUserId of createChannelDto.invitedFriendIds) {
-      if (!invitedUserId)
-        continue;
+      if (!invitedUserId) continue;
       await this.channelParticipantRepository.saveOne({
         role: 'user',
         participantId: invitedUserId,
@@ -276,13 +288,10 @@ export class ChannelService {
     if (!target) return 'Target is not in this channel';
     if (participant.role !== 'owner' && target.role !== 'user')
       return 'Admin can only ban user';
-    if (isTargetBanned)
-    {
+    if (isTargetBanned) {
       isTargetBanned.updatedIsDeleted(false);
       this.channelUserBannedRepository.updateOne(isTargetBanned);
-    }
-    else
-      this.channelUserBannedRepository.saveOne(targetId, channelId);
+    } else this.channelUserBannedRepository.saveOne(targetId, channelId);
     return 'success';
   }
 
@@ -319,7 +328,11 @@ export class ChannelService {
     return 'unBanUser Success!';
   }
 
-  async kickUser(userId: string, channelId: string, targetId: string): Promise<string> {
+  async kickUser(
+    userId: string,
+    channelId: string,
+    targetId: string,
+  ): Promise<string> {
     if (userId === targetId) return 'Cannot kick yourself';
 
     const participant =
@@ -347,7 +360,11 @@ export class ChannelService {
     return 'kickUser Success!';
   }
 
-  async muteUser(userId: string, channelId: string, targetId: string): Promise<string> {
+  async muteUser(
+    userId: string,
+    channelId: string,
+    targetId: string,
+  ): Promise<string> {
     if (userId === targetId) return 'Cannot mute yourself';
 
     const participant =
@@ -374,7 +391,8 @@ export class ChannelService {
     return 'muteUser Success!';
   }
 
-  async changeAdmin(userId: string, 
+  async changeAdmin(
+    userId: string,
     channelId: string,
     targetId: string,
     types: string,
@@ -404,7 +422,11 @@ export class ChannelService {
     return 'changeAdmin Success!';
   }
 
-  async changePassword(userId: string, channelId: string, password: string): Promise<string> {
+  async changePassword(
+    userId: string,
+    channelId: string,
+    password: string,
+  ): Promise<string> {
     const participant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
@@ -424,7 +446,6 @@ export class ChannelService {
 
   hashPassword(password: string): string {
     if (password === '') return password;
-    const crypto = require('crypto');
     const secret = 'pipapopu';
     return crypto
       .createHmac('sha256', secret)

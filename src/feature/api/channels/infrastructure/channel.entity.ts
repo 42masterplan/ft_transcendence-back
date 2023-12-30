@@ -1,10 +1,4 @@
-import {
-  DateTimeType,
-  Entity,
-  PrimaryKey,
-  Property,
-  Unique,
-} from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { bool } from 'joi';
 import { v4 } from 'uuid';
 

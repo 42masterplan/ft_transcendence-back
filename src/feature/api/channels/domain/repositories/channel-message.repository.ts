@@ -28,11 +28,14 @@ export class ChannelMessageRepository {
     return this.toDomain(newMessage);
   }
 
-  async findAllByChannelId(channelId: string, blockedUsers): Promise<ChannelMessage[]> {
+  async findAllByChannelId(
+    channelId: string,
+    blockedUsers,
+  ): Promise<ChannelMessage[]> {
     const messages = await this.repository.find(
       {
         channelId: channelId,
-        participantId: { $nin: blockedUsers }
+        participantId: { $nin: blockedUsers },
       },
       { orderBy: { createdAt: QueryOrder.ASC } },
     );
