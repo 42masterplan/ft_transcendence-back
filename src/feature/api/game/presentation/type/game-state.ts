@@ -1,5 +1,6 @@
 import { GAME_TIME_LIMIT } from '../util';
 import { Ball } from './ball';
+import { GAME_MODE } from './game-mode.type';
 import { Player } from './player';
 import { Score } from './score';
 
@@ -13,8 +14,9 @@ export class GameState {
   private _isReady: boolean;
   private _isForfeit: boolean;
   private _isDeuce: boolean;
+  private _gameMode: GAME_MODE;
 
-  constructor(matchId: string) {
+  constructor(matchId: string, gameMode: string) {
     this._matchId = matchId;
     this._isReady = false;
     this._playerA = null;
@@ -24,6 +26,7 @@ export class GameState {
     this._time = GAME_TIME_LIMIT;
     this._isForfeit = false;
     this._isDeuce = false;
+    this._gameMode = GAME_MODE[gameMode];
   }
 
   get matchId(): string {
@@ -60,6 +63,10 @@ export class GameState {
 
   get isDeuce(): boolean {
     return this._isDeuce;
+  }
+
+  get gameMode(): GAME_MODE {
+    return this._gameMode;
   }
 
   set playerA(player: Player) {

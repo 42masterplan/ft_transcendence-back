@@ -1,4 +1,3 @@
-const TIER = {
-  default: 'default',
-} as const;
-type TIER = (typeof TIER)[keyof typeof TIER];
+export enum TIER {
+  default = 'default',
+}

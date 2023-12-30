@@ -1,3 +1,5 @@
+import { GAME_STATUS } from '../presentation/type/game-status.type';
+
 export class PlayerScore {
   private readonly _playerId: string;
   private readonly _gameId: number;

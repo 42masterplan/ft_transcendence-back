@@ -16,11 +16,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class GameService {
   findOneByMatchId(gameStates: GameState[], matchId: string) {
-    let match = gameStates.find((state) => state.matchId === matchId);
-    if (!match) {
-      match = this.createMatch(matchId);
-      gameStates.push(match);
-    }
+    const match = gameStates.find((state) => state.matchId === matchId);
     return match;
   }
 
@@ -29,16 +25,28 @@ export class GameService {
     return false;
   }
 
-  createMatch(matchId: string): GameState {
+  createMatchOld(matchId: string, gameMode: string): GameState {
     console.log('create new match');
-    return new GameState(matchId);
+    return new GameState(matchId, gameMode);
   }
 
-  joinMatch(state: GameState, clientId: string) {
+  createMatch(
+    gameStates: GameState[],
+    matchId: string,
+    gameMode: string,
+  ): GameState {
+    console.log('create new match');
+    const match = new GameState(matchId, gameMode);
+    gameStates.push(match);
+    return match;
+  }
+
+  joinMatch(state: GameState, socketId: string, userId: string) {
     if (state.playerA === null) {
       console.log('join as playerA');
       state.playerA = new Player({
-        id: clientId,
+        id: userId,
+        socketId: socketId,
         x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
         y: SCREEN_HEIGHT - 45,
         color: PLAYER_A_COLOR,
@@ -46,7 +54,8 @@ export class GameService {
     } else if (state.playerB === null) {
       console.log('join as playerB');
       state.playerB = new Player({
-        id: clientId,
+        id: userId,
+        socketId: socketId,
         x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
         y: 30,
         color: PLAYER_B_COLOR,
@@ -55,9 +64,12 @@ export class GameService {
     }
   }
 
-  getMatch(gameStates: GameState[], clientId: string): GameState {
+  getMatchOld(gameStates: GameState[], socketId: string): GameState {
     const matchIndex = gameStates.findIndex((state) => {
-      if (state.playerA.id === clientId || state.playerB.id === clientId)
+      if (
+        state.playerA.socketId === socketId ||
+        state.playerB.socketId === socketId
+      )
         return true;
       return false;
     });
@@ -65,8 +77,22 @@ export class GameService {
     return gameStates[matchIndex];
   }
 
-  getMe(gameState: GameState, clientId: string): Player {
-    return gameState.playerA.id === clientId
+  getMyMatchId(
+    gameStates: Map<string, GameState>,
+    socketId: string,
+  ): string | null {
+    for (const [matchId, match] of gameStates) {
+      if (
+        match.playerA.socketId === socketId ||
+        match.playerB.socketId === socketId
+      )
+        return matchId;
+    }
+    return null;
+  }
+
+  getMe(gameState: GameState, socketId: string): Player {
+    return gameState.playerA.socketId === socketId
       ? gameState.playerA
       : gameState.playerB;
   }
@@ -76,14 +102,15 @@ export class GameService {
       if (state.matchId === match.matchId) return true;
       return false;
     });
+    if (matchIndex === -1) return;
     delete gameStates[matchIndex];
     gameStates.splice(matchIndex, 1);
-    //TODO: delete 필요?
   }
 
   matchForfeit(match: GameState, losePlayerId: string) {
-    if (match.playerA.id === losePlayerId) match.score.playerB = SCORE_LIMIT;
-    else if (match.playerB.id === losePlayerId)
+    if (match.playerA.socketId === losePlayerId)
+      match.score.playerB = SCORE_LIMIT;
+    else if (match.playerB.socketId === losePlayerId)
       match.score.playerA = SCORE_LIMIT;
     match.isForfeit = true;
     //TODO: 저장 후 delete
