@@ -231,6 +231,7 @@ export class ChannelGateway
     );
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
+    await this.getPublicChannelsToAll();
     client.leave(channelId);
     return result;
   }
@@ -254,6 +255,7 @@ export class ChannelGateway
     await this.channelService.kickUser(myId, channelId, userId);
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
+    await this.getPublicChannelsToAll();
     this.server
       .to(channelId)
       .emit(
@@ -289,6 +291,7 @@ export class ChannelGateway
     );
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
+    await this.getPublicChannelsToAll();
     this.server
       .to(channelId)
       .emit(
