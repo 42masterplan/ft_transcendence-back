@@ -14,7 +14,6 @@ export class ChannelEntity {
   id: string = v4();
 
   @Property({ length: 64 })
-  @Unique()
   name: string;
 
   @Property({ length: 32 })
