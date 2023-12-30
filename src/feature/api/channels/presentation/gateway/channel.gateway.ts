@@ -80,12 +80,10 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     console.log('socket: myChannels', myId);
     const list = await this.channelService.getMyChannels(myId);
-    client.emit('myChannels', list);
   }
 
   async getMyChannelsInRoom(room: string) {
     const clients = this.server.adapter.rooms.get(room);
-    console.log("클라이언츠", clients);
     if (clients) {
       for (const client of clients) {
           const myId = this.socketToUser.get(client);
@@ -97,25 +95,18 @@ export class ChannelGateway
 
   async newMessageInRoom(room: string, newMessage) {
     const clients = this.server.adapter.rooms.get(room);
-    console.log(clients);
     if (clients) {
       for (const client of clients) {
           const myId = this.socketToUser.get(client);
-          if (await this.blockedUserUseCase.isBlocked({  myId: (await this.usersUseCase.findOne(myId)).id , targetId: newMessage.userId }))
-          {
-            console.log({  myId: (await this.usersUseCase.findOne(myId)).id , targetId: newMessage.userId })
+          if (await this.blockedUserUseCase.isBlocked({  myId: myId, targetId: newMessage.userId }))
             continue;
-          }
-          console.log( (await this.usersUseCase.findOne(myId)).id, newMessage.userId);
           this.server.to(client).emit('newMessage', newMessage);
       }
     }
   }
 
   async getPublicChannelsToAll()  {
-    console.log("헬")
     const clients = this.server.sockets.keys();
-    console.log(clients);
     if (clients) {
       for (const client of clients) {
           const myId = this.socketToUser.get(client);
@@ -308,10 +299,7 @@ export class ChannelGateway
     console.log('socket: unBanUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
-    if (result !== 'unBanUser Success!') {
-      console.log(result)
-      return result;
-    }
+    if (result !== 'unBanUser Success!')  return result;
     this.server.to(channelId).emit('getBannedUsers', await this.channelService.getBannedUsers(channelId))
   }
 
