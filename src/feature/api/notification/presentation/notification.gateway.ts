@@ -141,7 +141,6 @@ export class NotificationGateway
     }
     const destSocketId = this.sockets.get(matchInfo.destId);
     const userSocketId = this.sockets.get(matchInfo.srcId);
-    const destSocketId = this.sockets.get(matchInfo.destId);
     // 	const userA,B;
     if (isAccept) {
       this.server.to(userSocketId).emit('gameStart', {
