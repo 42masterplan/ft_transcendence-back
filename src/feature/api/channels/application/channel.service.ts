@@ -1,3 +1,4 @@
+import { FindBlockedUserUseCase } from '../../users/application/use-case/find-blocked-user.use-case';
 import { Channel } from '../domain/channel';
 import { ChannelMessage } from '../domain/channel-message';
 import { ChannelMessageRepository } from '../domain/repositories/channel-message.repository';
@@ -16,6 +17,7 @@ export class ChannelService {
     private readonly channelMessageRepository: ChannelMessageRepository,
     private readonly channelParticipantRepository: ChannelParticipantRepository,
     private readonly channelUserBannedRepository: ChannelUserBannedRepository,
+    private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
   ) {}
 
@@ -23,7 +25,6 @@ export class ChannelService {
     console.log('channel myChannels', userId);
     const myChannelList =
       await this.channelParticipantRepository.findAllByUserId(userId);
-    console.log('myChannelList', myChannelList);
     return await Promise.all(
       myChannelList.map(async (participants) => ({
         id: participants.channelId,
@@ -130,8 +131,9 @@ export class ChannelService {
 
   async getChannelHistory(userId: string, channelId: string) {
     console.log('service channelHistory');
+    const blockedUsers = (await this.findBlockedUserUseCase.execute(userId)).map(user => user.id);
     const message =
-      await this.channelMessageRepository.findAllByChannelId(channelId);
+      await this.channelMessageRepository.findAllByChannelId(channelId, blockedUsers);
     const history = await this.messageToHistory(message);
     return history;
   }
@@ -147,6 +149,13 @@ export class ChannelService {
       participantId: userId,
       channelId: channel.id,
     });
+    for(const invitedUserId of createChannelDto.invitedFriendIds) {
+      await this.channelParticipantRepository.saveOne({
+        role: 'user',
+        participantId: invitedUserId,
+        channelId: channel.id,
+      });
+    }
     return channel.id;
   }
 
