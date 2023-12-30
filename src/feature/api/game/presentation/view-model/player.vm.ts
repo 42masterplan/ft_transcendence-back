@@ -10,7 +10,7 @@ export class PlayerViewModel {
   private dx: number;
 
   constructor(param: Player) {
-    this.id = param.id;
+    this.id = param.socketId;
     this.x = param.x;
     this.y = param.y;
     this.width = param.width;

@@ -261,21 +261,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('start update game state cron');
     setInterval(async () => {
       for (const [matchId, mutex] of this.gameStateMutexes) {
-        console.log('[update] start ' + matchId);
+        // console.log('[update] start ' + matchId);
         let skip = false;
         let isGameOver = false;
         let isGameReset = false;
         let gameWinner;
         await mutex.runExclusive(async () => {
           const state: GameState = this.gameStates.get(matchId);
-          console.log('[update] get state ' + matchId);
+          // console.log('[update] get state ' + matchId);
           if (!state || !state.isReady) {
             skip = true;
-            console.log('[update] skip!! ' + matchId);
+            // console.log('[update] skip!! ' + matchId);
             return;
           } // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
           const winnerStr = this.gameService.moveBall(state.ball);
-          console.log('[update] move ball ' + matchId);
+          // console.log('[update] move ball ' + matchId);
           if (winnerStr === '') {
             this.gameService.handleCollision(
               state.ball,
@@ -283,7 +283,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               state.playerB,
             );
           } else {
-            console.log('[update] someone wins ' + matchId);
+            // console.log('[update] someone wins ' + matchId);
             if (winnerStr === 'A') state.score.playerA++;
             if (winnerStr === 'B') state.score.playerB++;
             this.server
@@ -292,7 +292,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
             if (this.gameService.isGameOver(state)) {
               isGameOver = true;
-              console.log('[update] game over ' + matchId);
+              // console.log('[update] game over ' + matchId);
               this.server
                 .to(state.matchId)
                 .emit('gameOver', new GameStateViewModel(state));
@@ -305,19 +305,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               });
               return;
             } else {
-              console.log('[update] game reset ' + matchId);
+              // console.log('[update] game reset ' + matchId);
               isGameReset = true;
               gameWinner = winnerStr === 'A' ? state.playerA : state.playerB;
               this.gameService.resetBall(state.ball);
             }
           }
-          console.log('[update] ball update ' + matchId);
+          // console.log('[update] ball update ' + matchId);
           this.server
             .to(state.matchId)
             .emit('updateBall', new GameStateViewModel(state));
         });
         if (!skip && isGameOver) {
-          console.log('[update] game over and delete states ' + matchId);
+          // console.log('[update] game over and delete states ' + matchId);
           await this.joinMutex.runExclusive(async () => {
             /* get game's mutex */
             const mutex = this.gameStateMutexes.get(matchId);
@@ -334,7 +334,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           return;
         }
         if (!skip && isGameReset) {
-          console.log('[update] game reset ' + matchId);
+          // console.log('[update] game reset ' + matchId);
           setTimeout(async () => {
             const mutex = this.gameStateMutexes.get(matchId);
             if (!mutex) throw new WsException('Cannot get game mutex');
