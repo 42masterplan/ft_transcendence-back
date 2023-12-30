@@ -43,7 +43,7 @@ export class GameService {
 
   joinMatch(state: GameState, socketId: string, userId: string) {
     if (state.playerA === null) {
-      console.log('join as playerA');
+      console.log(socketId + ' join as playerA ' + state.matchId);
       state.playerA = new Player({
         id: userId,
         socketId: socketId,
@@ -52,7 +52,7 @@ export class GameService {
         color: PLAYER_A_COLOR,
       });
     } else if (state.playerB === null) {
-      console.log('join as playerB');
+      console.log(socketId + ' join as playerB ' + state.matchId);
       state.playerB = new Player({
         id: userId,
         socketId: socketId,
