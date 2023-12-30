@@ -125,6 +125,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           }
           client.join(matchId);
           client.emit('joinedRoom');
+          console.log(client.id + ' join room ' + matchId);
           if (!this.gameService.canJoin(match)) {
             this.server
               .to(matchId)
@@ -270,6 +271,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             await mutex.runExclusive(() => {
               const match = this.gameStates.get(matchId);
               if (!match) throw new WsException('Cannot get game state');
+              match.resetTimeout = null;
               this.gameService.readyBall(match.ball, gameWinner);
               this.server
                 .to(match.matchId)

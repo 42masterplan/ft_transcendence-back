@@ -25,11 +25,6 @@ export class GameService {
     return false;
   }
 
-  createMatchOld(matchId: string, gameMode: string): GameState {
-    console.log('create new match');
-    return new GameState(matchId, gameMode);
-  }
-
   createMatch(
     gameStates: GameState[],
     matchId: string,
@@ -72,19 +67,6 @@ export class GameService {
     return true;
   }
 
-  getMatchOld(gameStates: GameState[], socketId: string): GameState {
-    const matchIndex = gameStates.findIndex((state) => {
-      if (
-        state.playerA.socketId === socketId ||
-        state.playerB.socketId === socketId
-      )
-        return true;
-      return false;
-    });
-    if (matchIndex === -1) console.error('this should not happen'); // 게임 룸을 찾지 못하면 에러를 출력합니다. (로직상 불가능합니다 ;)..
-    return gameStates[matchIndex];
-  }
-
   getMyMatchId(
     gameStates: Map<string, GameState>,
     socketId: string,
@@ -103,16 +85,6 @@ export class GameService {
     return gameState.playerA.socketId === socketId
       ? gameState.playerA
       : gameState.playerB;
-  }
-
-  deleteMatch(gameStates: GameState[], match: GameState) {
-    const matchIndex = gameStates.findIndex((state) => {
-      if (state.matchId === match.matchId) return true;
-      return false;
-    });
-    if (matchIndex === -1) return;
-    delete gameStates[matchIndex];
-    gameStates.splice(matchIndex, 1);
   }
 
   matchForfeit(match: GameState, losePlayerId: string) {
