@@ -116,14 +116,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client: Socket,
     { matchId, gameMode }: { matchId: string; gameMode: string },
   ) {
-    console.log('join room ' + gameMode);
+    console.log(client.id + ' join room ' + matchId);
     const user = await getUserFromSocket(client, this.usersService);
 
     await this.joinMutex.runExclusive(async () => {
       /* get game's mutex */
       let mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) {
-        console.log("create new match's mutex");
+        console.log(client.id + " create new match's mutex");
         this.gameStateMutexes.set(matchId, new Mutex());
         mutex = this.gameStateMutexes.get(matchId);
       }
@@ -131,7 +131,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await mutex.runExclusive(() => {
         let match = this.gameStates.get(matchId);
         if (!match) {
-          console.log('create new match');
+          console.log(client.id + ' create new match ' + matchId);
           this.gameStates.set(matchId, new GameState(matchId, gameMode));
           match = this.gameStates.get(matchId);
         }
@@ -141,6 +141,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.gameService.joinMatch(match, client.id, user.id);
           client.join(matchId);
           client.emit('joinedRoom');
+          if (!this.gameService.canJoin(match))
+            this.server
+              .to(matchId)
+              .emit('updatePlayers', new GameStateViewModel(match));
         } else {
           client.emit('gameFull');
           client.disconnect();
@@ -152,15 +156,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('keyDown')
   async playerKeyDown(client: Socket, keycode: string) {
     await this.joinMutex.runExclusive(async () => {
+      console.log(client.id + ' key down !!');
       const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
       if (!matchId)
         throw new WsException('Invalid Request: you are not in game');
+      console.log(client.id + ' get match ID');
       const mutex = this.gameStateMutexes.get(matchId);
+      console.log(client.id + ' get match mutex');
       await mutex.runExclusive(() => {
         const state = this.gameStates.get(matchId);
+        console.log(client.id + ' get match state');
         const targetPlayer = this.gameService.getMe(state, client.id);
         const isA = targetPlayer.color === PLAYER_A_COLOR;
         this.gameService.movePlayer(targetPlayer, isA, keycode);
+        console.log(client.id + ' move successfully');
         this.server
           .to(state.matchId)
           .emit('updatePlayers', new GameStateViewModel(state));
@@ -171,14 +180,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('keyUp')
   async playerKeyUp(client: Socket) {
     await this.joinMutex.runExclusive(async () => {
+      console.log(client.id + ' key up !!!');
       const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
       if (!matchId)
         throw new WsException('Invalid Request: you are not in game');
+      console.log(client.id + ' get match ID');
       const mutex = this.gameStateMutexes.get(matchId);
+      console.log(client.id + ' get match mutex');
       await mutex.runExclusive(() => {
         const state = this.gameStates.get(matchId);
+        console.log(client.id + ' get match state');
         const targetPlayer = this.gameService.getMe(state, client.id);
         targetPlayer.dx = 0;
+        console.log(client.id + ' stop successfully');
         this.server
           .to(state.matchId)
           .emit('updatePlayers', new GameStateViewModel(state));
@@ -247,20 +261,29 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('start update game state cron');
     setInterval(async () => {
       for (const [matchId, mutex] of this.gameStateMutexes) {
+        console.log('[update] start ' + matchId);
+        let skip = false;
         let isGameOver = false;
         let isGameReset = false;
         let gameWinner;
         await mutex.runExclusive(async () => {
           const state: GameState = this.gameStates.get(matchId);
-          if (!state || !state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+          console.log('[update] get state ' + matchId);
+          if (!state || !state.isReady) {
+            skip = true;
+            console.log('[update] skip!! ' + matchId);
+            return;
+          } // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
           const winnerStr = this.gameService.moveBall(state.ball);
-          if (winnerStr === '')
+          console.log('[update] move ball ' + matchId);
+          if (winnerStr === '') {
             this.gameService.handleCollision(
               state.ball,
               state.playerA,
               state.playerB,
             );
-          else {
+          } else {
+            console.log('[update] someone wins ' + matchId);
             if (winnerStr === 'A') state.score.playerA++;
             if (winnerStr === 'B') state.score.playerB++;
             this.server
@@ -269,6 +292,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
             if (this.gameService.isGameOver(state)) {
               isGameOver = true;
+              console.log('[update] game over ' + matchId);
               this.server
                 .to(state.matchId)
                 .emit('gameOver', new GameStateViewModel(state));
@@ -281,16 +305,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               });
               return;
             } else {
+              console.log('[update] game reset ' + matchId);
               isGameReset = true;
               gameWinner = winnerStr === 'A' ? state.playerA : state.playerB;
               this.gameService.resetBall(state.ball);
             }
           }
+          console.log('[update] ball update ' + matchId);
           this.server
             .to(state.matchId)
             .emit('updateBall', new GameStateViewModel(state));
         });
-        if (isGameOver) {
+        if (!skip && isGameOver) {
+          console.log('[update] game over and delete states ' + matchId);
           await this.joinMutex.runExclusive(async () => {
             /* get game's mutex */
             const mutex = this.gameStateMutexes.get(matchId);
@@ -304,8 +331,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.gameStateMutexes.delete(matchId);
             this.server.socketsLeave(matchId);
           });
+          return;
         }
-        if (isGameReset) {
+        if (!skip && isGameReset) {
+          console.log('[update] game reset ' + matchId);
           setTimeout(async () => {
             const mutex = this.gameStateMutexes.get(matchId);
             if (!mutex) throw new WsException('Cannot get game mutex');
