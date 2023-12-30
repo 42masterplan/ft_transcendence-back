@@ -103,13 +103,24 @@ export class ChannelGateway
           const myId = this.socketToUser.get(client);
           if (await this.blockedUserUseCase.isBlocked({  myId: (await this.usersUseCase.findOne(myId)).id , targetId: newMessage.userId }))
           {
-            console.log("왜와이")
             console.log({  myId: (await this.usersUseCase.findOne(myId)).id , targetId: newMessage.userId })
-            console.log('blockedUser');
             continue;
           }
           console.log( (await this.usersUseCase.findOne(myId)).id, newMessage.userId);
           this.server.to(client).emit('newMessage', newMessage);
+      }
+    }
+  }
+
+  async getPublicChannelsToAll()  {
+    console.log("헬")
+    const clients = this.server.sockets.keys();
+    console.log(clients);
+    if (clients) {
+      for (const client of clients) {
+          const myId = this.socketToUser.get(client);
+          const channels = await this.channelService.getPublicChannels(myId);
+          this.server.to(client).emit('getPublicChannels', channels);
       }
     }
   }
@@ -134,7 +145,8 @@ export class ChannelGateway
       '[system] ' + (await this.usersUseCase.findOne(myId)).name + ' 참가했습니다.',
       id,
     );
-    client.to(id).emit('newMessage', newMessage);
+    this.newMessageInRoom(id, newMessage);
+    await this.getPublicChannelsToAll();
     return ret;
   }
 
@@ -156,21 +168,21 @@ export class ChannelGateway
         client,
         createChannelDto,
       );
-      console.log("초대", createChannelDto.invitedFriendIds);
 
       for (const invitedUser of createChannelDto.invitedFriendIds) {
-        console.log(this.userToSocket);
+        if (!invitedUser) continue;
         const socket = this.userToSocket.get(invitedUser);
-        console.log('음',socket, invitedUser);
         if (socket)
-          this.server.get(socket).join(channelId);
+          this.server.sockets.get(socket).join(channelId);
       }
       client.join(channelId);
       await this.getMyChannelsInRoom(channelId);
+      
     } catch (e) {
       console.log(e.message);
       return '이미 존재하는 방입니다.';
     }
+    await this.getPublicChannelsToAll();
     return 'createChannel Success!';
   }
 
@@ -212,7 +224,7 @@ export class ChannelGateway
       '[system]' + (await this.usersUseCase.findOne(myId)).name + ' 떠났습니다.',
       channelId,
     );
-    client.to(channelId).emit('newMessage', newMessage);
+    await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
     client.leave(channelId);
     return result;
@@ -234,13 +246,12 @@ export class ChannelGateway
         '님이 밴되었습니다.',
       channelId,
     );
-    this.channelService.kickUser(myId, channelId, userId);
-    this.server.to(channelId).emit('newMessage', newMessage);
+    await this.channelService.kickUser(myId, channelId, userId);
+    await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
+    this.server.to(channelId).emit('getParticipants', await this.channelService.getParticipants(myId, channelId));
+    this.server.to(channelId).emit('getBannedUsers', await this.channelService.getBannedUsers(channelId))
     client.leave(channelId);
-    // client
-    //   .to(channelId)
-    //   .emit('myChannels', await this.channelService.getMyChannels(myId));
     
     return 'banUser Success!';
   }
@@ -261,9 +272,9 @@ export class ChannelGateway
         '님이 추방되었습니다.',
       channelId,
     );
-
-    this.server.to(channelId).emit('newMessage', newMessage);
+    await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
+    this.server.to(channelId).emit('getParticipants', await this.channelService.getParticipants(myId, channelId));
     return 'kickUser Success!';
   }
 
@@ -283,7 +294,7 @@ export class ChannelGateway
         '님이 뮤트되었습니다.',
       channelId,
     );
-    this.server.to(channelId).emit('newMessage', newMessage);
+    this.newMessageInRoom(channelId, newMessage);
     return 'muteUser Success!';
   }
 
@@ -301,8 +312,7 @@ export class ChannelGateway
       console.log(result)
       return result;
     }
-    const bannedUsers = await this.channelService.getBannedUsers(channelId);
-    client.emit('getBannedUsers', bannedUsers);
+    this.server.to(channelId).emit('getBannedUsers', await this.channelService.getBannedUsers(channelId))
   }
 
   @SubscribeMessage('changePassword')
@@ -341,7 +351,9 @@ export class ChannelGateway
       const adminUsers = await this.channelService.getAdminUsers(channelId);
       client.emit('getAdminUsers', adminUsers);
     }
-    // 롤 바뀐애한테 myChannels emit하기
+    const socket = this.userToSocket.get(userId);
+    if (socket)
+      this.server.to(socket).emit('myChannels', await this.channelService.getMyChannels(userId));
     return result;
   }
 }
