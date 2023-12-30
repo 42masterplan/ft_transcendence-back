@@ -144,10 +144,12 @@ export class NotificationGateway
       this.server.to(userSocketId).emit('gameStart', {
         matchId: matchId,
         theme: matchInfo.theme,
+        gameMode: 'normal',
       });
       this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
         theme: matchInfo.theme,
+        gameMode: 'normal',
       });
     }
     this.requestQueue.delete(matchId);
