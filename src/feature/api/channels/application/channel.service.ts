@@ -113,7 +113,7 @@ export class ChannelService {
         userId,
         channelId,
       );
-    if (participant.chatableAt > new Date(Date.now()))
+    if (participant.chatableAt > new Date(Date.now()) && !content.startsWith('[system]'))
       throw new ForbiddenException(
         participant.chatableAt.getHours() +
           '시 ' +
