@@ -91,6 +91,7 @@ export class UserRepositoryImpl implements UserRepository {
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
+    //TODO: 기본 tier, exp 설정
     const user = await this.userRepository.create(createUserDto);
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
@@ -149,6 +150,8 @@ export class UserRepositoryImpl implements UserRepository {
       isEmailValidated: userEntity.isEmailValidated,
       is2faValidated: userEntity.is2faValidated,
       verificationCode: userEntity.verificationCode,
+      tier: userEntity.tier,
+      exp: userEntity.exp,
       isDeleted: userEntity.isDeleted,
       updatedAt: userEntity.updatedAt,
     });
@@ -165,6 +168,8 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
     userEntity.verificationCode = user.verificationCode;
+    userEntity.tier = user.tier;
+    userEntity.exp = user.exp;
     userEntity.isEmailValidated = user.isEmailValidated;
     userEntity.isDeleted = user.isDeleted;
 
