@@ -1,10 +1,4 @@
-import {
-  DateTimeType,
-  Entity,
-  PrimaryKey,
-  Property,
-  Unique,
-} from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { bool } from 'joi';
 import { v4 } from 'uuid';
 
@@ -14,7 +8,6 @@ export class ChannelEntity {
   id: string = v4();
 
   @Property({ length: 64 })
-  @Unique()
   name: string;
 
   @Property({ length: 32 })
