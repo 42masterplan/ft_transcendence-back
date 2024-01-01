@@ -1,11 +1,13 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
-import { GAME_MODE } from '../../game/presentation/type/game-mode.type';
-import { THEME } from '../../game/presentation/type/theme.type';
-import { TIER } from '../../game/presentation/type/tier.type';
+import { GAME_MODE } from '../../game/presentation/type/game-mode.enum';
+import { THEME } from '../../game/presentation/type/theme.enum';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
+import { LadderQueueService } from '../application/ladder-queue.service';
+import { LadderMatch } from './type/ladder-match';
+import { NormalMatch } from './type/normal-match.type';
 import {
   OnModuleInit,
   UsePipes,
@@ -21,6 +23,7 @@ import {
   WsException,
   ConnectedSocket,
 } from '@nestjs/websockets';
+import { Mutex } from 'async-mutex';
 import { Server, Socket } from 'socket.io';
 import { io, Socket as ClientSocket } from 'socket.io-client';
 
@@ -35,18 +38,6 @@ type gameResponse = {
 };
 type gameCancel = {
   matchId: string;
-};
-
-type NormalMatch = {
-  srcId: string;
-  destId: string;
-  gameMode: GAME_MODE;
-  theme: THEME;
-};
-type LadderMatch = {
-  id: string;
-  tier: TIER;
-  exp: number;
 };
 
 @WebSocketGateway({ namespace: 'alarm' })
@@ -70,13 +61,16 @@ export class NotificationGateway
     private readonly userUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
     private readonly friendUseCase: FriendUseCase,
+    private readonly ladderQueueService: LadderQueueService,
   ) {}
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
   private normalRequestQueue: Map<string, NormalMatch> = new Map();
-  private ladderRequestQueue: Array<LadderMatch[]> = [[], [], [], []];
+  private ladderRequestQueue: Array<LadderMatch> = [];
   private gameClientSocket: ClientSocket;
+  private ladderQueueMutex: Mutex = new Mutex();
+
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
@@ -148,7 +142,17 @@ export class NotificationGateway
   async handleLadderGameRequest(client) {
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return;
-
+    await this.ladderQueueMutex.runExclusive(() => {
+      this.ladderQueueService.insertQueue(
+        this.ladderRequestQueue,
+        new LadderMatch({
+          id: user.id,
+          socketId: client.id,
+          tier: user.tier,
+          exp: user.exp,
+        }),
+      );
+    });
     return { msg: 'gameRequestSuccess!' };
   }
 
@@ -294,5 +298,20 @@ export class NotificationGateway
       introduction: user.introduction,
       currentStatus: user.currentStatus,
     };
+  }
+
+  updateLadderQueue() {
+    console.log('start update ladder queue cron');
+    setInterval(async () => {
+      this.ladderQueueMutex.runExclusive(() => {
+        const timeSortedQueue = this.ladderQueueService.sortQueueByTime(
+          this.ladderRequestQueue,
+        );
+        for (let index = 0; index < timeSortedQueue.length; index++) {
+          const match = timeSortedQueue[index];
+          match.time++;
+        }
+      });
+    }, 1000);
   }
 }

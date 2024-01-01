@@ -1,4 +1,4 @@
-import { GAME_STATUS } from '../presentation/type/game-status.type';
+import { GAME_STATUS } from '../presentation/type/game-status.enum';
 
 export class PlayerScore {
   private readonly _playerId: string;

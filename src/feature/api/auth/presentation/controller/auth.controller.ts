@@ -19,27 +19,26 @@ export class AuthController {
     const intraId: string = await this.authService.getUserIntraId(accessToken);
     const jwtToken: string = await this.authService.getJwtToken(intraId);
     const user = await this.usersService.findOneByIntraId(intraId);
-    let isExist = true;
+    let isExist = false;
     let is2faEnabled = false;
+    let isSignInFinish = false;
 
     if (!user) {
-      isExist = false;
       const createUserDto = new CreateUserDto(intraId);
       await this.usersService.createOne(createUserDto);
-    } else if (
-      user.name === null ||
-      user.email === null ||
-      !user.isEmailValidated
-    ) {
-      isExist = false;
-    } else {
-      is2faEnabled = user.is2faEnabled;
+    } else if (user.name !== null) {
+      isSignInFinish = true;
+      if (user.email !== null && user.isEmailValidated) {
+        isExist = true;
+        if (is2faEnabled) is2faEnabled = true;
+      }
     }
     await this.usersUseCase.resetTwoFactorAuthValidation(intraId);
 
     return {
       accessToken: jwtToken,
       hasAccount: isExist,
+      hasProfile: isSignInFinish,
       intraId: intraId,
       isTwoFactorEnabled: is2faEnabled,
     };

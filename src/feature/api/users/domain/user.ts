@@ -1,4 +1,4 @@
-import { TIER } from '../../game/presentation/type/tier.type';
+import { TIER } from '../../game/presentation/type/tier.enum';
 
 export class User {
   private readonly _id: string;
@@ -100,7 +100,7 @@ export class User {
     return this._verificationCode;
   }
 
-  get tier(): string {
+  get tier(): TIER {
     return this._tier;
   }
 

@@ -1,7 +1,7 @@
 import { Game } from '../domain/game';
 import { GameRepository } from '../domain/interface/game.repository';
 import { PlayerScoreRepository } from '../domain/interface/player-score.repository';
-import { GAME_STATUS } from '../presentation/type/game-status.type';
+import { GAME_STATUS } from '../presentation/type/game-status.enum';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
