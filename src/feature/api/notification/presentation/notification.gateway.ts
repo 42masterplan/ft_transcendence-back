@@ -165,10 +165,6 @@ export class NotificationGateway
         theme: matchInfo.theme,
         gameMode: 'normal',
       });
-      this.server.to(destSocketId).emit('gameStart', {
-        matchId: matchId,
-        theme: matchInfo.theme,
-      });
     }
     this.requestQueue.delete(matchId);
     return 'gameRequest success!';
