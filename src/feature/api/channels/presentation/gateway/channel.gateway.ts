@@ -47,6 +47,10 @@ export class ChannelGateway
     // 소켓 토큰으로 유저정보 저장하기
     // 유저가 가지고있는 모든 채널에 조인하기
     if (!user) return;
+    if (this.socketToUser.has(client.id)) {
+      client.disconnect();
+      return;
+    }
     this.socketToUser.set(client.id, user.id);
     this.userToSocket.set(user.id, client.id);
     const channels = await this.channelService.getMyChannels(
