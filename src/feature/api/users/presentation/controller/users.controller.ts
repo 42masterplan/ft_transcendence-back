@@ -110,10 +110,9 @@ export class UsersController {
     return true;
   }
 
-  @Get('info')
-  async getInfo(@Param(':id') id: string) {
-    console.log(id);
-    const user = await this.usersService.findOneByIntraId(id);
+  @Get('info/:name')
+  async getInfo(@Param('name') name: string) {
+    const user = await this.usersUseCase.findOneByName(name);
     return {
       id: user.id,
       name: user.name,
