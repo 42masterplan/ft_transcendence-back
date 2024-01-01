@@ -13,11 +13,6 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GameService {
-  findOneByMatchId(gameStates: GameState[], matchId: string) {
-    const match = gameStates.find((state) => state.matchId === matchId);
-    return match;
-  }
-
   canJoin(state: GameState) {
     if (state.playerA.socketId === null || state.playerB.socketId === null)
       return true;
