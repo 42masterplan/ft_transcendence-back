@@ -35,4 +35,9 @@ export class BlockedUserUseCase {
       return true;
     return false;
   }
+
+  async isBlocked({ myId, targetId }: { myId: string; targetId: string }) {
+    if (await this.repository.alreadyBlock({ myId, targetId })) return true;
+    return false;
+  }
 }
