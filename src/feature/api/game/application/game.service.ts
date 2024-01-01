@@ -4,8 +4,6 @@ import { Player } from '../presentation/type/player';
 import {
   DEBOUNCING_TIME,
   PADDLE_OFFSET,
-  PLAYER_A_COLOR,
-  PLAYER_B_COLOR,
   PLAYER_WIDTH,
   SCORE_LIMIT,
   SCREEN_HEIGHT,
@@ -21,19 +19,9 @@ export class GameService {
   }
 
   canJoin(state: GameState) {
-    if (state.playerA === null || state.playerB === null) return true;
+    if (state.playerA.socketId === null || state.playerB.socketId === null)
+      return true;
     return false;
-  }
-
-  createMatch(
-    gameStates: GameState[],
-    matchId: string,
-    gameMode: string,
-  ): GameState {
-    console.log('create new match');
-    const match = new GameState(matchId, gameMode);
-    gameStates.push(match);
-    return match;
   }
 
   joinMatch(
@@ -43,27 +31,18 @@ export class GameService {
     side: string,
   ): boolean {
     if (side === 'A') {
-      if (state.playerA !== null) return false;
+      if (state.playerA.socketId !== null) return false;
+      if (state.playerA.id !== userId) return false;
       console.log(socketId + ' join as playerA ' + state.matchId);
-      state.playerA = new Player({
-        id: userId,
-        socketId: socketId,
-        x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
-        y: SCREEN_HEIGHT - 45,
-        color: PLAYER_A_COLOR,
-      });
+      state.playerA.socketId = socketId;
     } else if (side === 'B') {
-      if (state.playerB !== null) return false;
+      if (state.playerB.socketId !== null) return false;
+      if (state.playerB.id !== userId) return false;
       console.log(socketId + ' join as playerB ' + state.matchId);
-      state.playerB = new Player({
-        id: userId,
-        socketId: socketId,
-        x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
-        y: 30,
-        color: PLAYER_B_COLOR,
-      });
+      state.playerB.socketId = socketId;
     }
-    if (state.playerA !== null && state.playerB !== null) state.isReady = true;
+    if (state.playerA.socketId !== null && state.playerB.socketId !== null)
+      state.isReady = true;
     return true;
   }
 

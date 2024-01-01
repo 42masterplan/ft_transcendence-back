@@ -1,4 +1,11 @@
-import { GAME_TIME_LIMIT } from '../util';
+import {
+  GAME_TIME_LIMIT,
+  PLAYER_A_COLOR,
+  PLAYER_B_COLOR,
+  PLAYER_WIDTH,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+} from '../util';
 import { Ball } from './ball';
 import { GAME_MODE } from './game-mode.type';
 import { Player } from './player';
@@ -6,8 +13,8 @@ import { Score } from './score';
 
 export class GameState {
   private readonly _matchId: string;
-  private _playerA: Player | null;
-  private _playerB: Player | null;
+  private _playerA: Player;
+  private _playerB: Player;
   private readonly _ball: Ball;
   private readonly _score: Score;
   private _time: number;
@@ -17,11 +24,26 @@ export class GameState {
   private _gameMode: GAME_MODE;
   private _resetTimeout: ReturnType<typeof setTimeout> | null;
 
-  constructor(matchId: string, gameMode: string) {
+  constructor(
+    matchId: string,
+    gameMode: string,
+    playerAId: string,
+    playerBId: string,
+  ) {
     this._matchId = matchId;
     this._isReady = false;
-    this._playerA = null;
-    this._playerB = null;
+    this._playerA = new Player({
+      id: playerAId,
+      x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
+      y: SCREEN_HEIGHT - 45,
+      color: PLAYER_A_COLOR,
+    });
+    this._playerB = new Player({
+      id: playerBId,
+      x: SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2,
+      y: 30,
+      color: PLAYER_B_COLOR,
+    });
     this._ball = new Ball();
     this._score = new Score();
     this._time = GAME_TIME_LIMIT;

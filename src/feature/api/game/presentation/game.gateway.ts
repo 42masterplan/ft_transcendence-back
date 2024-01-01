@@ -16,7 +16,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({ namespace: 'game' })
 @UsePipes()
@@ -32,13 +32,13 @@ import { Socket } from 'socket.io';
 // }),
 // DTO를 검증하는 ValidationPipe를 사용할 수 있다.
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  private gameStatesOld: GameState[] = [];
   private gameStateMutexes: Map<string, Mutex> = new Map();
   private gameStates: Map<string, GameState> = new Map();
   private joinMutex = new Mutex();
+  private notificationSocket: Socket;
 
   @WebSocketServer()
-  server;
+  private readonly server: Server;
   constructor(
     private readonly gameService: GameService,
     private readonly usersService: UsersService,
@@ -51,6 +51,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //TODO: match, state 혼용한거 합치기
 
   handleConnection(client: any, ...args: any[]) {
+    if (
+      client.handshake.headers.server_secret_key ===
+      process.env.SERVER_SECRET_KEY
+    ) {
+      console.log('Hi, you are server!');
+      this.notificationSocket = client;
+    }
     console.log('Game is get connected!');
   }
 
@@ -88,6 +95,47 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('createRoom')
+  async createRoom(
+    client: Socket,
+    {
+      matchId,
+      aId,
+      bId,
+      gameMode,
+    }: {
+      matchId: string;
+      aId: string;
+      bId: string;
+      gameMode: string;
+    },
+  ) {
+    if (client !== this.notificationSocket) return;
+    await this.joinMutex.runExclusive(async () => {
+      let mutex = this.gameStateMutexes.get(matchId);
+      if (mutex) {
+        // TODO: match 안겹치게
+        console.log('! server has match already');
+      } else {
+        console.log("! server create new match's mutex");
+        this.gameStateMutexes.set(matchId, new Mutex());
+        mutex = this.gameStateMutexes.get(matchId);
+      }
+      await mutex.runExclusive(() => {
+        const match = this.gameStates.get(matchId);
+        if (match) {
+          console.log('! server has match status already');
+        } else {
+          console.log('! server create new match status ' + matchId);
+          this.gameStates.set(
+            matchId,
+            new GameState(matchId, gameMode, aId, bId),
+          );
+        }
+      });
+    });
+  }
+
   @SubscribeMessage('joinRoom')
   async joinRoom(
     client: Socket,
@@ -97,24 +145,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       side,
     }: { matchId: string; gameMode: string; side: string },
   ) {
-    console.log(client.id + ' join room ' + matchId);
+    console.log(client.id + ' join room start ' + matchId);
     const user = await getUserFromSocket(client, this.usersService);
 
     await this.joinMutex.runExclusive(async () => {
       /* get game's mutex */
-      let mutex = this.gameStateMutexes.get(matchId);
+      const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) {
-        console.log(client.id + " create new match's mutex");
-        this.gameStateMutexes.set(matchId, new Mutex());
-        mutex = this.gameStateMutexes.get(matchId);
+        console.log('there is no such match(mutex)');
+        return;
       }
       /* get game state and join */
       await mutex.runExclusive(() => {
-        let match = this.gameStates.get(matchId);
+        const match = this.gameStates.get(matchId);
         if (!match) {
-          console.log(client.id + ' create new match ' + matchId);
-          this.gameStates.set(matchId, new GameState(matchId, gameMode));
-          match = this.gameStates.get(matchId);
+          console.log('there is no such match(state)');
+          return;
         }
         if (match.gameMode !== gameMode)
           throw new WsException('Invalid Join Game Request');
@@ -122,15 +168,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (!this.gameService.joinMatch(match, client.id, user.id, side)) {
             client.emit('gameFull');
             client.disconnect();
+            return;
           }
           client.join(matchId);
           client.emit('joinedRoom');
-          console.log(client.id + ' join room ' + matchId);
-          if (!this.gameService.canJoin(match)) {
-            this.server
-              .to(matchId)
-              .emit('updatePlayers', new GameStateViewModel(match));
-          }
+          console.log(client.id + ' join room finish ' + matchId);
+          this.server
+            .to(matchId)
+            .emit('updatePlayers', new GameStateViewModel(match));
         } else {
           client.emit('gameFull');
           client.disconnect();

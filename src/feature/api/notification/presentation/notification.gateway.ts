@@ -3,7 +3,12 @@ import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
+import {
+  OnModuleInit,
+  UsePipes,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -14,6 +19,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { io, Socket as ClientSocket } from 'socket.io-client';
 
 type gameMode = 'normal' | 'ladder';
 type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
@@ -51,7 +57,7 @@ type MatchStore = {
   }),
 )
 export class NotificationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   constructor(
     private readonly usersService: UsersService,
@@ -63,6 +69,7 @@ export class NotificationGateway
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
   private requestQueue: Map<string, MatchStore> = new Map();
+  private gameClientSocket: ClientSocket;
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
@@ -91,6 +98,15 @@ export class NotificationGateway
 
     this.sockets.delete(user.id);
     this.userUseCase.updateStatus(user.intraId, 'off-line');
+  }
+
+  onModuleInit() {
+    console.log('notification to game');
+    this.gameClientSocket = io(process.env.SERVER_URL + '/game', {
+      extraHeaders: {
+        server_secret_key: process.env.SERVER_SECRET_KEY,
+      },
+    });
   }
 
   @SubscribeMessage('gameRequest')
@@ -163,6 +179,12 @@ export class NotificationGateway
         bProfileImage: destUser.profileImage,
         side: 'B',
         theme: matchInfo.theme,
+        gameMode: 'normal',
+      });
+      this.gameClientSocket.emit('createRoom', {
+        matchId: matchId,
+        aId: matchInfo.srcId,
+        bId: matchInfo.destId,
         gameMode: 'normal',
       });
     }
