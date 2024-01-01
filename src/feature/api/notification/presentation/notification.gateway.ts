@@ -83,6 +83,12 @@ export class NotificationGateway
       return;
     }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
+    if (this.sockets.has(user.id)) {
+      console.log('이미 연결된 소켓이 있습니다.');
+      socket.emit('error', '이미 연결된 소켓이 있습니다.');
+      socket.disconnect();
+      return;
+    }
     this.sockets.set(user.id, socket.id);
     this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
@@ -95,7 +101,6 @@ export class NotificationGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     const user = await getUserFromSocket(socket, this.usersService);
     if (!user) return;
-
     this.sockets.delete(user.id);
     this.userUseCase.updateStatus(user.intraId, 'off-line');
   }
