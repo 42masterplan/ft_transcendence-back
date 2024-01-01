@@ -46,6 +46,12 @@ export class UserEntity {
   @Property({ type: bool, default: false })
   is2faValidated: boolean;
 
+  @Property({ length: 32 })
+  tier: string;
+
+  @Property()
+  exp: number;
+
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
 

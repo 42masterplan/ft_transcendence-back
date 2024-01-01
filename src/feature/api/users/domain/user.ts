@@ -1,3 +1,5 @@
+import { TIER } from '../../game/presentation/type/tier.type';
+
 export class User {
   private readonly _id: string;
   private readonly _intraId: string;
@@ -10,6 +12,8 @@ export class User {
   private readonly _isEmailValidated: boolean;
   private readonly _is2faValidated: boolean;
   private readonly _verificationCode: string | null;
+  private readonly _tier: TIER;
+  private readonly _exp: number;
   private readonly _isDeleted: boolean;
   private readonly _updatedAt: Date;
 
@@ -26,6 +30,8 @@ export class User {
     isEmailValidated: boolean;
     is2faValidated: boolean;
     verificationCode: string | null;
+    tier: string;
+    exp: number;
     isDeleted: boolean;
     updatedAt: Date;
   }) {
@@ -40,6 +46,8 @@ export class User {
     this._isEmailValidated = props.isEmailValidated;
     this._is2faValidated = props.is2faValidated;
     this._verificationCode = props.verificationCode;
+    this._tier = TIER[props.tier];
+    this._exp = props.exp;
     this._isDeleted = props.isDeleted;
     this._updatedAt = props.updatedAt;
   }
@@ -90,6 +98,14 @@ export class User {
 
   get verificationCode(): string {
     return this._verificationCode;
+  }
+
+  get tier(): string {
+    return this._tier;
+  }
+
+  get exp(): number {
+    return this._exp;
   }
 
   get updatedAt(): Date {
