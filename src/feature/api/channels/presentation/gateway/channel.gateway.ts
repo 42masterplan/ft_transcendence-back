@@ -218,7 +218,10 @@ export class ChannelGateway
     console.log('socket: getBannedUsers', channelId);
     const myId = this.socketToUser.get(client.id);
     const bannedUsers = await this.channelService.getBannedUsers(channelId);
-    client.emit('getBannedUsers', bannedUsers);
+    client.emit('getBannedUsers', {
+      bannedUsers: bannedUsers,
+      channelId: channelId,
+    });
     return 'getBannedUsers Success!';
   }
 
