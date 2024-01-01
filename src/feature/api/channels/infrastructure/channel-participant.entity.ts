@@ -12,8 +12,8 @@ export class ChannelParticipantEntity {
   @Property({ length: 64 })
   role: string;
 
-  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
-  chatableAt: Date = new Date();
+  @Property({ type: DateTimeType, defaultRaw: 'null' })
+  chatableAt: Date = new Date(0);
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
   createdAt: Date = new Date();
