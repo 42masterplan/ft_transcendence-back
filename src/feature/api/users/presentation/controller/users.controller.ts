@@ -25,6 +25,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { AchievementUseCase } from '../../application/use-case/achievement.use-case';
 
 @Controller('users')
 export class UsersController {
@@ -33,6 +34,7 @@ export class UsersController {
     private readonly usersUseCase: UsersUseCase,
     private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
     private readonly blockedUserUseCase: BlockedUserUseCase,
+    private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -131,106 +133,10 @@ export class UsersController {
     };
   }
 
-  @Get('challenges')
-  getChallenges(@Param(':id') id: string) {
-    return [
-      {
-        name: 'Challenge1',
-        description: 'This is challenge1',
-        progressRate: 25,
-      },
-      {
-        name: 'Challenge2',
-        description: 'This is challenge2',
-        progressRate: 0,
-      },
-      {
-        name: 'Challenge3',
-        description: 'This is challenge3',
-        progressRate: 14,
-      },
-      {
-        name: 'Challenge4',
-        description: 'This is challenge4',
-        progressRate: 23,
-      },
-      {
-        name: 'Challenge5',
-        description: 'This is challenge5',
-        progressRate: 33,
-      },
-      {
-        name: 'Challenge6',
-        description: 'This is challenge6',
-        progressRate: 44,
-      },
-      {
-        name: 'Challenge7',
-        description: 'This is challenge7',
-        progressRate: 55,
-        achieveRatio: 1,
-      },
-      {
-        name: 'Challenge8',
-        description: 'This is challenge8',
-        progressRate: 66,
-      },
-      {
-        name: 'Challenge9',
-        description: 'This is challenge9',
-        progressRate: 77,
-      },
-      {
-        name: 'Challenge10',
-        description: 'This is challenge10',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge11',
-        description: 'This is challenge11',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge12',
-        description: 'This is challenge12',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge13',
-        description: 'This is challenge13',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge14',
-        description: 'This is challenge14',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge15',
-        description: 'This is challenge15',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge16',
-        description: 'This is challenge16',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge17',
-        description: 'This is challenge17',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge18',
-        description: 'This is challenge18',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge19',
-        description: 'This is challenge19',
-        progressRate: 100,
-      },
-    ];
+  @Get('challenges/:id')
+  async getChallenges(@Param('id') id: string) {
+    const user = await this.usersUseCase.findOneByName(id);
+    return await this.achievementUseCase.findAllByUserId(user.id);
   }
 
   @Get('matches')
