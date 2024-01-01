@@ -206,7 +206,10 @@ export class ChannelGateway
       myId,
       channelId,
     );
-    client.emit('getParticipants', participants);
+    client.emit('getParticipants', {
+      participants: participants,
+      channelId: channelId,
+    });
     return 'getParticipants Success!';
   }
 
@@ -224,7 +227,10 @@ export class ChannelGateway
     console.log('socket: getAdminUsers', channelId);
     const myId = this.socketToUser.get(client.id);
     const adminUsers = await this.channelService.getAdminUsers(channelId);
-    client.emit('getAdminUsers', adminUsers);
+    client.emit('getAdminUsers', {
+      adminUsers: adminUsers,
+      channelId: channelId,
+    });
     return 'getAdminUsers Success!';
   }
 
@@ -268,18 +274,14 @@ export class ChannelGateway
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
     await this.getPublicChannelsToAll();
-    this.server
-      .to(channelId)
-      .emit(
-        'getParticipants',
-        await this.channelService.getParticipants(myId, channelId),
-      );
-    this.server
-      .to(channelId)
-      .emit(
-        'getBannedUsers',
-        await this.channelService.getBannedUsers(channelId),
-      );
+    this.server.to(channelId).emit('getParticipants', {
+      participants: await this.channelService.getParticipants(myId, channelId),
+      channelId: channelId,
+    });
+    this.server.to(channelId).emit('getBannedUsers', {
+      bannedUsers: await this.channelService.getBannedUsers(channelId),
+      channelId: channelId,
+    });
     client.leave(channelId);
 
     return 'banUser Success!';
@@ -304,12 +306,10 @@ export class ChannelGateway
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
     await this.getPublicChannelsToAll();
-    this.server
-      .to(channelId)
-      .emit(
-        'getParticipants',
-        await this.channelService.getParticipants(myId, channelId),
-      );
+    this.server.to(channelId).emit('getParticipants', {
+      participants: await this.channelService.getParticipants(myId, channelId),
+      channelId: channelId,
+    });
     return 'kickUser Success!';
   }
 
@@ -344,12 +344,10 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
     if (result !== 'unBanUser Success!') return result;
-    this.server
-      .to(channelId)
-      .emit(
-        'getBannedUsers',
-        await this.channelService.getBannedUsers(channelId),
-      );
+    this.server.to(channelId).emit('getBannedUsers', {
+      bannedUsers: await this.channelService.getBannedUsers(channelId),
+      channelId: channelId,
+    });
   }
 
   @SubscribeMessage('changePassword')
@@ -386,7 +384,10 @@ export class ChannelGateway
     );
     if (result === 'changeAdmin Success!') {
       const adminUsers = await this.channelService.getAdminUsers(channelId);
-      client.emit('getAdminUsers', adminUsers);
+      client.emit('getAdminUsers', {
+        adminUsers: adminUsers,
+        channelId: channelId,
+      });
     }
     const socket = this.userToSocket.get(userId);
     if (socket)
