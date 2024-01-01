@@ -99,8 +99,8 @@ export class Player {
   handleCollision(ball: Ball, now: number) {
     ball.lastCollision = now;
     const reflectedAngle = -Math.atan2(ball.velocity.y, ball.velocity.x);
-    ball.velocity.x = Math.cos(reflectedAngle) * BALL_SPEED;
-    ball.velocity.y = Math.sin(reflectedAngle) * BALL_SPEED;
+    ball.velocity.x = Math.cos(reflectedAngle) * ball.speed;
+    ball.velocity.y = Math.sin(reflectedAngle) * ball.speed;
     this.applySpin(ball);
   }
 
