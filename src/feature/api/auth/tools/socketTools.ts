@@ -20,7 +20,13 @@ export async function getUserFromSocket(
   });
 
   const accesstoken = socket.handshake.auth?.Authorization?.split(' ')[1];
-  if (!accesstoken) {
+  if (
+    accesstoken === null ||
+    accesstoken === undefined ||
+    accesstoken === '' ||
+    accesstoken === 'null' ||
+    accesstoken === 'undefined'
+  ) {
     console.log('no token', socket.id);
     return null;
   }
