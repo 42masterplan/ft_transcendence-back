@@ -70,6 +70,7 @@ export class UsersController {
     return true;
   }
 
+  @UseGuards(AuthGuard('signIn'))
   @Get('is-duplicated-name')
   async isDuplicatedName(@Query('name') name: string) {
     const isDuplicated = await this.usersService.isDuplicatedName(name);
@@ -78,6 +79,7 @@ export class UsersController {
     };
   }
 
+  @UseGuards(AuthGuard('signIn'))
   @Post('profile-image')
   @UseInterceptors(
     FileInterceptor('profileImage', {
@@ -108,17 +110,15 @@ export class UsersController {
     return true;
   }
 
-  @Get('info')
-  async getInfo(@Param(':id') id: string) {
-    console.log(id);
-    const user = await this.usersService.findOneByIntraId(id);
+  @Get('info/:name')
+  async getInfo(@Param('name') name: string) {
+    const user = await this.usersUseCase.findOneByName(name);
     return {
-      id: '1',
-      name: 'Seoyoo',
-      profileImage: 'https://www.w3schools.com/howto/img_avatar.png',
-      currentStatus: 'on-line',
-      introduction:
-        'Hello, I am User1 and this is a very very very very long long long long long long introduction. ',
+      id: user.id,
+      name: user.name,
+      profileImage: user.profileImage,
+      currentStatus: user.currentStatus,
+      introduction: user.introduction,
     };
   }
 
