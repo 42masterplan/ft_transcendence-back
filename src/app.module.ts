@@ -5,6 +5,7 @@ import { AppService } from '@/src/app.service';
 import { ApiModule } from '@/src/feature/api/api.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+
 import { ServeStaticModule } from '@nestjs/serve-static';
 import * as Joi from 'joi';
 
@@ -35,6 +36,8 @@ import * as Joi from 'joi';
         EMAIL_ADDRESS: Joi.string().email().required(),
         EMAIL_PASSWORD: Joi.string().required(),
         EMAIL_HOST_NAME: Joi.string().required(),
+        SERVER_URL: Joi.string().uri().required(),
+        SERVER_SECRET_KEY: Joi.string().required(),
       }),
     }),
   ],
