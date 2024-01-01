@@ -1,4 +1,7 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { GAME_MODE } from '../../game/presentation/type/game-mode.type';
+import { THEME } from '../../game/presentation/type/theme.type';
+import { TIER } from '../../game/presentation/type/tier.type';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
@@ -21,12 +24,10 @@ import {
 import { Server, Socket } from 'socket.io';
 import { io, Socket as ClientSocket } from 'socket.io-client';
 
-type gameMode = 'normal' | 'ladder';
-type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
 type gameRequest = {
   userId: string;
-  gameMode: gameMode;
-  theme: theme;
+  gameMode: GAME_MODE;
+  theme: THEME;
 };
 type gameResponse = {
   matchId: string;
@@ -36,11 +37,16 @@ type gameCancel = {
   matchId: string;
 };
 
-type MatchStore = {
+type NormalMatch = {
   srcId: string;
   destId: string;
-  gameMode: gameMode;
-  theme: theme;
+  gameMode: GAME_MODE;
+  theme: THEME;
+};
+type LadderMatch = {
+  id: string;
+  tier: TIER;
+  exp: number;
 };
 
 @WebSocketGateway({ namespace: 'alarm' })
@@ -68,7 +74,8 @@ export class NotificationGateway
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
-  private requestQueue: Map<string, MatchStore> = new Map();
+  private normalRequestQueue: Map<string, NormalMatch> = new Map();
+  private ladderRequestQueue: Array<LadderMatch[]> = [[], [], [], []];
   private gameClientSocket: ClientSocket;
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
@@ -83,12 +90,6 @@ export class NotificationGateway
       return;
     }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
-    if (this.sockets.has(user.id)) {
-      console.log('이미 연결된 소켓이 있습니다.');
-      socket.emit('error', '이미 연결된 소켓이 있습니다.');
-      socket.disconnect();
-      return;
-    }
     this.sockets.set(user.id, socket.id);
     this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
@@ -114,37 +115,41 @@ export class NotificationGateway
     });
   }
 
-  @SubscribeMessage('gameRequest')
-  async handleGameRequest(client, { userId, gameMode, theme }: gameRequest) {
+  @SubscribeMessage('normalGameRequest')
+  async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
     const receiverSocketId = this.sockets.get(userId);
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return;
     const srcId = user.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
-    //만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
-    //이전에 할당된 매칭 큐를 확인해서 pop해준다.
-    //MAP으로, 새로운 requestId할당.
-    //객체 == [{requestId, userA, userB, theme} ...]
-    //두명의 유저에게 gameStart를 동시에 emit해준다.
-    const destUser = await this.userUseCase.findOne(userId);
     const matchId = srcId + destId;
-    this.requestQueue.set(matchId, { srcId, destId, gameMode, theme });
-    console.log(this.requestQueue);
+    const destUser = await this.userUseCase.findOne(userId);
 
-    console.log('socket gameRequest', 'userId: ', userId, gameMode, theme);
+    this.normalRequestQueue.set(matchId, {
+      srcId,
+      destId,
+      gameMode: GAME_MODE.normal,
+      theme,
+    });
+    console.log('socket gameRequest', 'userId: ', userId, 'normal', theme);
 
     this.server.to(receiverSocketId).emit('gameRequest', {
       profileImage: destUser.profileImage,
       userName: destUser.name,
       matchId: matchId,
-      gameMode: gameMode,
+      gameMode: GAME_MODE.normal,
       theme: theme,
     });
-    console.log('socket gameRequest');
-    console.log(this.sockets);
     return { msg: 'gameRequestSuccess!', matchId: matchId };
-    //실패한 경우
-    //자유로은 실패 메시지
+    //TODO: 실패한 경우
+  }
+
+  @SubscribeMessage('ladderGameRequest')
+  async handleLadderGameRequest(client) {
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
+
+    return { msg: 'gameRequestSuccess!' };
   }
 
   @SubscribeMessage('gameResponse')
@@ -154,9 +159,9 @@ export class NotificationGateway
     //객체 == [{requestId, userA, userB, theme} ...]
     //두명의 유저에게 gameStart를 동시에 emit해준다.
     console.log('socket gameResponse');
-    console.log(this.requestQueue);
+    console.log(this.normalRequestQueue);
     console.log(isAccept, matchId);
-    const matchInfo = this.requestQueue.get(matchId);
+    const matchInfo = this.normalRequestQueue.get(matchId);
     if (!matchInfo && isAccept == true) {
       return 'gameResponse Fail!';
     }
@@ -193,7 +198,7 @@ export class NotificationGateway
         gameMode: 'normal',
       });
     }
-    this.requestQueue.delete(matchId);
+    this.normalRequestQueue.delete(matchId);
     return 'gameRequest success!';
     //실패한 경우
     //자유로은 실패 메시지
@@ -202,12 +207,12 @@ export class NotificationGateway
   @SubscribeMessage('gameCancel')
   async handleGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel');
-    const matchInfo = this.requestQueue.get(matchId);
+    const matchInfo = this.normalRequestQueue.get(matchId);
     console.log(matchInfo);
     const destId = this.sockets.get(matchInfo.destId);
-    this.requestQueue.delete(matchId);
+    this.normalRequestQueue.delete(matchId);
     this.server.to(destId).emit('gameCancel', { matchId });
-    console.log(this.requestQueue);
+    console.log(this.normalRequestQueue);
     return 'gameCancel Success!';
   }
 

@@ -1,3 +1,6 @@
 export enum TIER {
-  default = 'default',
+  bronze = 'bronze',
+  silver = 'silver',
+  gold = 'gold',
+  platinum = 'platinum',
 }
