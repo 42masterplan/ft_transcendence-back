@@ -375,6 +375,16 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
     if (result !== 'unBanUser Success!') return result;
+    const newMessage = await this.channelService.newMessage(
+      myId,
+      '[system]' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 밴 해제 되었습니다.',
+      channelId,
+    );
+    await this.newMessageInRoom(channelId, newMessage);
+    await this.getMyChannelsInRoom(channelId);
+    await this.getPublicChannelsToAll();
     this.server.to(channelId).emit('getBannedUsers', {
       bannedUsers: await this.channelService.getBannedUsers(channelId),
       channelId: channelId,
