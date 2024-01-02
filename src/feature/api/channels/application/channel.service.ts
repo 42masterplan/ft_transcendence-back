@@ -327,7 +327,7 @@ export class ChannelService {
       return 'Admin can only ban user';
 
     isTargetBanned.updatedIsDeleted(true);
-    this.channelUserBannedRepository.updateOne(isTargetBanned);
+    await this.channelUserBannedRepository.updateOne(isTargetBanned);
     return 'unBanUser Success!';
   }
 
