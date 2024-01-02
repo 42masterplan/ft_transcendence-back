@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, NotContains } from 'class-validator';
 
 export class CreateChannelDto {
   @IsString()
@@ -6,6 +6,7 @@ export class CreateChannelDto {
   name: string;
 
   @IsString()
+  @NotContains(' ')
   password: string;
 
   // @IsString()

@@ -1,7 +1,14 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
+import { DmUseCase } from '../application/dm.use-case';
+import {
+  OnModuleInit,
+  UsePipes,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -12,6 +19,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { io, Socket as ClientSocket } from 'socket.io-client';
 
 type gameMode = 'normal' | 'ladder';
 type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
@@ -49,16 +57,19 @@ type MatchStore = {
   }),
 )
 export class NotificationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   constructor(
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
+    private readonly dmUseCase: DmUseCase,
+    private readonly friendUseCase: FriendUseCase,
   ) {}
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
   private requestQueue: Map<string, MatchStore> = new Map();
+  private gameClientSocket: ClientSocket;
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
@@ -72,7 +83,14 @@ export class NotificationGateway
       return;
     }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
+    if (this.sockets.has(user.id)) {
+      console.log('이미 연결된 소켓이 있습니다.');
+      socket.emit('error', '이미 연결된 소켓이 있습니다.');
+      socket.disconnect();
+      return;
+    }
     this.sockets.set(user.id, socket.id);
+    this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
 
   /**
@@ -83,9 +101,17 @@ export class NotificationGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     const user = await getUserFromSocket(socket, this.usersService);
     if (!user) return;
-    //TODO: JWT를 이용해서 해당 정보를 가져올 것
-
     this.sockets.delete(user.id);
+    this.userUseCase.updateStatus(user.intraId, 'off-line');
+  }
+
+  onModuleInit() {
+    console.log('notification to game');
+    this.gameClientSocket = io(process.env.SERVER_URL + '/game', {
+      extraHeaders: {
+        server_secret_key: process.env.SERVER_SECRET_KEY,
+      },
+    });
   }
 
   @SubscribeMessage('gameRequest')
@@ -134,12 +160,37 @@ export class NotificationGateway
     if (!matchInfo && isAccept == true) {
       return 'gameResponse Fail!';
     }
+    const destSocketId = this.sockets.get(matchInfo.destId);
     const userSocketId = this.sockets.get(matchInfo.srcId);
+    const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
+    const destUser = await this.userUseCase.findOne(matchInfo.destId);
     // 	const userA,B;
     if (isAccept) {
       this.server.to(userSocketId).emit('gameStart', {
         matchId: matchId,
+        aName: srcUser.name,
+        aProfileImage: srcUser.profileImage,
+        bName: destUser.name,
+        bProfileImage: destUser.profileImage,
+        side: 'A',
         theme: matchInfo.theme,
+        gameMode: 'normal',
+      });
+      this.server.to(destSocketId).emit('gameStart', {
+        matchId: matchId,
+        aName: srcUser.name,
+        aProfileImage: srcUser.profileImage,
+        bName: destUser.name,
+        bProfileImage: destUser.profileImage,
+        side: 'B',
+        theme: matchInfo.theme,
+        gameMode: 'normal',
+      });
+      this.gameClientSocket.emit('createRoom', {
+        matchId: matchId,
+        aId: matchInfo.srcId,
+        bId: matchInfo.destId,
+        gameMode: 'normal',
       });
     }
     this.requestQueue.delete(matchId);
@@ -159,21 +210,84 @@ export class NotificationGateway
     console.log(this.requestQueue);
     return 'gameCancel Success!';
   }
+
+  /**
+   *
+   * userName: 받는 사람의 유저 이름
+   */
   @SubscribeMessage('DmHistory')
-  async handleDMHistory(client, { userId }) {
+  async handleDMHistory(client, userName: string) {
     console.log('socket DmHistory');
-    const userSocketId = this.sockets.get(userId);
-    this.server.to(userSocketId).emit('DMHistory', { userId });
-    return 'DmHistory Success!';
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return 'DmHistory Fail!';
+
+    const friend = await this.userUseCase.findOneByName(userName);
+    const user1Id = friend.id > user.id ? user.id : friend.id;
+    const user2Id = friend.id > user.id ? friend.id : user.id;
+    if (
+      (await this.friendUseCase.isFriend({
+        myId: user1Id,
+        friendId: user2Id,
+      })) === false
+    )
+      return 'Not Friend!';
+    try {
+      const DmHistory = await this.dmUseCase.getDmMessages(user1Id, user2Id);
+      return {
+        ...DmHistory,
+        profileImage: friend.profileImage,
+        name: friend.name,
+      };
+    } catch (e) {
+      console.log(e);
+      return 'DmHistory Fail!';
+    }
   }
 
+  /**
+   * dmId : 디엠 방 ID
+   * participantId : 메세지를 보낸 유저의 ID
+   * content : 보낼 메시지
+   */
   @SubscribeMessage('DmNewMessage')
-  async handleDMNewMessage(client, { userId, message, matchId }) {
+  async handleDMNewMessage(client, { dmId, participantId, content }) {
     console.log('socket DmNewMessage');
-    const userSocketId = this.sockets.get(userId);
-    this.server
-      .to(userSocketId)
-      .emit('DMNewMessage', { userId, message, matchId });
-    return 'DmNewMessage Success!';
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return 'DmNewMessage Fail!';
+    try {
+      this.dmUseCase.saveNewMessage({ dmId, participantId, content });
+      const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
+      if (
+        (await this.friendUseCase.isFriend({
+          myId: user.id,
+          friendId: receiverId,
+        })) === false
+      )
+        return 'Not Friend!';
+      const receiverSocketId = this.sockets.get(receiverId);
+      if (receiverSocketId) {
+        this.server
+          .to(receiverSocketId)
+          .emit('DMNewMessage', { dmId, participantId, content });
+      }
+      return 'DmNewMessage Success!';
+    } catch (e) {
+      console.log(e);
+      return 'DmNewMessage Fail!';
+    }
+  }
+
+  @SubscribeMessage('myInfo')
+  async handleMyInfo(client) {
+    console.log('socket myInfo');
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return 'myInfo Fail!';
+    return {
+      profileImage: user.profileImage,
+      name: user.name,
+      id: user.id,
+      introduction: user.introduction,
+      currentStatus: user.currentStatus,
+    };
   }
 }

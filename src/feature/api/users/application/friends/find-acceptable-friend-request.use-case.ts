@@ -9,10 +9,10 @@ export class FindAcceptableFriendRequestUseCase {
     @Inject(FriendRequestRepository)
     private readonly repository: FriendRequestRepository,
     @Inject(UsersUseCase)
-    private readonly usersUseCases: UsersUseCase,
+    private readonly usersUseCase: UsersUseCase,
   ) {}
 
-  async findMyFriendsRequests(myId: string): Promise<FriendRequest[]> {
+  async findFriendsRequestsFromMe(myId: string): Promise<FriendRequest[]> {
     const myFriendsRequest =
       await this.repository.findManyByPrimaryUserId(myId);
 
@@ -20,16 +20,38 @@ export class FindAcceptableFriendRequestUseCase {
       (myFriendRequest) => myFriendRequest.isAccepted === null,
     );
 
-    this.setTargetUser(myAcceptableFriendsRequest);
+    await this.setTargetUser(myAcceptableFriendsRequest);
+    return myAcceptableFriendsRequest;
+  }
 
+  async findFriendsRequestsToMe(myId: string): Promise<FriendRequest[]> {
+    const myFriendsRequest = await this.repository.findManyByTargetUserId(myId);
+
+    const myAcceptableFriendsRequest = myFriendsRequest.filter(
+      (myFriendRequest) => myFriendRequest.isAccepted === null,
+    );
+
+    await this.setPrimaryUser(myAcceptableFriendsRequest);
     return myAcceptableFriendsRequest;
   }
 
   private async setTargetUser(friendsRequest: FriendRequest[]) {
-    friendsRequest.map(async (friendRequest) =>
-      friendRequest.connectTargetUser(
-        await this.usersUseCases.findOne(friendRequest.targetUserId),
-      ),
+    await Promise.all(
+      friendsRequest.map(async (friendRequest) => {
+        friendRequest.connectTargetUser(
+          await this.usersUseCase.findOne(friendRequest.targetUserId),
+        );
+      }),
+    );
+  }
+
+  private async setPrimaryUser(friendsRequest: FriendRequest[]) {
+    await Promise.all(
+      friendsRequest.map(async (friendRequest) => {
+        friendRequest.connectPrimaryUser(
+          await this.usersUseCase.findOne(friendRequest.primaryUserId),
+        );
+      }),
     );
   }
 }

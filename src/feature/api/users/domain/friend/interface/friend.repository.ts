@@ -2,7 +2,14 @@ import { Friend } from '../friend';
 
 export interface FriendRepository {
   findManyByMyId(myId: string): Promise<Friend[]>;
-  deleteMyFriend({
+  deleteFriend({
+    myId,
+    friendId,
+  }: {
+    myId: string;
+    friendId: string;
+  }): Promise<Friend>;
+  createFriend({
     myId,
     friendId,
   }: {

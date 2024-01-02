@@ -33,6 +33,9 @@ export class UsersUseCase {
   ): Promise<User> {
     return await this.repository.updateOne(intraId, updateUserDto);
   }
+  async updateStatus(intraId: string, status: string): Promise<User> {
+    return await this.repository.updateStatus(intraId, status);
+  }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     try {

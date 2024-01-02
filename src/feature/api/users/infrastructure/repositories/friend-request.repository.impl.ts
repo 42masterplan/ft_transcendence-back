@@ -39,6 +39,12 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
 
+  async findManyByTargetUserId(targetUserId: string): Promise<FriendRequest[]> {
+    const friendRequest = await this.repository.find({ targetUserId });
+
+    return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
+  }
+
   async findManyByPrimaryUserIdTargetUserId({
     primaryUserId,
     targetUserId,
@@ -54,11 +60,18 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
 
+  async findOneByRequestId({ requestId }): Promise<FriendRequest> {
+    const friendRequest = await this.repository.findOne({
+      id: requestId,
+    });
+    return this.toDomain(friendRequest);
+  }
+
   async update(friendRequest: FriendRequest): Promise<FriendRequest> {
     const entity = await this.repository.findOneOrFail(friendRequest.id);
 
     entity.isAccepted = friendRequest.isAccepted;
-
+    //TODO: 동작하는지 확인 필요
     this.repository.getEntityManager().flush();
 
     return this.toDomain(entity);

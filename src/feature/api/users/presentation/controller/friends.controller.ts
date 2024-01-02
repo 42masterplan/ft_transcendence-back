@@ -1,10 +1,13 @@
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
-import { DeleteFriendUseCase } from '../../application/friends/delete-friend.use-case';
 import { FindAcceptableFriendRequestUseCase } from '../../application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
+import { FriendUseCase } from '../../application/friends/friend.use-case';
+import { UsersUseCase } from '../../application/use-case/users.use-case';
+import { UsersService } from '../../users.service';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
-import { FindFriendsRequestViewModel } from '../view-models/friends-request/find-friends-request.vm';
+import { FindFriendsRequestToMeViewModel } from '../view-models/friends-request/find-friends-request-to-me.vm';
+
 import {
   Body,
   Controller,
@@ -14,7 +17,11 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
+  Request,
+  Query,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users/friends')
 export class FriendsController {
@@ -24,80 +31,101 @@ export class FriendsController {
     private readonly findUseCase: FindFriendsUseCase,
     private readonly createRequestUseCase: CreateFriendRequestUseCase,
     private readonly friendRequestUseCase: FriendRequestUseCase,
-    private readonly deleteUseCase: DeleteFriendUseCase,
+    private readonly friendUseCase: FriendUseCase,
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
+    private readonly userService: UsersService,
+    private readonly userUseCase: UsersUseCase,
   ) {}
-
+  @UseGuards(AuthGuard('jwt'))
   @Get('')
-  async getFriends() {
-    //TODO: add user decorator
+  async getFriends(@Request() req) {
     this.logger.log('getFriends');
-    const friends = await this.findUseCase.execute(
-      'd8397903-7238-4feb-9d00-6f94a5483ee0',
-    );
-
+    const intraId = req.user.sub;
+    const user = await this.userService.findOneByIntraId(intraId);
+    const friends = await this.findUseCase.execute(user.id);
     return friends.map((friend) => new FindFriendViewModel(friend));
   }
 
-  @Delete(':friendId')
-  deleteFriends(@Param('friendId') friendId: string): boolean {
-    //TODO: change to user decorator
-    this.deleteUseCase.execute({
-      myId: 'd8397903-7238-4feb-9d00-6f94a5483ee0',
+  @UseGuards(AuthGuard('jwt'))
+  @Get('isFriend')
+  async isFriend(@Request() req, @Query('name') friendName: string) {
+    const intraId = req.user.sub;
+    const user = await this.userUseCase.findOneByIntraId(intraId);
+    const friend = await this.userUseCase.findOneByName(friendName);
+    const isFriend = await this.friendUseCase.isFriend({
+      myId: user.id,
+      friendId: friend.id,
+    });
+    return {
+      isFriends: isFriend,
+    };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/:friendId')
+  async deleteFriends(
+    @Request() req,
+    @Param('friendId') friendId: string,
+  ): Promise<boolean> {
+    const intraId = req.user.sub;
+    const user = await this.userService.findOneByIntraId(intraId);
+    await this.friendUseCase.delete({
+      myId: user.id,
       friendId,
     });
 
     return true;
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('request')
-  async getFriendsRequest(): Promise<FindFriendsRequestViewModel[]> {
-    //TODO change to user decorator
-    const myId = 'b233ba54-50be-4dcc-9c84-a2ce366936a9';
+  async getFriendsRequest(
+    @Request() req,
+  ): Promise<FindFriendsRequestToMeViewModel[]> {
+    const intraId = req.user.sub;
+    const user = await this.userService.findOneByIntraId(intraId);
 
     const friendsRequest =
-      await this.findAcceptableFriendRequestUseCase.findMyFriendsRequests(myId);
+      await this.findAcceptableFriendRequestUseCase.findFriendsRequestsToMe(
+        user.id,
+      );
 
     return friendsRequest.map(
-      (friendRequest) => new FindFriendsRequestViewModel(friendRequest),
+      (friendRequest) => new FindFriendsRequestToMeViewModel(friendRequest),
     );
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('request')
   async createFriendRequest(
-    @Body('friend-id') friendId: string,
+    @Request() req,
+    @Body('friendId') friendId: string,
   ): Promise<boolean> {
-    //TODO: change to user decorator
-    const userId = 'b233ba54-50be-4dcc-9c84-a2ce366936a9';
+    const intraId = req.user.sub;
+    const user = await this.userService.findOneByIntraId(intraId);
 
     await this.createRequestUseCase.execute({
-      primaryUserId: userId,
+      primaryUserId: user.id,
       targetUserId: friendId,
     });
-
     return true;
   }
 
-  //TODO: change interface
+  @UseGuards(AuthGuard('jwt'))
   @Put('request')
-  async acceptFriendRequest(@Body('friend-id') friendId: string) {
-    //TODO: change to user decorator
-
+  async acceptFriendRequest(@Body('requestId') requestId: number) {
     await this.friendRequestUseCase.acceptFriendRequest({
-      primaryUserId: 'b233ba54-50be-4dcc-9c84-a2ce366936a9',
-      targetUserId: friendId,
+      requestId: requestId,
     });
-
+    //TODO:  양쪽으로 해줘야하는지 재고해보기
     return true;
   }
 
-  //TODO: change interface
-  @Delete('request/:friendId')
-  async rejectFriendRequest(@Param('friendId') friendId: string) {
-    //TODO: change to user decorator
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('request/:requestId')
+  async rejectFriendRequest(@Param('requestId') requestId: number) {
     await this.friendRequestUseCase.rejectFriendRequest({
-      primaryUserId: 'b233ba54-50be-4dcc-9c84-a2ce366936a9',
-      targetUserId: friendId,
+      requestId: requestId,
     });
 
     return true;
