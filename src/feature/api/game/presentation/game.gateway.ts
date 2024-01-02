@@ -196,6 +196,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('keyDown')
   async playerKeyDown(client: Socket, keycode: string) {
     await this.joinMutex.runExclusive(async () => {
@@ -215,6 +216,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('keyUp')
   async playerKeyUp(client: Socket) {
     await this.joinMutex.runExclusive(async () => {

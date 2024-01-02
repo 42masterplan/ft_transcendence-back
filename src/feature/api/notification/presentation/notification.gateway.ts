@@ -157,6 +157,7 @@ export class NotificationGateway
     //자유로은 실패 메시지
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('gameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
     //이전에 할당된 매칭 큐를 확인해서 pop해준다.
@@ -209,6 +210,7 @@ export class NotificationGateway
     //자유로은 실패 메시지
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('gameCancel')
   async handleGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel');

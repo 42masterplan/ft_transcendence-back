@@ -1,10 +1,16 @@
 import { AuthService } from '../../../auth/auth.service';
+import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { UsersService } from '../../../users/users.service';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
+import {
+  UseGuards,
+  UsePipes,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -78,6 +84,7 @@ export class ChannelGateway
     client.leave(channels.map((channel) => channel.id));
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
     const myId = this.socketToUser.get(client.id);
@@ -95,6 +102,7 @@ export class ChannelGateway
     return 'success';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('myChannels')
   async getMyChannels(client) {
     const myId = this.socketToUser.get(client.id);
@@ -142,6 +150,7 @@ export class ChannelGateway
     }
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getPublicChannels')
   async getPublicChannels(client) {
     console.log('socket: allPublicChannel');
@@ -150,6 +159,7 @@ export class ChannelGateway
     client.emit('getPublicChannels', channels);
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('joinChannel')
   async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
@@ -170,6 +180,7 @@ export class ChannelGateway
     return ret;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client, { channelId }) {
     console.log('socket: channelHistory');
@@ -181,6 +192,7 @@ export class ChannelGateway
     return history;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('createChannel')
   async createChannel(client: any, createChannelDto: CreateChannelDto) {
     console.log('socket: createChannel');
@@ -207,6 +219,7 @@ export class ChannelGateway
     return 'createChannel Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getParticipants')
   async getParticipants(client: any, { channelId }) {
     console.log('socket: getParticipants', channelId);
@@ -222,6 +235,7 @@ export class ChannelGateway
     return 'getParticipants Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getBannedUsers')
   async getBannedUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getBannedUsers', channelId);
@@ -234,6 +248,7 @@ export class ChannelGateway
     return 'getBannedUsers Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getAdminUsers', channelId);
@@ -246,6 +261,7 @@ export class ChannelGateway
     return 'getAdminUsers Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('leaveChannel')
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
     console.log('socket: leaveChannel', channelId);
@@ -266,6 +282,7 @@ export class ChannelGateway
     return result;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('banUser')
   async banUser(
     client: any,
@@ -299,6 +316,7 @@ export class ChannelGateway
     return 'banUser Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('kickUser')
   async kickUser(
     client: any,
@@ -325,6 +343,7 @@ export class ChannelGateway
     return 'kickUser Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('muteUser')
   async muteUser(
     client: any,
@@ -346,7 +365,7 @@ export class ChannelGateway
   }
 
   /*unBanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
-
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('unBanUser')
   async unBanUser(
     client: any,
@@ -362,6 +381,7 @@ export class ChannelGateway
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('changePassword')
   async changePassword(
     client: any,
@@ -377,6 +397,7 @@ export class ChannelGateway
     return result;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('changeAdmin')
   async changeAdmin(
     client: any,
