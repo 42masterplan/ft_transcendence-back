@@ -207,7 +207,7 @@ export class NotificationGateway
         gameMode: GAME_MODE.normal,
       });
     } else {
-      this.server.to(matchInfo.destId).emit('normalGameReject');
+      this.server.to(matchInfo.srcId).emit('normalGameReject');
     }
     this.normalRequestQueue.delete(matchId);
     return 'gameResponse success!';
