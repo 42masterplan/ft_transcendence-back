@@ -134,9 +134,10 @@ export class UsersController {
   }
 
   @Get('challenges/:id')
-  async getChallenges(@Param('id') id: string) {
+  async getChallenges(@Param('id') id: string): Promise<any> {
     const user = await this.usersUseCase.findOneByName(id);
-    return await this.achievementUseCase.findAllByUserId(user.id);
+    const achieves= await this.achievementUseCase.findAllByUserId(user.id);
+    return achieves;
   }
 
   @Get('matches')

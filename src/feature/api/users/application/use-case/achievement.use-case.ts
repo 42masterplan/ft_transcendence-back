@@ -14,18 +14,16 @@ export class AchievementUseCase {
   private names: string[] = ["너진짜잘한다", "너진짜못한다", "와우! 첫 승리!", "이런! 첫 패배!", "힘의 차이가 느껴지십니까?", "스토커", "여기여기 모여라", "쉿! 조용히 해!", "꼴보기 싫어", "잠깐 나가줄래?"];
   private descriptions: string[] = ["게임으로 3연승을 거두세요.", "게임으로 3연패를 당하세요.", "게임으로 첫 승리를 거두세요.", "게임으로 첫 패배를 당하세요.", "두배 점수차로 승리하세요", "연속으로 10개의 메세지를 보내세요", "채팅창을 만들어 보세요!", "참가자를 뮤트해 보세요", "참가자를 밴해 보세요", "참가자를 킥해 보세요"];
 
-    async findAllByUserId(userId: string) {
+    async findAllByUserId(userId: string): Promise<any> {
       const achievementStatuses = await this.achievementStatusRepository.findAllByUserId(userId);
-      console.log("achievement", achievementStatuses);
-
-      return achievementStatuses.map(async (achievementStatus) => {
+      return Promise.all(achievementStatuses.map(async (achievementStatus) => {
         const achievement = await this.achievementRepository.findOneById(achievementStatus.achievementId);
         return {
-          name: this.names[achievement.id],
-          description: this.descriptions[achievement.id],
+          name: this.names[achievement.id - 1],
+          description: this.descriptions[achievement.id - 1],
           progressRate: achievementStatus.count / achievement.criterionNumber * 100,
         };
-      });
+      }));
     }
 
     async initAchievementStatus(userId: string) {
