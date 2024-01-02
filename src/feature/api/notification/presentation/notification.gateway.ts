@@ -116,13 +116,12 @@ export class NotificationGateway
 
   @SubscribeMessage('normalGameRequest')
   async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
-    const receiverSocketId = this.sockets.get(userId);
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return;
-    const srcId = user.id; //게임 요청을 보낸 사람의 아이디
+    const destSocketId = this.sockets.get(userId);
+    const srcUser = await getUserFromSocket(client, this.usersService);
+    if (!srcUser) return;
+    const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     const matchId = srcId + destId;
-    const destUser = await this.userUseCase.findOne(userId);
 
     this.normalRequestQueue.set(matchId, {
       srcId,
@@ -130,11 +129,19 @@ export class NotificationGateway
       gameMode: GAME_MODE.normal,
       theme,
     });
-    console.log('socket gameRequest', 'userId: ', userId, 'normal', theme);
+    console.log(
+      'socket gameRequest',
+      'srcUserId',
+      srcId,
+      'destUserId: ',
+      destId,
+      'normal',
+      theme,
+    );
 
-    this.server.to(receiverSocketId).emit('gameRequest', {
-      profileImage: destUser.profileImage,
-      userName: destUser.name,
+    this.server.to(destSocketId).emit('gameRequest', {
+      profileImage: srcUser.profileImage,
+      userName: srcUser.name,
       matchId: matchId,
       gameMode: GAME_MODE.normal,
       theme: theme,
