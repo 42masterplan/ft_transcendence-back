@@ -7,6 +7,7 @@ import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
 import { LadderQueueService } from '../application/ladder-queue.service';
 import { LadderMatch } from './type/ladder-match';
+import { LadderMatchQueue } from './type/ladder-match-queue';
 import { NormalMatch } from './type/normal-match.type';
 import {
   OnModuleInit,
@@ -62,7 +63,10 @@ export class NotificationGateway
     private readonly dmUseCase: DmUseCase,
     private readonly friendUseCase: FriendUseCase,
     private readonly ladderQueueService: LadderQueueService,
-  ) {}
+  ) {
+    this.matchLadderQueue();
+    this.tickLadderQueue();
+  }
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
@@ -70,6 +74,7 @@ export class NotificationGateway
   private ladderRequestQueue: Array<LadderMatch> = [];
   private gameClientSocket: ClientSocket;
   private ladderQueueMutex: Mutex = new Mutex();
+  private ladderMatchQueue: LadderMatchQueue = new LadderMatchQueue();
 
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
@@ -143,8 +148,7 @@ export class NotificationGateway
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return;
     await this.ladderQueueMutex.runExclusive(() => {
-      this.ladderQueueService.insertQueue(
-        this.ladderRequestQueue,
+      this.ladderMatchQueue.insert(
         new LadderMatch({
           id: user.id,
           socketId: client.id,
@@ -152,6 +156,15 @@ export class NotificationGateway
           exp: user.exp,
         }),
       );
+      // this.ladderQueueService.insertQueue(
+      //   this.ladderRequestQueue,
+      //   new LadderMatch({
+      //     id: user.id,
+      //     socketId: client.id,
+      //     tier: user.tier,
+      //     exp: user.exp,
+      //   }),
+      // );
     });
     return { msg: 'gameRequestSuccess!' };
   }
@@ -300,18 +313,114 @@ export class NotificationGateway
     };
   }
 
-  updateLadderQueue() {
-    console.log('start update ladder queue cron');
+  tickLadderQueue() {
+    console.log('start tick ladder queue cron');
     setInterval(async () => {
-      this.ladderQueueMutex.runExclusive(() => {
-        const timeSortedQueue = this.ladderQueueService.sortQueueByTime(
-          this.ladderRequestQueue,
-        );
-        for (let index = 0; index < timeSortedQueue.length; index++) {
-          const match = timeSortedQueue[index];
-          match.time++;
-        }
+      this.ladderQueueMutex.runExclusive(async () => {
+        this.ladderMatchQueue.tickQueue();
       });
     }, 1000);
+  }
+
+  matchLadderQueue() {
+    console.log('start update ladder queue cron');
+    setInterval(async () => {
+      this.ladderQueueMutex.runExclusive(async () => {
+        const match = this.ladderMatchQueue.getMostWaitedMatch();
+        if (!match || match.removed === true) return;
+        let prevMatch = match.prev;
+        while (prevMatch && prevMatch.removed === true) {
+          prevMatch = prevMatch.prev;
+        }
+        let nextMatch = match.next;
+        while (nextMatch && nextMatch.removed === true) {
+          nextMatch = nextMatch.next;
+        }
+        const matchPoint = match.tierNum * 100 + match.exp;
+        const prevMatchPoint = prevMatch
+          ? prevMatch.tierNum * 100 + prevMatch.exp
+          : 0;
+        const nextMatchPoint = nextMatch
+          ? nextMatch.tierNum * 100 + nextMatch.exp
+          : 0;
+        const matchRange = match.time * 10;
+        let canMatchOtherTier = false;
+        let canMatchWithPrev = false;
+        let canMatchWithNext = false;
+        let result;
+
+        console.log(match);
+        match.time++;
+        if (
+          match.exp + match.time * 10 >= 100 &&
+          match.exp - match.time * 10 < 0
+        ) {
+          canMatchOtherTier = true;
+        }
+        if (
+          prevMatch &&
+          prevMatchPoint <= matchPoint + matchRange &&
+          prevMatchPoint >= matchPoint - matchRange
+        ) {
+          if (canMatchOtherTier) canMatchWithPrev = true;
+          else if (prevMatch.tier === match.tier) canMatchWithPrev = true;
+        }
+        if (
+          nextMatch &&
+          nextMatchPoint <= matchPoint + matchRange &&
+          nextMatchPoint >= matchPoint - matchRange
+        ) {
+          if (canMatchOtherTier) canMatchWithNext = true;
+          else if (nextMatch.tier === match.tier) canMatchWithNext = true;
+        }
+        if (canMatchWithPrev || canMatchWithNext) {
+          if (canMatchWithPrev && canMatchWithNext) {
+            if (
+              prevMatch.tier === match.tier &&
+              nextMatch.tier === match.tier
+            ) {
+              result = prevMatch.time < nextMatch.time ? nextMatch : prevMatch;
+            } else {
+              result = prevMatch.tier === match.tier ? prevMatch : nextMatch;
+            }
+          } else if (canMatchWithPrev) result = prevMatch;
+          else result = nextMatch;
+          console.log('match success!' + match.id + ' vs ' + result.id);
+
+          const playerA = await this.userUseCase.findOne(match.id);
+          const playerB = await this.userUseCase.findOne(result.id);
+          const matchId = match.id + result.id;
+          this.server.to(match.socketId).emit('gameStart', {
+            matchId: matchId,
+            aName: playerA.name,
+            aProfileImage: playerA.profileImage,
+            bName: playerB.name,
+            bProfileImage: playerB.profileImage,
+            side: 'A',
+            theme: THEME.default,
+            gameMode: GAME_MODE.ladder,
+          });
+          this.server.to(result.matchId).emit('gameStart', {
+            matchId: matchId,
+            aName: playerA.name,
+            aProfileImage: playerA.profileImage,
+            bName: playerB.name,
+            bProfileImage: playerB.profileImage,
+            side: 'B',
+            theme: THEME.default,
+            gameMode: GAME_MODE.ladder,
+          });
+          this.gameClientSocket.emit('createRoom', {
+            matchId: matchId,
+            aId: playerA.id,
+            bId: playerB.id,
+            gameMode: GAME_MODE.ladder,
+          });
+
+          this.ladderMatchQueue.remove(match);
+          this.ladderMatchQueue.remove(result);
+        }
+      });
+    }, 10);
   }
 }

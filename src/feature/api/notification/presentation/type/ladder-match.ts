@@ -7,6 +7,9 @@ export class LadderMatch {
   private readonly _tierNum: number;
   private readonly _exp: number;
   private _time: number;
+  private _prev: LadderMatch | null;
+  private _next: LadderMatch | null;
+  private _removed: boolean;
 
   constructor(props: {
     id: string;
@@ -33,6 +36,9 @@ export class LadderMatch {
         this._tierNum = 3;
         break;
     }
+    this._prev = null;
+    this._next = null;
+    this._removed = false;
   }
 
   get id(): string {
@@ -59,7 +65,31 @@ export class LadderMatch {
     return this._time;
   }
 
+  get prev(): LadderMatch | null {
+    return this._prev;
+  }
+
+  get next(): LadderMatch | null {
+    return this._next;
+  }
+
+  get removed(): boolean {
+    return this._removed;
+  }
+
   set time(time: number) {
     this._time = time;
+  }
+
+  set prev(match: LadderMatch | null) {
+    this._prev = match;
+  }
+
+  set next(match: LadderMatch | null) {
+    this._next = match;
+  }
+
+  set removed(removed: boolean) {
+    this._removed = removed;
   }
 }
