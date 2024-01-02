@@ -180,6 +180,7 @@ export class NotificationGateway
     const destUser = await this.userUseCase.findOne(matchInfo.destId);
     // 	const userA,B;
     if (isAccept) {
+      console.log('game accept');
       this.server.to(userSocketId).emit('gameStart', {
         matchId: matchId,
         aName: srcUser.name,
@@ -207,7 +208,8 @@ export class NotificationGateway
         gameMode: GAME_MODE.normal,
       });
     } else {
-      this.server.to(matchInfo.srcId).emit('normalGameReject');
+      console.log('game reject');
+      this.server.to(userSocketId).emit('normalGameReject');
     }
     this.normalRequestQueue.delete(matchId);
     return 'gameResponse success!';
