@@ -2,7 +2,7 @@ import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
 import { GameUseCase } from '../application/game.use-case';
-import { GAME_MODE } from './type/game-mode.type';
+import { GAME_MODE } from './type/game-mode.enum';
 import { GameState } from './type/game-state';
 import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
