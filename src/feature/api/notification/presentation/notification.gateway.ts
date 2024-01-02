@@ -335,9 +335,9 @@ export class NotificationGateway
     console.log('start update ladder queue cron');
     setInterval(async () => {
       this.ladderQueueMutex.runExclusive(async () => {
-        console.log(this.ladderMatchQueue);
         const matchArray: Array<LadderMatch> =
           this.ladderMatchQueue.getMatchArrayByTime();
+        console.log(matchArray);
         for (const match of matchArray) {
           console.log('check about' + match.id);
           if (!match || match.removed === true) continue;
@@ -360,9 +360,6 @@ export class NotificationGateway
           let canMatchWithPrev = false;
           let canMatchWithNext = false;
           let result: LadderMatch;
-
-          console.log(match);
-          match.time++;
 
           const matchRange = match.time * 10;
           if (match.exp + matchRange >= 100 && match.exp - matchRange < 0) {
@@ -436,13 +433,13 @@ export class NotificationGateway
             matchPoint - matchRange < 0 &&
             matchPoint + matchRange >= 400
           ) {
-            console.log('there is no match for ' + match.id + ', cancel game');
-            this.server.to(match.socketId).emit('gameCancel');
+            console.log('there is no match for ' + match.id + ', reject game');
+            this.server.to(match.socketId).emit('ladderGameReject');
             this.ladderMatchQueue.remove(match);
             return;
           }
         }
       });
-    }, 100);
+    }, 500);
   }
 }

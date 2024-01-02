@@ -13,10 +13,12 @@ export class LadderMatchQueue {
     }
 
     let current = this._head;
+    array.push(current);
     while (current.next) {
-      array.push(current);
       current = current.next;
+      array.push(current);
     }
+
     return array;
   }
 
@@ -26,9 +28,10 @@ export class LadderMatchQueue {
     }
 
     let current = this._head;
+    current.time++;
     while (current.next) {
-      current.time++;
       current = current.next;
+      current.time++;
     }
   }
 

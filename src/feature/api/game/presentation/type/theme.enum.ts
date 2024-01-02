@@ -1,7 +1,7 @@
 export enum THEME {
-  default = 'default',
-  soccer = 'soccer',
-  swimming = 'swimming',
-  badminton = 'badminton',
-  basketball = 'basketball',
+  default = 'Default',
+  soccer = 'Soccer',
+  swimming = 'Swimming',
+  badminton = 'Badminton',
+  basketball = 'Basketball',
 }
