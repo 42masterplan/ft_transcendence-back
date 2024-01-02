@@ -176,6 +176,7 @@ export class ChannelGateway
       id,
     );
     this.newMessageInRoom(id, newMessage);
+    this.server.to(id).emit("getParticipants", await this.channelService.getParticipants(myId, id));
     await this.getPublicChannelsToAll();
     return ret;
   }
