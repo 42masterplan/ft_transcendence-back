@@ -67,7 +67,6 @@ export class GameService {
     else if (match.playerB.socketId === losePlayerId)
       match.score.playerA = SCORE_LIMIT;
     match.isForfeit = true;
-    //TODO: 저장 후 delete
   }
 
   movePlayer(player: Player, isA: boolean, keycode: string) {
