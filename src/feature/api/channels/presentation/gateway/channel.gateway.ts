@@ -374,9 +374,12 @@ export class ChannelGateway
     console.log('socket: unBanUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
-    if (result !== 'unBanUser Success!') return result;
+    if (result !== 'unBanUser Success!') 
+    {return result;}
+    const bannedUsers = await this.channelService.getBannedUsers(channelId);
+    console.log("unban success", bannedUsers)
     this.server.to(channelId).emit('getBannedUsers', {
-      bannedUsers: await this.channelService.getBannedUsers(channelId),
+      bannedUsers: bannedUsers,
       channelId: channelId,
     });
   }
