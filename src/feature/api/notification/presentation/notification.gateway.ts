@@ -1,11 +1,16 @@
 import { AuthService } from '../../auth/auth.service';
-import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
+import {
+  getIntraIdFromSocket,
+  getUserFromSocket,
+} from '../../auth/tools/socketTools';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
 import {
   OnModuleInit,
+  UseGuards,
   UsePipes,
   ValidationError,
   ValidationPipe,
@@ -117,11 +122,13 @@ export class NotificationGateway
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('gameRequest')
   async handleGameRequest(client, { userId, gameMode, theme }: gameRequest) {
     const receiverSocketId = this.sockets.get(userId);
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return;
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     const srcId = user.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     //만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
@@ -218,12 +225,13 @@ export class NotificationGateway
    *
    * userName: 받는 사람의 유저 이름
    */
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmHistory')
   async handleDMHistory(client, userName: string) {
     console.log('socket DmHistory');
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return 'DmHistory Fail!';
-
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     const friend = await this.userUseCase.findOneByName(userName);
     const user1Id = friend.id > user.id ? user.id : friend.id;
     const user2Id = friend.id > user.id ? friend.id : user.id;
@@ -252,11 +260,13 @@ export class NotificationGateway
    * participantId : 메세지를 보낸 유저의 ID
    * content : 보낼 메시지
    */
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmNewMessage')
   async handleDMNewMessage(client, { dmId, participantId, content }) {
     console.log('socket DmNewMessage');
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return 'DmNewMessage Fail!';
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     try {
       this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
@@ -280,11 +290,13 @@ export class NotificationGateway
     }
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('myInfo')
   async handleMyInfo(client) {
     console.log('socket myInfo');
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return 'myInfo Fail!';
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     return {
       profileImage: user.profileImage,
       name: user.name,

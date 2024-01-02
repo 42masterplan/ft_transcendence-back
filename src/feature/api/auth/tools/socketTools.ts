@@ -1,5 +1,6 @@
 import { UsersService } from '@/src/feature/api/users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import * as jwt from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 
 /**
@@ -41,6 +42,12 @@ export async function getUserFromSocket(
     // throw new UnauthorizedException();
     return null;
   }
+}
+
+export function getIntraIdFromSocket(socket: Socket): string {
+  const accesstoken = socket.handshake.auth?.Authorization?.split(' ')[1];
+  const payload = jwt.verify(accesstoken, process.env.AUTH_JWT_SECRET);
+  return payload?.sub as string;
 }
 
 export function sendToAllSockets(

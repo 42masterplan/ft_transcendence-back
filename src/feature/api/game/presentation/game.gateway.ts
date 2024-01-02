@@ -1,5 +1,6 @@
 import { AuthService } from '../../auth/auth.service';
-import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
+import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
 import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
 import { GameUseCase } from '../application/game.use-case';
@@ -7,7 +8,7 @@ import { GAME_MODE } from './type/game-mode.type';
 import { GameState } from './type/game-state';
 import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
-import { UsePipes } from '@nestjs/common';
+import { UseGuards, UsePipes } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -144,6 +145,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('joinRoom')
   async joinRoom(
     client: Socket,
@@ -154,7 +156,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }: { matchId: string; gameMode: string; side: string },
   ) {
     console.log(client.id + ' join room start ' + matchId);
-    const user = await getUserFromSocket(client, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
 
     await this.joinMutex.runExclusive(async () => {
       /* get game's mutex */
