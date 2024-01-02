@@ -169,10 +169,11 @@ export class NotificationGateway
     console.log('socket gameResponse');
     console.log(this.normalRequestQueue);
     console.log(isAccept, matchId);
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
     const matchInfo = this.normalRequestQueue.get(matchId);
-    if (!matchInfo && isAccept == true) {
-      return 'gameResponse Fail!';
-    }
+    if (!matchInfo || matchInfo.destId !== user.id) return;
+
     const destSocketId = this.sockets.get(matchInfo.destId);
     const userSocketId = this.sockets.get(matchInfo.srcId);
     const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
@@ -205,9 +206,11 @@ export class NotificationGateway
         bId: matchInfo.destId,
         gameMode: GAME_MODE.normal,
       });
+    } else {
+      this.server.to(matchInfo.destId).emit('normalGameReject');
     }
     this.normalRequestQueue.delete(matchId);
-    return 'gameRequest success!';
+    return 'gameResponse success!';
     //실패한 경우
     //자유로은 실패 메시지
   }
