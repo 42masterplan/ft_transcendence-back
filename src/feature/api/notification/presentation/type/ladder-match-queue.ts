@@ -144,4 +144,27 @@ export class LadderMatchQueue {
     }
     console.log('cannot remove anything!');
   }
+
+  removeUserMatch(userSocketId: string) {
+    let current = this._head;
+    while (current) {
+      if (current.socketId === userSocketId) {
+        current.removed = true;
+        if (current === this._head) {
+          this.removeFront();
+        } else if (current === this._tail) {
+          this.removeBack();
+        } else {
+          current.prev.next = current.next;
+          current.next.prev = current.prev;
+          current.prev = null;
+          current.next = null;
+
+          this._size--;
+        }
+      }
+      current = current.next;
+    }
+    console.log('cannot remove anything!');
+  }
 }

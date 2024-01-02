@@ -169,7 +169,7 @@ export class NotificationGateway
     return { msg: 'gameRequestSuccess!' };
   }
 
-  @SubscribeMessage('gameResponse')
+  @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
     //이전에 할당된 매칭 큐를 확인해서 pop해준다.
     //MAP으로, 새로운 requestId할당.
@@ -221,15 +221,25 @@ export class NotificationGateway
     //자유로은 실패 메시지
   }
 
-  @SubscribeMessage('gameCancel')
-  async handleGameCancel(client, { matchId }: gameCancel) {
+  @SubscribeMessage('normalGameCancel')
+  async handleNormalGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel');
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
     const matchInfo = this.normalRequestQueue.get(matchId);
     console.log(matchInfo);
+    if (!matchInfo || matchInfo.srcId !== user.id) return;
     const destId = this.sockets.get(matchInfo.destId);
-    this.normalRequestQueue.delete(matchId);
     this.server.to(destId).emit('gameCancel', { matchId });
+    this.normalRequestQueue.delete(matchId);
     console.log(this.normalRequestQueue);
+    return 'gameCancel Success!';
+  }
+
+  @SubscribeMessage('ladderGameCancel')
+  async handleLadderGameCancel(client) {
+    console.log('socket gameCancel');
+    this.ladderMatchQueue.removeUserMatch(client.id);
     return 'gameCancel Success!';
   }
 
