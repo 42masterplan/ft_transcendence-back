@@ -221,7 +221,7 @@ export class NotificationGateway
     console.log(matchInfo);
     if (!matchInfo || matchInfo.srcId !== user.id) return;
     const destId = this.sockets.get(matchInfo.destId);
-    this.server.to(destId).emit('gameCancel', { matchId });
+    this.server.to(destId).emit('normalGameCancel', { matchId });
     this.normalRequestQueue.delete(matchId);
     console.log(this.normalRequestQueue);
     return 'gameCancel Success!';

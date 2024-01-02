@@ -139,6 +139,8 @@ export class LadderMatchQueue {
 
           this._size--;
         }
+        console.log('remove success!');
+        return;
       }
       current = current.next;
     }
@@ -162,6 +164,8 @@ export class LadderMatchQueue {
 
           this._size--;
         }
+        console.log('remove success!');
+        return;
       }
       current = current.next;
     }
