@@ -337,7 +337,6 @@ export class NotificationGateway
       this.ladderQueueMutex.runExclusive(async () => {
         const matchArray: Array<LadderMatch> =
           this.ladderMatchQueue.getMatchArrayByTime();
-        console.log(matchArray);
         for (const match of matchArray) {
           console.log('check about' + match.id);
           if (!match || match.removed === true) continue;
