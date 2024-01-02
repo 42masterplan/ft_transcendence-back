@@ -37,7 +37,8 @@ export async function getUserFromSocket(
     const user = await usersService.findOneByIntraId(intraId);
     return user;
   } catch (e) {
-    console.log(accesstoken, e);
+    // console.log(accesstoken, e);
+    // throw new UnauthorizedException();
     return null;
   }
 }

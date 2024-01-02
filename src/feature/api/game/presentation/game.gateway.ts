@@ -1,3 +1,4 @@
+import { AuthService } from '../../auth/auth.service';
 import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
@@ -40,6 +41,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   private readonly server: Server;
   constructor(
+    private readonly authService: AuthService,
     private readonly gameService: GameService,
     private readonly usersService: UsersService,
     private readonly gameUseCase: GameUseCase,
@@ -50,13 +52,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //TODO: match, state 혼용한거 합치기
 
-  handleConnection(client: any, ...args: any[]) {
+  async handleConnection(client: any, ...args: any[]) {
     if (
       client.handshake.headers.server_secret_key ===
       process.env.SERVER_SECRET_KEY
     ) {
       console.log('Hi, you are server!');
       this.notificationSocket = client;
+    } else {
+      const token = client.handshake.auth?.Authorization?.split(' ')[1];
+      if (!(await this.authService.verifySocket(token))) {
+        client.disconnect();
+        return;
+      }
     }
     console.log('Game is get connected!');
   }

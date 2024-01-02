@@ -1,3 +1,4 @@
+import { AuthService } from '../../auth/auth.service';
 import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
@@ -60,6 +61,7 @@ export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   constructor(
+    private readonly authService: AuthService,
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
@@ -75,13 +77,14 @@ export class NotificationGateway
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
    */
   async handleConnection(@ConnectedSocket() socket: Socket) {
-    const user = await getUserFromSocket(socket, this.usersService);
-
-    console.log('알림 소켓 연결!!', user);
+    const token = socket.handshake.auth?.Authorization?.split(' ')[1];
+    const user = await this.authService.verifySocket(token);
     if (!user) {
       socket.disconnect();
       return;
     }
+
+    console.log('알림 소켓 연결!!', user);
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     if (this.sockets.has(user.id)) {
       console.log('이미 연결된 소켓이 있습니다.');

@@ -1,3 +1,5 @@
+import { User } from '../users/domain/user';
+import { UsersService } from '../users/users.service';
 import { JwtPayload } from './presentation/jwt-payload.interface';
 import {
   Injectable,
@@ -8,7 +10,10 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
+  ) {}
 
   async getAccessTokenFromFT(code: string): Promise<string> {
     const requestUrl = `https://api.intra.42.fr/oauth/token?grant_type=authorization_code&client_id=${process.env.AUTH_CLIENT_ID}&client_secret=${process.env.AUTH_CLIENT_SECRET}&code=${code}&redirect_uri=${process.env.AUTH_REDIRECT_URL}`;
@@ -77,5 +82,36 @@ export class AuthService {
     const jwtToken = await this.jwtService.signAsync(payload);
 
     return jwtToken;
+  }
+
+  async verifySocket(token: string): Promise<User | null> {
+    if (
+      token === null ||
+      token === undefined ||
+      token === '' ||
+      token === 'null' ||
+      token === 'undefined'
+    )
+      return null;
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.AUTH_JWT_SECRET,
+      });
+      const intraId = decoded?.sub as string;
+
+      if (!intraId) return null;
+      const user = await this.usersService.findOneByIntraId(intraId);
+      if (
+        !user ||
+        user.name == null ||
+        user.email === null ||
+        (user.email !== null && !user.isEmailValidated) ||
+        (user.is2faEnabled && !user.is2faValidated)
+      )
+        return null;
+      return user;
+    } catch (e) {
+      return null;
+    }
   }
 }

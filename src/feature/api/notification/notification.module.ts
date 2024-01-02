@@ -1,3 +1,4 @@
+import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { DmUseCase } from './application/dm.use-case';
 import { DmMessageRepository } from './domain/repositories/dm-message.repository';
@@ -10,8 +11,9 @@ import { Module, forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
-    forwardRef(() => UsersModule),
     MikroOrmModule.forFeature([DmEntity, DmMessageEntity]),
+    forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
   ],
   providers: [
     NotificationGateway,

@@ -1,4 +1,4 @@
-import { getUserFromSocket } from '../../../auth/tools/socketTools';
+import { AuthService } from '../../../auth/auth.service';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { UsersService } from '../../../users/users.service';
@@ -35,6 +35,7 @@ export class ChannelGateway
   private socketToUser: Map<string, string> = new Map();
   private userToSocket: Map<string, string> = new Map();
   constructor(
+    private readonly authService: AuthService,
     private readonly channelService: ChannelService,
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
@@ -43,10 +44,14 @@ export class ChannelGateway
 
   async handleConnection(client, ...args: any[]) {
     console.log("It's get connected!");
-    const user = await getUserFromSocket(client, this.usersService);
+    const token = client.handshake.auth?.Authorization?.split(' ')[1];
+    const user = await this.authService.verifySocket(token);
+    if (!user) {
+      client.disconnect();
+      return;
+    }
     // 소켓 토큰으로 유저정보 저장하기
     // 유저가 가지고있는 모든 채널에 조인하기
-    if (!user) return;
     if (this.socketToUser.has(client.id)) {
       client.disconnect();
       return;

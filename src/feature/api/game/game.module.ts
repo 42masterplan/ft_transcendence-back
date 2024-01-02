@@ -1,3 +1,4 @@
+import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { GameService } from './application/game.service';
 import { GameUseCase } from './application/game.use-case';
@@ -21,6 +22,7 @@ import { Module } from '@nestjs/common';
       PlayerScoreEntity,
       PlayerTierEntity,
     ]),
+    AuthModule,
     UsersModule,
   ],
   providers: [
