@@ -385,12 +385,9 @@ export class ChannelGateway
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
     await this.getPublicChannelsToAll();
-    if (result !== 'unBanUser Success!') 
-    {return result;}
-    const bannedUsers = await this.channelService.getBannedUsers(channelId);
-    console.log("unban success", bannedUsers)
+
     this.server.to(channelId).emit('getBannedUsers', {
-      bannedUsers: bannedUsers,
+      bannedUsers: await this.channelService.getBannedUsers(channelId),
       channelId: channelId,
     });
   }
