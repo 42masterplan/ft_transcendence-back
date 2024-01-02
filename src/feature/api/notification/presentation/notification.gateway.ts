@@ -326,101 +326,112 @@ export class NotificationGateway
     console.log('start update ladder queue cron');
     setInterval(async () => {
       this.ladderQueueMutex.runExclusive(async () => {
-        const match = this.ladderMatchQueue.getMostWaitedMatch();
-        if (!match || match.removed === true) return;
-        let prevMatch = match.prev;
-        while (prevMatch && prevMatch.removed === true) {
-          prevMatch = prevMatch.prev;
-        }
-        let nextMatch = match.next;
-        while (nextMatch && nextMatch.removed === true) {
-          nextMatch = nextMatch.next;
-        }
-        const matchPoint = match.tierNum * 100 + match.exp;
-        const prevMatchPoint = prevMatch
-          ? prevMatch.tierNum * 100 + prevMatch.exp
-          : 0;
-        const nextMatchPoint = nextMatch
-          ? nextMatch.tierNum * 100 + nextMatch.exp
-          : 0;
-        const matchRange = match.time * 10;
-        let canMatchOtherTier = false;
-        let canMatchWithPrev = false;
-        let canMatchWithNext = false;
-        let result;
+        const matchArray: Array<LadderMatch> =
+          this.ladderMatchQueue.getMatchArrayByTime();
+        for (const match of matchArray) {
+          if (!match || match.removed === true) continue;
+          let prevMatch: LadderMatch = match.prev;
+          while (prevMatch && prevMatch.removed === true) {
+            prevMatch = prevMatch.prev;
+          }
+          let nextMatch: LadderMatch = match.next;
+          while (nextMatch && nextMatch.removed === true) {
+            nextMatch = nextMatch.next;
+          }
+          const matchPoint = match.tierNum * 100 + match.exp;
+          const prevMatchPoint = prevMatch
+            ? prevMatch.tierNum * 100 + prevMatch.exp
+            : 0;
+          const nextMatchPoint = nextMatch
+            ? nextMatch.tierNum * 100 + nextMatch.exp
+            : 0;
+          let canMatchOtherTier = false;
+          let canMatchWithPrev = false;
+          let canMatchWithNext = false;
+          let result: LadderMatch;
 
-        console.log(match);
-        match.time++;
-        if (
-          match.exp + match.time * 10 >= 100 &&
-          match.exp - match.time * 10 < 0
-        ) {
-          canMatchOtherTier = true;
-        }
-        if (
-          prevMatch &&
-          prevMatchPoint <= matchPoint + matchRange &&
-          prevMatchPoint >= matchPoint - matchRange
-        ) {
-          if (canMatchOtherTier) canMatchWithPrev = true;
-          else if (prevMatch.tier === match.tier) canMatchWithPrev = true;
-        }
-        if (
-          nextMatch &&
-          nextMatchPoint <= matchPoint + matchRange &&
-          nextMatchPoint >= matchPoint - matchRange
-        ) {
-          if (canMatchOtherTier) canMatchWithNext = true;
-          else if (nextMatch.tier === match.tier) canMatchWithNext = true;
-        }
-        if (canMatchWithPrev || canMatchWithNext) {
-          if (canMatchWithPrev && canMatchWithNext) {
-            if (
-              prevMatch.tier === match.tier &&
-              nextMatch.tier === match.tier
-            ) {
-              result = prevMatch.time < nextMatch.time ? nextMatch : prevMatch;
-            } else {
-              result = prevMatch.tier === match.tier ? prevMatch : nextMatch;
-            }
-          } else if (canMatchWithPrev) result = prevMatch;
-          else result = nextMatch;
-          console.log('match success!' + match.id + ' vs ' + result.id);
+          console.log(match);
+          match.time++;
 
-          const playerA = await this.userUseCase.findOne(match.id);
-          const playerB = await this.userUseCase.findOne(result.id);
-          const matchId = match.id + result.id;
-          this.server.to(match.socketId).emit('gameStart', {
-            matchId: matchId,
-            aName: playerA.name,
-            aProfileImage: playerA.profileImage,
-            bName: playerB.name,
-            bProfileImage: playerB.profileImage,
-            side: 'A',
-            theme: THEME.default,
-            gameMode: GAME_MODE.ladder,
-          });
-          this.server.to(result.matchId).emit('gameStart', {
-            matchId: matchId,
-            aName: playerA.name,
-            aProfileImage: playerA.profileImage,
-            bName: playerB.name,
-            bProfileImage: playerB.profileImage,
-            side: 'B',
-            theme: THEME.default,
-            gameMode: GAME_MODE.ladder,
-          });
-          this.gameClientSocket.emit('createRoom', {
-            matchId: matchId,
-            aId: playerA.id,
-            bId: playerB.id,
-            gameMode: GAME_MODE.ladder,
-          });
+          const matchRange = match.time * 10;
+          if (match.exp + matchRange >= 100 && match.exp - matchRange < 0) {
+            canMatchOtherTier = true;
+          }
+          if (
+            prevMatch &&
+            prevMatchPoint <= matchPoint + matchRange &&
+            prevMatchPoint >= matchPoint - matchRange
+          ) {
+            if (canMatchOtherTier) canMatchWithPrev = true;
+            else if (prevMatch.tier === match.tier) canMatchWithPrev = true;
+          }
+          if (
+            nextMatch &&
+            nextMatchPoint <= matchPoint + matchRange &&
+            nextMatchPoint >= matchPoint - matchRange
+          ) {
+            if (canMatchOtherTier) canMatchWithNext = true;
+            else if (nextMatch.tier === match.tier) canMatchWithNext = true;
+          }
+          if (canMatchWithPrev || canMatchWithNext) {
+            if (canMatchWithPrev && canMatchWithNext) {
+              if (
+                prevMatch.tier === match.tier &&
+                nextMatch.tier === match.tier
+              ) {
+                result =
+                  prevMatch.time < nextMatch.time ? nextMatch : prevMatch;
+              } else {
+                result = prevMatch.tier === match.tier ? prevMatch : nextMatch;
+              }
+            } else if (canMatchWithPrev) result = prevMatch;
+            else result = nextMatch;
+            console.log('match success!' + match.id + ' vs ' + result.id);
 
-          this.ladderMatchQueue.remove(match);
-          this.ladderMatchQueue.remove(result);
+            const playerA = await this.userUseCase.findOne(match.id);
+            const playerB = await this.userUseCase.findOne(result.id);
+            const matchId = match.id + result.id;
+            this.server.to(match.socketId).emit('gameStart', {
+              matchId: matchId,
+              aName: playerA.name,
+              aProfileImage: playerA.profileImage,
+              bName: playerB.name,
+              bProfileImage: playerB.profileImage,
+              side: 'A',
+              theme: THEME.default,
+              gameMode: GAME_MODE.ladder,
+            });
+            this.server.to(result.socketId).emit('gameStart', {
+              matchId: matchId,
+              aName: playerA.name,
+              aProfileImage: playerA.profileImage,
+              bName: playerB.name,
+              bProfileImage: playerB.profileImage,
+              side: 'B',
+              theme: THEME.default,
+              gameMode: GAME_MODE.ladder,
+            });
+            this.gameClientSocket.emit('createRoom', {
+              matchId: matchId,
+              aId: playerA.id,
+              bId: playerB.id,
+              gameMode: GAME_MODE.ladder,
+            });
+
+            this.ladderMatchQueue.remove(match);
+            this.ladderMatchQueue.remove(result);
+            return;
+          } else if (
+            matchPoint - matchRange < 0 &&
+            matchPoint + matchRange >= 400
+          ) {
+            console.log('there is no match for ' + match.id + ', cancel game');
+            this.server.to(match.socketId).emit('gameCancel');
+            this.ladderMatchQueue.remove(match);
+            return;
+          }
         }
       });
-    }, 10);
+    }, 100);
   }
 }

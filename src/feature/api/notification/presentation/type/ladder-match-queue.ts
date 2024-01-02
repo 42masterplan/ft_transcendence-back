@@ -32,9 +32,9 @@ export class LadderMatchQueue {
     }
   }
 
-  getMostWaitedMatch(): LadderMatch {
+  getMatchArrayByTime(): Array<LadderMatch> {
     const array: Array<LadderMatch> = this.createArray();
-    return array.sort((a, b) => (a.time > b.time ? -1 : 1)).at(0);
+    return array.sort((a, b) => (a.time > b.time ? -1 : 1));
   }
 
   isEmpty(): boolean {
