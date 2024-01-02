@@ -6,7 +6,7 @@ import { GAME_MODE } from './type/game-mode.enum';
 import { GameState } from './type/game-state';
 import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
-import { UsePipes } from '@nestjs/common';
+import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -19,18 +19,18 @@ import { Mutex } from 'async-mutex';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({ namespace: 'game' })
-@UsePipes()
-// new ValidationPipe({
-//   exceptionFactory(validationErrors: ValidationError[] = []) {
-//     if (this.isDetailedOutputDisable) {
-//       return new WsException('');
-//     }
-//     const errors = this.flattenValidationErrors(validationErrors);
-//     console.log(new WsException(errors));
-//     return new WsException(errors);
-//   },
-// }),
-// DTO를 검증하는 ValidationPipe를 사용할 수 있다.
+@UsePipes(
+  new ValidationPipe({
+    exceptionFactory(validationErrors: ValidationError[] = []) {
+      if (this.isDetailedOutputDisable) {
+        return new WsException('');
+      }
+      const errors = this.flattenValidationErrors(validationErrors);
+      console.log(new WsException(errors));
+      return new WsException(errors);
+    },
+  }),
+)
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private gameStateMutexes: Map<string, Mutex> = new Map();
   private gameStates: Map<string, GameState> = new Map();
@@ -48,7 +48,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.updateGameTimeCron();
   }
 
-  //TODO: match, state 혼용한거 합치기
+  //TODO: jwt 적용
 
   handleConnection(client: any, ...args: any[]) {
     if (
@@ -114,7 +114,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.joinMutex.runExclusive(async () => {
       let mutex = this.gameStateMutexes.get(matchId);
       if (mutex) {
-        // TODO: match 안겹치게
         console.log('! server has match already');
       } else {
         console.log("! server create new match's mutex");
@@ -192,13 +191,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new WsException('Invalid Request: you are not in game');
       const mutex = this.gameStateMutexes.get(matchId);
       await mutex.runExclusive(() => {
-        const state = this.gameStates.get(matchId);
-        const targetPlayer = this.gameService.getMe(state, client.id);
+        const match = this.gameStates.get(matchId);
+        const targetPlayer = this.gameService.getMe(match, client.id);
         const isA = targetPlayer.color === PLAYER_A_COLOR;
         this.gameService.movePlayer(targetPlayer, isA, keycode);
         this.server
-          .to(state.matchId)
-          .emit('updatePlayers', new GameStateViewModel(state));
+          .to(match.matchId)
+          .emit('updatePlayers', new GameStateViewModel(match));
       });
     });
   }
@@ -211,12 +210,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new WsException('Invalid Request: you are not in game');
       const mutex = this.gameStateMutexes.get(matchId);
       await mutex.runExclusive(() => {
-        const state = this.gameStates.get(matchId);
-        const targetPlayer = this.gameService.getMe(state, client.id);
+        const match = this.gameStates.get(matchId);
+        const targetPlayer = this.gameService.getMe(match, client.id);
         targetPlayer.dx = 0;
         this.server
-          .to(state.matchId)
-          .emit('updatePlayers', new GameStateViewModel(state));
+          .to(match.matchId)
+          .emit('updatePlayers', new GameStateViewModel(match));
       });
     });
   }
@@ -230,47 +229,47 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         let isGameReset = false;
         let gameWinner;
         await mutex.runExclusive(async () => {
-          const state: GameState = this.gameStates.get(matchId);
-          if (!state || !state.isReady) {
+          const match: GameState = this.gameStates.get(matchId);
+          if (!match || !match.isReady) {
             skip = true;
             return;
           } // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-          const winnerStr = this.gameService.moveBall(state.ball);
+          const winnerStr = this.gameService.moveBall(match.ball);
           if (winnerStr === '') {
             this.gameService.handleCollision(
-              state.ball,
-              state.playerA,
-              state.playerB,
+              match.ball,
+              match.playerA,
+              match.playerB,
             );
           } else {
-            if (winnerStr === 'A') state.score.playerA++;
-            if (winnerStr === 'B') state.score.playerB++;
+            if (winnerStr === 'A') match.score.playerA++;
+            if (winnerStr === 'B') match.score.playerB++;
             this.server
-              .to(state.matchId)
-              .emit('updateScore', new GameStateViewModel(state));
+              .to(match.matchId)
+              .emit('updateScore', new GameStateViewModel(match));
 
-            if (this.gameService.isGameOver(state)) {
+            if (this.gameService.isGameOver(match)) {
               isGameOver = true;
               this.server
-                .to(state.matchId)
-                .emit('gameOver', new GameStateViewModel(state));
+                .to(match.matchId)
+                .emit('gameOver', new GameStateViewModel(match));
               await this.gameUseCase.saveGame({
-                playerAId: state.playerA.id,
-                playerBId: state.playerB.id,
-                playerAScore: state.score.playerA,
-                playerBScore: state.score.playerB,
-                isLadder: state.gameMode === GAME_MODE.normal ? false : true,
+                playerAId: match.playerA.id,
+                playerBId: match.playerB.id,
+                playerAScore: match.score.playerA,
+                playerBScore: match.score.playerB,
+                isLadder: match.gameMode === GAME_MODE.normal ? false : true,
               });
               return;
             } else {
               isGameReset = true;
-              gameWinner = winnerStr === 'A' ? state.playerA : state.playerB;
-              this.gameService.resetBall(state.ball);
+              gameWinner = winnerStr === 'A' ? match.playerA : match.playerB;
+              this.gameService.resetBall(match.ball);
             }
           }
           this.server
-            .to(state.matchId)
-            .emit('updateBall', new GameStateViewModel(state));
+            .to(match.matchId)
+            .emit('updateBall', new GameStateViewModel(match));
         });
         if (!skip && isGameOver) {
           await this.joinMutex.runExclusive(async () => {
@@ -322,25 +321,25 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         let isGameOver = false;
 
         await mutex.runExclusive(() => {
-          const state: GameState = this.gameStates.get(matchId);
-          if (!state || !state.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-          if (this.gameService.updateTimeAndCheckFinish(state)) {
-            if (state.score.playerA !== state.score.playerB) {
+          const match: GameState = this.gameStates.get(matchId);
+          if (!match || !match.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+          if (this.gameService.updateTimeAndCheckFinish(match)) {
+            if (match.score.playerA !== match.score.playerB) {
               isGameOver = true;
               this.server
-                .to(state.matchId)
-                .emit('gameOver', new GameStateViewModel(state));
+                .to(match.matchId)
+                .emit('gameOver', new GameStateViewModel(match));
             } else {
-              this.gameService.setDeuce(state);
+              this.gameService.setDeuce(match);
               this.server
-                .to(state.matchId)
-                .emit('deuce', new GameStateViewModel(state));
+                .to(match.matchId)
+                .emit('deuce', new GameStateViewModel(match));
             }
             clearInterval(timerId);
           } else {
             this.server
-              .to(state.matchId)
-              .emit('updateTime', new GameStateViewModel(state));
+              .to(match.matchId)
+              .emit('updateTime', new GameStateViewModel(match));
           }
         });
         if (isGameOver) {
@@ -348,7 +347,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             /* get game's mutex */
             const mutex = this.gameStateMutexes.get(matchId);
             if (!mutex) return;
-            /* get game state and join */
+            /* get game match and join */
             await mutex.runExclusive(() => {
               const match = this.gameStates.get(matchId);
               if (!match) return;

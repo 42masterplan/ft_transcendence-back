@@ -71,7 +71,6 @@ export class NotificationGateway
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
   private normalRequestQueue: Map<string, NormalMatch> = new Map();
-  private ladderRequestQueue: Array<LadderMatch> = [];
   private gameClientSocket: ClientSocket;
   private ladderQueueMutex: Mutex = new Mutex();
   private ladderMatchQueue: LadderMatchQueue = new LadderMatchQueue();
@@ -116,13 +115,12 @@ export class NotificationGateway
 
   @SubscribeMessage('normalGameRequest')
   async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
-    const receiverSocketId = this.sockets.get(userId);
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return;
-    const srcId = user.id; //게임 요청을 보낸 사람의 아이디
+    const destSocketId = this.sockets.get(userId);
+    const srcUser = await getUserFromSocket(client, this.usersService);
+    if (!srcUser) return;
+    const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     const matchId = srcId + destId;
-    const destUser = await this.userUseCase.findOne(userId);
 
     this.normalRequestQueue.set(matchId, {
       srcId,
@@ -130,17 +128,24 @@ export class NotificationGateway
       gameMode: GAME_MODE.normal,
       theme,
     });
-    console.log('socket gameRequest', 'userId: ', userId, 'normal', theme);
+    console.log(
+      'socket gameRequest',
+      'srcUserId',
+      srcId,
+      'destUserId: ',
+      destId,
+      'normal',
+      theme,
+    );
 
-    this.server.to(receiverSocketId).emit('gameRequest', {
-      profileImage: destUser.profileImage,
-      userName: destUser.name,
+    this.server.to(destSocketId).emit('gameRequest', {
+      profileImage: srcUser.profileImage,
+      userName: srcUser.name,
       matchId: matchId,
       gameMode: GAME_MODE.normal,
       theme: theme,
     });
     return { msg: 'gameRequestSuccess!', matchId: matchId };
-    //TODO: 실패한 경우
   }
 
   @SubscribeMessage('ladderGameRequest')
@@ -179,7 +184,6 @@ export class NotificationGateway
     const userSocketId = this.sockets.get(matchInfo.srcId);
     const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
     const destUser = await this.userUseCase.findOne(matchInfo.destId);
-    // 	const userA,B;
     if (isAccept) {
       console.log('game accept');
       this.server.to(userSocketId).emit('gameStart', {
@@ -214,8 +218,6 @@ export class NotificationGateway
     }
     this.normalRequestQueue.delete(matchId);
     return 'gameResponse success!';
-    //실패한 경우
-    //자유로은 실패 메시지
   }
 
   @SubscribeMessage('normalGameCancel')

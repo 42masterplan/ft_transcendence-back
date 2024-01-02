@@ -1,3 +1,4 @@
+import { TIER } from '../../../game/presentation/type/tier.enum';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
@@ -33,8 +34,47 @@ export class UsersUseCase {
   ): Promise<User> {
     return await this.repository.updateOne(intraId, updateUserDto);
   }
+
   async updateStatus(intraId: string, status: string): Promise<User> {
     return await this.repository.updateStatus(intraId, status);
+  }
+
+  async updateTierAndExp(id: string, exp: number): Promise<User> {
+    const user = await this.repository.findOneById(id);
+    let newExp: number = user.exp + exp;
+    let newTier: TIER;
+    if (newExp < 0) {
+      if (user.tier === TIER.bronze) {
+        newTier = TIER.bronze;
+        newExp = 0;
+      } else if (user.tier === TIER.silver) {
+        newTier = TIER.bronze;
+        newExp += 100;
+      } else if (user.tier === TIER.gold) {
+        newTier = TIER.silver;
+        newExp += 100;
+      } else {
+        newTier = TIER.gold;
+        newExp += 100;
+      }
+    } else if (newExp >= 100) {
+      if (user.tier === TIER.bronze) {
+        newTier = TIER.silver;
+        newExp -= 100;
+      } else if (user.tier === TIER.silver) {
+        newTier = TIER.gold;
+        newExp -= 100;
+      } else if (user.tier === TIER.gold) {
+        newTier = TIER.platinum;
+        newExp -= 100;
+      } else {
+        newTier = TIER.platinum;
+        newExp = 100;
+      }
+    } else {
+      newTier = user.tier;
+    }
+    return await this.repository.updateTierAndExp(id, newTier, newExp);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {

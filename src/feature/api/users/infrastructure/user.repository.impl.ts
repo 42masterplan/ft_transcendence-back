@@ -91,6 +91,14 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
+  async updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User> {
+    const user = await this.userRepository.findOne({ id });
+    user.tier = tier as string;
+    user.exp = exp;
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
+  }
+
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     //TODO: 기본 tier, exp 설정
     const user = await this.userRepository.create({
