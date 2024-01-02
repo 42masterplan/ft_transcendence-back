@@ -1,4 +1,5 @@
 import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
+import { TIER } from '../../game/presentation/type/tier.enum';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
@@ -92,7 +93,11 @@ export class UserRepositoryImpl implements UserRepository {
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     //TODO: 기본 tier, exp 설정
-    const user = await this.userRepository.create(createUserDto);
+    const user = await this.userRepository.create({
+      ...createUserDto,
+      tier: TIER.silver as string,
+      exp: 0,
+    });
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }

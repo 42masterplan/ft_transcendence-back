@@ -148,6 +148,7 @@ export class NotificationGateway
     const user = await getUserFromSocket(client, this.usersService);
     if (!user) return;
     await this.ladderQueueMutex.runExclusive(() => {
+      console.log('ladder game request');
       this.ladderMatchQueue.insert(
         new LadderMatch({
           id: user.id,
@@ -334,9 +335,11 @@ export class NotificationGateway
     console.log('start update ladder queue cron');
     setInterval(async () => {
       this.ladderQueueMutex.runExclusive(async () => {
+        console.log(this.ladderMatchQueue);
         const matchArray: Array<LadderMatch> =
           this.ladderMatchQueue.getMatchArrayByTime();
         for (const match of matchArray) {
+          console.log('check about' + match.id);
           if (!match || match.removed === true) continue;
           let prevMatch: LadderMatch = match.prev;
           while (prevMatch && prevMatch.removed === true) {
