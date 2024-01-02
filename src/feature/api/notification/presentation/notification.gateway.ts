@@ -71,7 +71,6 @@ export class NotificationGateway
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
   private normalRequestQueue: Map<string, NormalMatch> = new Map();
-  private ladderRequestQueue: Array<LadderMatch> = [];
   private gameClientSocket: ClientSocket;
   private ladderQueueMutex: Mutex = new Mutex();
   private ladderMatchQueue: LadderMatchQueue = new LadderMatchQueue();
@@ -147,7 +146,6 @@ export class NotificationGateway
       theme: theme,
     });
     return { msg: 'gameRequestSuccess!', matchId: matchId };
-    //TODO: 실패한 경우
   }
 
   @SubscribeMessage('ladderGameRequest')
@@ -186,7 +184,6 @@ export class NotificationGateway
     const userSocketId = this.sockets.get(matchInfo.srcId);
     const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
     const destUser = await this.userUseCase.findOne(matchInfo.destId);
-    // 	const userA,B;
     if (isAccept) {
       console.log('game accept');
       this.server.to(userSocketId).emit('gameStart', {
@@ -221,8 +218,6 @@ export class NotificationGateway
     }
     this.normalRequestQueue.delete(matchId);
     return 'gameResponse success!';
-    //실패한 경우
-    //자유로은 실패 메시지
   }
 
   @SubscribeMessage('normalGameCancel')
