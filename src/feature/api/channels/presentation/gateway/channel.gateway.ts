@@ -311,6 +311,10 @@ export class ChannelGateway
       bannedUsers: await this.channelService.getBannedUsers(channelId),
       channelId: channelId,
     });
+    client.emit('getAdminUsers', {
+      adminUsers: await this.channelService.getAdminUsers(channelId),
+      channelId: channelId,
+    });
     client.leave(channelId);
 
     return 'banUser Success!';
@@ -390,6 +394,7 @@ export class ChannelGateway
       bannedUsers: await this.channelService.getBannedUsers(channelId),
       channelId: channelId,
     });
+    return result;
   }
 
   @UseGuards(JwtSocketGuard)
