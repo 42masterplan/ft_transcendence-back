@@ -103,6 +103,7 @@ export class UserRepositoryImpl implements UserRepository {
     //TODO: 기본 tier, exp 설정
     const user = await this.userRepository.create({
       ...createUserDto,
+      currentStatus: 'on-line',
       tier: TIER.silver as string,
       exp: 0,
     });
