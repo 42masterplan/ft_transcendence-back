@@ -156,15 +156,6 @@ export class NotificationGateway
           exp: user.exp,
         }),
       );
-      // this.ladderQueueService.insertQueue(
-      //   this.ladderRequestQueue,
-      //   new LadderMatch({
-      //     id: user.id,
-      //     socketId: client.id,
-      //     tier: user.tier,
-      //     exp: user.exp,
-      //   }),
-      // );
     });
     return { msg: 'gameRequestSuccess!' };
   }
@@ -196,7 +187,7 @@ export class NotificationGateway
         bProfileImage: destUser.profileImage,
         side: 'A',
         theme: matchInfo.theme,
-        gameMode: 'normal',
+        gameMode: GAME_MODE.normal,
       });
       this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
@@ -206,13 +197,13 @@ export class NotificationGateway
         bProfileImage: destUser.profileImage,
         side: 'B',
         theme: matchInfo.theme,
-        gameMode: 'normal',
+        gameMode: GAME_MODE.normal,
       });
       this.gameClientSocket.emit('createRoom', {
         matchId: matchId,
         aId: matchInfo.srcId,
         bId: matchInfo.destId,
-        gameMode: 'normal',
+        gameMode: GAME_MODE.normal,
       });
     }
     this.normalRequestQueue.delete(matchId);
@@ -239,7 +230,9 @@ export class NotificationGateway
   @SubscribeMessage('ladderGameCancel')
   async handleLadderGameCancel(client) {
     console.log('socket gameCancel');
-    this.ladderMatchQueue.removeUserMatch(client.id);
+    this.ladderQueueMutex.runExclusive(() =>
+      this.ladderMatchQueue.removeUserMatch(client.id),
+    );
     return 'gameCancel Success!';
   }
 
