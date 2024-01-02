@@ -356,9 +356,8 @@ export class ChannelService {
       return 'Target is not in this channel';
     if (participant.role !== 'owner' && target.role !== 'user')
       return 'Admin can only kick user';
-
+    target.updatedRole('user');
     target.updatedIsDeleted(true);
-
     await this.channelParticipantRepository.updateOne(target);
     return 'kickUser Success!';
   }
