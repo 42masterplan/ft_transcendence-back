@@ -38,11 +38,13 @@ export class DmRepository {
       user1Id,
       user2Id,
     });
+    if (!dm) return;
     return this.toDomain(dm);
   }
 
   async findOneById(id: string): Promise<Dm> {
     const dm = await this.repository.findOne({ id });
+    if (!dm) return;
     return this.toDomain(dm);
   }
 

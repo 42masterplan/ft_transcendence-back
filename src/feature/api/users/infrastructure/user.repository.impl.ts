@@ -41,7 +41,9 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
-    if (user) return this.toDomain(user);
+    if (!user) return;
+
+    return this.toDomain(user);
   }
 
   async updateOne(
@@ -52,6 +54,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
       user.name = updateUserDto.name;
     }
@@ -86,6 +89,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     user.currentStatus = status;
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
@@ -93,6 +97,7 @@ export class UserRepositoryImpl implements UserRepository {
 
   async updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User> {
     const user = await this.userRepository.findOne({ id });
+    if (!user) return;
     user.tier = tier as string;
     user.exp = exp;
     await this.userRepository.getEntityManager().flush();
@@ -115,6 +120,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     user.is2faValidated = false;
     await this.userRepository.getEntityManager().flush();
   }
@@ -127,6 +133,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     if (twoFactorAuth.email !== undefined) {
       user.email = twoFactorAuth.email;
     }
