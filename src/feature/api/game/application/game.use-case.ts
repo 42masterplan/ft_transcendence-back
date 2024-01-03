@@ -78,13 +78,13 @@ export class GameUseCase {
     const player = await this.usersUseCase.findOne(playerId);
     if (!player) return;
     switch (player.tier) {
-      case TIER.bronze:
+      case TIER.Bronze:
         return 0;
-      case TIER.silver:
+      case TIER.Silver:
         return 1;
-      case TIER.gold:
+      case TIER.Gold:
         return 2;
-      case TIER.platinum:
+      case TIER.Platinum:
         return 3;
     }
   }

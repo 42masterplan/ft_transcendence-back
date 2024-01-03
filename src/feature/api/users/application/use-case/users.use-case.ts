@@ -44,31 +44,31 @@ export class UsersUseCase {
     let newExp: number = user.exp + exp;
     let newTier: TIER;
     if (newExp < 0) {
-      if (user.tier === TIER.bronze) {
-        newTier = TIER.bronze;
+      if (user.tier === TIER.Bronze) {
+        newTier = TIER.Bronze;
         newExp = 0;
-      } else if (user.tier === TIER.silver) {
-        newTier = TIER.bronze;
+      } else if (user.tier === TIER.Silver) {
+        newTier = TIER.Bronze;
         newExp += 100;
-      } else if (user.tier === TIER.gold) {
-        newTier = TIER.silver;
+      } else if (user.tier === TIER.Gold) {
+        newTier = TIER.Silver;
         newExp += 100;
       } else {
-        newTier = TIER.gold;
+        newTier = TIER.Gold;
         newExp += 100;
       }
     } else if (newExp >= 100) {
-      if (user.tier === TIER.bronze) {
-        newTier = TIER.silver;
+      if (user.tier === TIER.Bronze) {
+        newTier = TIER.Silver;
         newExp -= 100;
-      } else if (user.tier === TIER.silver) {
-        newTier = TIER.gold;
+      } else if (user.tier === TIER.Silver) {
+        newTier = TIER.Gold;
         newExp -= 100;
-      } else if (user.tier === TIER.gold) {
-        newTier = TIER.platinum;
+      } else if (user.tier === TIER.Gold) {
+        newTier = TIER.Platinum;
         newExp -= 100;
       } else {
-        newTier = TIER.platinum;
+        newTier = TIER.Platinum;
         newExp = 100;
       }
     } else {

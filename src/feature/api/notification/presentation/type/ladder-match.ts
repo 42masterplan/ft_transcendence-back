@@ -23,16 +23,16 @@ export class LadderMatch {
     this._exp = props.exp;
     this._time = 0;
     switch (props.tier) {
-      case TIER.bronze:
+      case TIER.Bronze:
         this._tierNum = 0;
         break;
-      case TIER.silver:
+      case TIER.Silver:
         this._tierNum = 1;
         break;
-      case TIER.gold:
+      case TIER.Gold:
         this._tierNum = 2;
         break;
-      case TIER.platinum:
+      case TIER.Platinum:
         this._tierNum = 3;
         break;
     }

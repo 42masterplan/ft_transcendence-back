@@ -108,7 +108,7 @@ export class UserRepositoryImpl implements UserRepository {
     const user = await this.userRepository.create({
       ...createUserDto,
       currentStatus: 'on-line',
-      tier: TIER.silver as string,
+      tier: TIER.Silver as string,
       exp: 0,
     });
     await this.userRepository.getEntityManager().flush();
