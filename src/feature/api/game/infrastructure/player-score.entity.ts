@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 
 @Entity({ tableName: 'player_score' })
 export class PlayerScoreEntity {
@@ -13,4 +13,14 @@ export class PlayerScoreEntity {
 
   @Property({ length: 32 })
   status: string;
+
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
+  createdAt: Date;
+
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
+  updatedAt: Date = new Date();
 }

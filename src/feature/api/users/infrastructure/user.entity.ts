@@ -54,7 +54,7 @@ export class UserEntity {
   exp: number;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
-  createdAt: Date = new Date();
+  createdAt: Date;
 
   @Property({
     type: DateTimeType,

@@ -17,7 +17,7 @@ export class ChannelEntity {
   password: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
-  createdAt: Date = new Date();
+  createdAt: Date;
 
   @Property({
     type: DateTimeType,

@@ -1,4 +1,6 @@
-import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { AuthService } from '../../auth/auth.service';
+import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
+import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
 import { GAME_MODE } from '../../game/presentation/type/game-mode.enum';
 import { THEME } from '../../game/presentation/type/theme.enum';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
@@ -10,6 +12,7 @@ import { LadderMatchQueue } from './type/ladder-match-queue';
 import { NormalMatch } from './type/normal-match.type';
 import {
   OnModuleInit,
+  UseGuards,
   UsePipes,
   ValidationError,
   ValidationPipe,
@@ -57,6 +60,7 @@ export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   constructor(
+    private readonly authService: AuthService,
     private readonly usersService: UsersService,
     private readonly userUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
@@ -79,13 +83,14 @@ export class NotificationGateway
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
    */
   async handleConnection(@ConnectedSocket() socket: Socket) {
-    const user = await getUserFromSocket(socket, this.usersService);
-
-    console.log('알림 소켓 연결!!', user);
+    const token = socket.handshake.auth?.Authorization?.split(' ')[1];
+    const user = await this.authService.verifySocket(token);
     if (!user) {
       socket.disconnect();
       return;
     }
+
+    console.log('알림 소켓 연결!!', user);
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
     this.userUseCase.updateStatus(user.intraId, 'on-line');
@@ -97,7 +102,9 @@ export class NotificationGateway
    * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
    */
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    const user = await getUserFromSocket(socket, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(socket),
+    );
     if (!user) return;
     this.handleLadderGameCancel(socket);
     this.normalQueueMutex.runExclusive(() => {
@@ -125,10 +132,13 @@ export class NotificationGateway
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameRequest')
   async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
     const destSocketId = this.sockets.get(userId);
-    const srcUser = await getUserFromSocket(client, this.usersService);
+    const srcUser = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     if (!srcUser) return;
     const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
@@ -162,9 +172,12 @@ export class NotificationGateway
     return { msg: 'gameRequestSuccess!', matchId: matchId };
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('ladderGameRequest')
   async handleLadderGameRequest(client) {
-    const user = await getUserFromSocket(client, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     if (!user) return;
     await this.ladderQueueMutex.runExclusive(() => {
       console.log('ladder game request');
@@ -180,12 +193,15 @@ export class NotificationGateway
     return { msg: 'gameRequestSuccess!' };
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
     console.log('socket gameResponse');
     console.log(this.normalMatchQueue);
     console.log(isAccept, matchId);
-    const user = await getUserFromSocket(client, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     if (!user) return;
     this.normalQueueMutex.runExclusive(async () => {
       const matchInfo = this.normalMatchQueue.get(matchId);
@@ -232,10 +248,13 @@ export class NotificationGateway
     return 'gameResponse success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameCancel')
   async handleNormalGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel');
-    const user = await getUserFromSocket(client, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     if (!user) return;
     this.normalQueueMutex.runExclusive(() => {
       const matchInfo = this.normalMatchQueue.get(matchId);
@@ -262,12 +281,13 @@ export class NotificationGateway
    *
    * userName: 받는 사람의 유저 이름
    */
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmHistory')
   async handleDMHistory(client, userName: string) {
     console.log('socket DmHistory');
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return 'DmHistory Fail!';
-
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     const friend = await this.userUseCase.findOneByName(userName);
     const user1Id = friend.id > user.id ? user.id : friend.id;
     const user2Id = friend.id > user.id ? friend.id : user.id;
@@ -296,11 +316,13 @@ export class NotificationGateway
    * participantId : 메세지를 보낸 유저의 ID
    * content : 보낼 메시지
    */
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmNewMessage')
   async handleDMNewMessage(client, { dmId, participantId, content }) {
     console.log('socket DmNewMessage');
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return 'DmNewMessage Fail!';
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     try {
       this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
@@ -324,11 +346,13 @@ export class NotificationGateway
     }
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('myInfo')
   async handleMyInfo(client) {
     console.log('socket myInfo');
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return 'myInfo Fail!';
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
     return {
       profileImage: user.profileImage,
       name: user.name,

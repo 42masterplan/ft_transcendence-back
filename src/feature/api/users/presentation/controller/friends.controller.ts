@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindAcceptableFriendRequestUseCase } from '../../application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
@@ -21,7 +22,6 @@ import {
   Request,
   Query,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users/friends')
 export class FriendsController {
@@ -36,7 +36,7 @@ export class FriendsController {
     private readonly userService: UsersService,
     private readonly userUseCase: UsersUseCase,
   ) {}
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('')
   async getFriends(@Request() req) {
     this.logger.log('getFriends');
@@ -46,7 +46,7 @@ export class FriendsController {
     return friends.map((friend) => new FindFriendViewModel(friend));
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('isFriend')
   async isFriend(@Request() req, @Query('name') friendName: string) {
     const intraId = req.user.sub;
@@ -61,7 +61,7 @@ export class FriendsController {
     };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Delete('/:friendId')
   async deleteFriends(
     @Request() req,
@@ -77,7 +77,7 @@ export class FriendsController {
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('request')
   async getFriendsRequest(
     @Request() req,
@@ -95,7 +95,7 @@ export class FriendsController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Post('request')
   async createFriendRequest(
     @Request() req,
@@ -111,7 +111,7 @@ export class FriendsController {
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Put('request')
   async acceptFriendRequest(@Body('requestId') requestId: number) {
     await this.friendRequestUseCase.acceptFriendRequest({
@@ -121,7 +121,7 @@ export class FriendsController {
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Delete('request/:requestId')
   async rejectFriendRequest(@Param('requestId') requestId: number) {
     await this.friendRequestUseCase.rejectFriendRequest({

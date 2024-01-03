@@ -1,10 +1,16 @@
-import { getUserFromSocket } from '../../../auth/tools/socketTools';
+import { AuthService } from '../../../auth/auth.service';
+import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { UsersService } from '../../../users/users.service';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
+import {
+  UseGuards,
+  UsePipes,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -35,6 +41,7 @@ export class ChannelGateway
   private socketToUser: Map<string, string> = new Map();
   private userToSocket: Map<string, string> = new Map();
   constructor(
+    private readonly authService: AuthService,
     private readonly channelService: ChannelService,
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
@@ -43,10 +50,14 @@ export class ChannelGateway
 
   async handleConnection(client, ...args: any[]) {
     console.log("It's get connected!");
-    const user = await getUserFromSocket(client, this.usersService);
+    const token = client.handshake.auth?.Authorization?.split(' ')[1];
+    const user = await this.authService.verifySocket(token);
+    if (!user) {
+      client.disconnect();
+      return;
+    }
     // 소켓 토큰으로 유저정보 저장하기
     // 유저가 가지고있는 모든 채널에 조인하기
-    if (!user) return;
     if (this.socketToUser.has(client.id)) {
       client.disconnect();
       return;
@@ -73,6 +84,7 @@ export class ChannelGateway
     client.leave(channels.map((channel) => channel.id));
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
     const myId = this.socketToUser.get(client.id);
@@ -90,6 +102,7 @@ export class ChannelGateway
     return 'success';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('myChannels')
   async getMyChannels(client) {
     const myId = this.socketToUser.get(client.id);
@@ -137,6 +150,7 @@ export class ChannelGateway
     }
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getPublicChannels')
   async getPublicChannels(client) {
     console.log('socket: allPublicChannel');
@@ -145,6 +159,7 @@ export class ChannelGateway
     client.emit('getPublicChannels', channels);
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('joinChannel')
   async joinChannel(client, { id, password }) {
     console.log('socket: joinChannel');
@@ -161,10 +176,12 @@ export class ChannelGateway
       id,
     );
     this.newMessageInRoom(id, newMessage);
+    this.server.to(id).emit("getParticipants", await this.channelService.getParticipants(myId, id));
     await this.getPublicChannelsToAll();
     return ret;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client, { channelId }) {
     console.log('socket: channelHistory');
@@ -176,6 +193,7 @@ export class ChannelGateway
     return history;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('createChannel')
   async createChannel(client: any, createChannelDto: CreateChannelDto) {
     console.log('socket: createChannel');
@@ -202,6 +220,7 @@ export class ChannelGateway
     return 'createChannel Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getParticipants')
   async getParticipants(client: any, { channelId }) {
     console.log('socket: getParticipants', channelId);
@@ -217,6 +236,7 @@ export class ChannelGateway
     return 'getParticipants Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getBannedUsers')
   async getBannedUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getBannedUsers', channelId);
@@ -229,6 +249,7 @@ export class ChannelGateway
     return 'getBannedUsers Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getAdminUsers', channelId);
@@ -241,6 +262,7 @@ export class ChannelGateway
     return 'getAdminUsers Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('leaveChannel')
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
     console.log('socket: leaveChannel', channelId);
@@ -261,6 +283,7 @@ export class ChannelGateway
     return result;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('banUser')
   async banUser(
     client: any,
@@ -289,11 +312,16 @@ export class ChannelGateway
       bannedUsers: await this.channelService.getBannedUsers(channelId),
       channelId: channelId,
     });
+    client.emit('getAdminUsers', {
+      adminUsers: await this.channelService.getAdminUsers(channelId),
+      channelId: channelId,
+    });
     client.leave(channelId);
 
     return 'banUser Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('kickUser')
   async kickUser(
     client: any,
@@ -320,6 +348,7 @@ export class ChannelGateway
     return 'kickUser Success!';
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('muteUser')
   async muteUser(
     client: any,
@@ -341,7 +370,7 @@ export class ChannelGateway
   }
 
   /*unBanUser,changePassword,changeAdmin 은 사용자 권한이 owner가 아니면 다 실패 */
-
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('unBanUser')
   async unBanUser(
     client: any,
@@ -351,12 +380,25 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
     if (result !== 'unBanUser Success!') return result;
+    const newMessage = await this.channelService.newMessage(
+      myId,
+      '[system]' +
+        (await this.usersUseCase.findOne(userId)).name +
+        '님이 밴 해제 되었습니다.',
+      channelId,
+    );
+    await this.newMessageInRoom(channelId, newMessage);
+    await this.getMyChannelsInRoom(channelId);
+    await this.getPublicChannelsToAll();
+
     this.server.to(channelId).emit('getBannedUsers', {
       bannedUsers: await this.channelService.getBannedUsers(channelId),
       channelId: channelId,
     });
+    return result;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('changePassword')
   async changePassword(
     client: any,
@@ -372,6 +414,7 @@ export class ChannelGateway
     return result;
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('changeAdmin')
   async changeAdmin(
     client: any,

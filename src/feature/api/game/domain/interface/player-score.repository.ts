@@ -13,6 +13,8 @@ export interface PlayerScoreRepository {
     value: number;
     status: GAME_STATUS;
   }): Promise<PlayerScore>;
+  findManyByUserId(userId): Promise<Array<PlayerScore>>;
+  findManyByGameId(gameId: number): Promise<Array<PlayerScore>>;
 }
 
 export const PlayerScoreRepository = Symbol('PLAYER_SCORE_REPOSITORY');
