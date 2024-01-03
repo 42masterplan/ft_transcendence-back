@@ -185,11 +185,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return;
           }
           client.join(matchId);
-          client.emit('joinedRoom');
           console.log(client.id + ' join room finish ' + matchId);
-          this.server
-            .to(matchId)
-            .emit('updatePlayers', new GameStateViewModel(match));
         } else {
           client.emit('gameFull');
           client.disconnect();
@@ -214,6 +210,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           match.playerB.socketId !== client.id
         )
           return;
+        this.server.to(matchId).emit('joinedRoom');
+        this.server
+          .to(matchId)
+          .emit('updatePlayers', new GameStateViewModel(match));
         if (match.playerA.socketId !== null && match.playerB.socketId !== null)
           match.isReady = true;
       });
