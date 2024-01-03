@@ -44,47 +44,40 @@ export class GameUseCase {
     });
 
     if (isLadder) {
-      const playerA = await this.usersUseCase.findOne(playerAId);
-      const playerB = await this.usersUseCase.findOne(playerBId);
-      const playerATierNum = this.getTierNum(playerA.tier);
-      const playerBTierNum = this.getTierNum(playerB.tier);
-      let playerAExpDifference, playerBExpDifference;
+      const playerATierNum = await this.getTierNumById(playerAId);
+      const playerBTierNum = await this.getTierNumById(playerBId);
       const scoreDifference = Math.abs(playerAScore - playerBScore);
-      const tierDifference = Math.abs(playerATierNum - playerBTierNum) + 1;
-
-      if (playerATierNum < playerBTierNum) {
-        if (playerAStatus === GAME_STATUS.win) {
-          playerAExpDifference = (scoreDifference * tierDifference * 3) / 4;
-          playerBExpDifference = playerAExpDifference * -1;
-        } else {
-          playerBExpDifference = scoreDifference / tierDifference;
-          playerAExpDifference = playerBExpDifference * -1;
-        }
-      } else if (playerATierNum > playerBTierNum) {
-        if (playerBStatus === GAME_STATUS.win) {
-          playerBExpDifference = (scoreDifference * tierDifference * 3) / 4;
-          playerAExpDifference = playerBExpDifference * -1;
-        } else {
-          playerAExpDifference = scoreDifference / tierDifference;
-          playerBExpDifference = playerAExpDifference * -1;
-        }
-      } else {
-        if (playerAStatus === GAME_STATUS.win) {
-          playerAExpDifference = scoreDifference;
-          playerBExpDifference = scoreDifference * -1;
-        } else {
-          playerBExpDifference = scoreDifference;
-          playerAExpDifference = scoreDifference * -1;
-        }
-      }
+      const { playerAExpDifference, playerBExpDifference } =
+        this.getExpDifference({
+          scoreDifference,
+          playerATierNum,
+          playerBTierNum,
+          playerAStatus,
+          playerBStatus,
+        });
       await this.usersUseCase.updateTierAndExp(playerAId, playerAExpDifference);
       await this.usersUseCase.updateTierAndExp(playerBId, playerBExpDifference);
     }
     return game;
   }
 
-  private getTierNum(tier: TIER) {
-    switch (tier) {
+  async findGamesByUserName(name: string): Promise<Array<Game>> {
+    const result: Array<Game> = [];
+
+    const user = await this.usersUseCase.findOneByName(name);
+    if (!user) return;
+
+    const scores = await this.playerScoreRepository.findManyByUserId(user.id);
+    for await (const score of scores) {
+      result.push(await this.gameRepository.findOneById(score.gameId));
+    }
+    return result;
+  }
+
+  private async getTierNumById(playerId: string): Promise<number> {
+    const player = await this.usersUseCase.findOne(playerId);
+    if (!player) return;
+    switch (player.tier) {
       case TIER.bronze:
         return 0;
       case TIER.silver:
@@ -94,5 +87,52 @@ export class GameUseCase {
       case TIER.platinum:
         return 3;
     }
+  }
+
+  private getExpDifference({
+    scoreDifference,
+    playerATierNum,
+    playerBTierNum,
+    playerAStatus,
+    playerBStatus,
+  }: {
+    scoreDifference: number;
+    playerATierNum: number;
+    playerBTierNum: number;
+    playerAStatus: GAME_STATUS;
+    playerBStatus: GAME_STATUS;
+  }): {
+    playerAExpDifference: number;
+    playerBExpDifference: number;
+  } {
+    let playerAExpDifference, playerBExpDifference;
+    const tierDifference = Math.abs(playerATierNum - playerBTierNum) + 1;
+
+    if (playerATierNum < playerBTierNum) {
+      if (playerAStatus === GAME_STATUS.win) {
+        playerAExpDifference = (scoreDifference * tierDifference * 3) / 4;
+        playerBExpDifference = playerAExpDifference * -1;
+      } else {
+        playerBExpDifference = scoreDifference / tierDifference;
+        playerAExpDifference = playerBExpDifference * -1;
+      }
+    } else if (playerATierNum > playerBTierNum) {
+      if (playerBStatus === GAME_STATUS.win) {
+        playerBExpDifference = (scoreDifference * tierDifference * 3) / 4;
+        playerAExpDifference = playerBExpDifference * -1;
+      } else {
+        playerAExpDifference = scoreDifference / tierDifference;
+        playerBExpDifference = playerAExpDifference * -1;
+      }
+    } else {
+      if (playerAStatus === GAME_STATUS.win) {
+        playerAExpDifference = scoreDifference;
+        playerBExpDifference = scoreDifference * -1;
+      } else {
+        playerBExpDifference = scoreDifference;
+        playerAExpDifference = scoreDifference * -1;
+      }
+    }
+    return { playerAExpDifference, playerBExpDifference };
   }
 }

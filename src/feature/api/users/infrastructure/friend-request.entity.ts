@@ -23,7 +23,7 @@ export class FriendRequestEntity {
   isAccepted: boolean | null;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
-  createdAt: Date = new Date();
+  createdAt: Date;
 
   @Property({
     type: DateTimeType,

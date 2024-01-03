@@ -19,10 +19,17 @@ export class GameRepositoryImpl implements GameRepository {
     return this.toDomain(game);
   }
 
+  async findOneById(id: number): Promise<Game> {
+    const game = await this.repository.findOneOrFail({ id });
+
+    return this.toDomain(game);
+  }
+
   private toDomain(entity: GameEntity): Game {
     return new Game({
       id: entity.id,
       isLadder: entity.isLadder,
+      createdAt: entity.createdAt,
     });
   }
 }

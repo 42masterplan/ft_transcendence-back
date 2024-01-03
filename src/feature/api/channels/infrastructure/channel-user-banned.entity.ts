@@ -10,7 +10,7 @@ export class ChannelUserBannedEntity {
   channelId: string;
 
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
-  createdAt: Date = new Date();
+  createdAt: Date;
 
   @Property({
     type: DateTimeType,

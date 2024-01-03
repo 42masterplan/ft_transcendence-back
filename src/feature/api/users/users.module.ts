@@ -1,3 +1,4 @@
+import { GameModule } from '../game/game.module';
 import { MailModule } from '../mail/mail.module';
 import { NotificationModule } from '../notification/notification.module';
 import { CreateFriendRequestUseCase } from './application/friends/create-friend-request.use-case';
@@ -45,6 +46,7 @@ import { Module, forwardRef } from '@nestjs/common';
     ]),
     MailModule,
     forwardRef(() => NotificationModule),
+    forwardRef(() => GameModule),
   ],
   controllers: [UsersController, FriendsController],
   providers: [
