@@ -1,4 +1,6 @@
 import path from 'node:path';
+import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
+import { JwtSignInGuard } from '../../../auth/jwt/jwt-sign-in.guard';
 import { GameWithPlayerUseCase } from '../../../game/application/game-with-player.use-case';
 import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
 import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
@@ -24,7 +26,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { AchievementUseCase } from '../../application/use-case/achievement.use-case';
@@ -40,7 +41,7 @@ export class UsersController {
     private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('')
   async getAll(@Request() req, @Query('status') status: string) {
     const intraId = req.user.sub;
@@ -63,19 +64,20 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthGuard('signIn'))
+  @UseGuards(JwtSignInGuard)
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     if (!req.user.sub) throw new UnauthorizedException();
     await this.usersService.updateOne(req.user.sub, updateUserDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('')
   quit() {
     return true;
   }
 
-  @UseGuards(AuthGuard('signIn'))
+  @UseGuards(JwtSignInGuard)
   @Get('is-duplicated-name')
   async isDuplicatedName(@Query('name') name: string) {
     const isDuplicated = await this.usersService.isDuplicatedName(name);
@@ -84,7 +86,7 @@ export class UsersController {
     };
   }
 
-  @UseGuards(AuthGuard('signIn'))
+  @UseGuards(JwtSignInGuard)
   @Post('profile-image')
   @UseInterceptors(
     FileInterceptor('profileImage', {
@@ -109,12 +111,14 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('game-setting')
   updateGameSetting(@Body('theme') theme: string) {
     console.log(theme);
     return true;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('info/:name')
   async getInfo(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
@@ -152,7 +156,7 @@ export class UsersController {
     return games.map((game) => new MatchViewModel(game));
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('myName')
   async getMyName(@Request() req) {
     const intraId = req.user.sub;
@@ -161,7 +165,7 @@ export class UsersController {
   }
 
   /* BLOCK */
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('block')
   async getBlockedUser(@Request() req) {
     const intraId = req.user.sub;
@@ -170,7 +174,7 @@ export class UsersController {
     return blocked.map((block) => new FindBlockedUserViewModel(block));
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Post('block')
   async block(@Request() req, @Body('id') targetId: string) {
     const intraId = req.user.sub;
@@ -180,7 +184,7 @@ export class UsersController {
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Delete('block/:id')
   async unblock(@Request() req, @Param('id') targetId: string) {
     const intraId = req.user.sub;

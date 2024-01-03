@@ -38,7 +38,7 @@ export class ChannelUserBannedRepository {
   async findAllByChannelId(channelId: string): Promise<ChannelUserBanned[]> {
     console.log('repository findBannedUserByChannelId');
     const list = await this.repository.find(
-      { channelId: channelId },
+      { channelId: channelId, isDeleted: false },
       { orderBy: { updatedAt: QueryOrder.DESC } },
     );
 

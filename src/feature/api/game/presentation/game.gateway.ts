@@ -1,3 +1,6 @@
+import { AuthService } from '../../auth/auth.service';
+import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
+import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
 import { getUserFromSocket } from '../../auth/tools/socketTools';
 import { AchievementUseCase } from '../../users/application/use-case/achievement.use-case';
 import { UsersService } from '../../users/users.service';
@@ -7,7 +10,12 @@ import { GAME_MODE } from './type/game-mode.enum';
 import { GameState } from './type/game-state';
 import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
-import { UsePipes, ValidationError, ValidationPipe } from '@nestjs/common';
+import {
+  UseGuards,
+  UsePipes,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -41,6 +49,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   private readonly server: Server;
   constructor(
+    private readonly authService: AuthService,
     private readonly gameService: GameService,
     private readonly usersService: UsersService,
     private readonly gameUseCase: GameUseCase,
@@ -52,13 +61,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   //TODO: jwt 적용
 
-  handleConnection(client: any, ...args: any[]) {
+  async handleConnection(client: any, ...args: any[]) {
     if (
       client.handshake.headers.server_secret_key ===
       process.env.SERVER_SECRET_KEY
     ) {
       console.log('Hi, you are server!');
       this.notificationSocket = client;
+    } else {
+      const token = client.handshake.auth?.Authorization?.split(' ')[1];
+      if (!(await this.authService.verifySocket(token))) {
+        client.disconnect();
+        return;
+      }
     }
     console.log('Game is get connected!');
   }
@@ -137,6 +152,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('joinRoom')
   async joinRoom(
     client: Socket,
@@ -147,7 +163,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }: { matchId: string; gameMode: string; side: string },
   ) {
     console.log(client.id + ' join room start ' + matchId);
-    const user = await getUserFromSocket(client, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
 
     await this.joinMutex.runExclusive(async () => {
       /* get game's mutex */
@@ -185,6 +203,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('keyDown')
   async playerKeyDown(client: Socket, keycode: string) {
     await this.joinMutex.runExclusive(async () => {
@@ -204,6 +223,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @UseGuards(JwtSocketGuard)
   @SubscribeMessage('keyUp')
   async playerKeyUp(client: Socket) {
     await this.joinMutex.runExclusive(async () => {

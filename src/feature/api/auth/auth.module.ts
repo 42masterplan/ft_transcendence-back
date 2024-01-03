@@ -33,5 +33,6 @@ import { JwtModule } from '@nestjs/jwt';
     JwtSignInStrategy,
     TwoFactorAuthUseCase,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}
