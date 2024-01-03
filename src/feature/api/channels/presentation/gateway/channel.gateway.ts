@@ -1,5 +1,6 @@
 import { AuthService } from '../../../auth/auth.service';
 import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
+import { AchievementUseCase } from '../../../users/application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { UsersService } from '../../../users/users.service';
@@ -46,6 +47,7 @@ export class ChannelGateway
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
     private readonly usersService: UsersService,
+    private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
   async handleConnection(client, ...args: any[]) {
@@ -176,7 +178,12 @@ export class ChannelGateway
       id,
     );
     this.newMessageInRoom(id, newMessage);
-    this.server.to(id).emit("getParticipants", await this.channelService.getParticipants(myId, id));
+    this.server
+      .to(id)
+      .emit(
+        'getParticipants',
+        await this.channelService.getParticipants(myId, id),
+      );
     await this.getPublicChannelsToAll();
     return ret;
   }
@@ -212,6 +219,7 @@ export class ChannelGateway
       }
       client.join(channelId);
       await this.getMyChannelsInRoom(channelId);
+      await this.achievementUseCase.handleFirstChannel(myId);
     } catch (e) {
       console.log(e.message);
       return '이미 존재하는 방입니다.';
@@ -304,6 +312,7 @@ export class ChannelGateway
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
     await this.getPublicChannelsToAll();
+    await this.achievementUseCase.handleFirstBan(myId);
     this.server.to(channelId).emit('getParticipants', {
       participants: await this.channelService.getParticipants(myId, channelId),
       channelId: channelId,
@@ -341,6 +350,7 @@ export class ChannelGateway
     await this.newMessageInRoom(channelId, newMessage);
     await this.getMyChannelsInRoom(channelId);
     await this.getPublicChannelsToAll();
+    await this.achievementUseCase.handleFirstKick(myId);
     this.server.to(channelId).emit('getParticipants', {
       participants: await this.channelService.getParticipants(myId, channelId),
       channelId: channelId,
@@ -358,6 +368,8 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.muteUser(myId, channelId, userId);
     if (result != 'muteUser Success!') return result;
+    await this.achievementUseCase.handleFirstMute(myId);
+
     const newMessage = await this.channelService.newMessage(
       myId,
       '[system] ' +

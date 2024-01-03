@@ -1,3 +1,4 @@
+import { AchievementUseCase } from './application/use-case/achievement.use-case';
 import { UsersUseCase } from './application/use-case/users.use-case';
 import { User } from './domain/user';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
@@ -6,14 +7,19 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersUseCase: UsersUseCase) {}
+  constructor(
+    private readonly usersUseCase: UsersUseCase,
+    private readonly achievementUseCase: AchievementUseCase,
+  ) {}
 
   async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
     return await this.usersUseCase.updateOne(intraId, updateUserDto);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    return await this.usersUseCase.createOne(createUserDto);
+    const user = await this.usersUseCase.createOne(createUserDto);
+    await this.achievementUseCase.initAchievementStatus(user.id);
+    return user;
   }
 
   async findOneByIntraId(intraId: string): Promise<User> {
