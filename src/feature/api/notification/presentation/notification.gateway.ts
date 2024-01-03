@@ -1,8 +1,14 @@
 import { getUserFromSocket } from '../../auth/tools/socketTools';
+import { GAME_MODE } from '../../game/presentation/type/game-mode.enum';
+import { THEME } from '../../game/presentation/type/theme.enum';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
+import { LadderQueueService } from '../application/ladder-queue.service';
+import { LadderMatch } from './type/ladder-match';
+import { LadderMatchQueue } from './type/ladder-match-queue';
+import { NormalMatch } from './type/normal-match.type';
 import {
   OnModuleInit,
   UsePipes,
@@ -18,15 +24,14 @@ import {
   WsException,
   ConnectedSocket,
 } from '@nestjs/websockets';
+import { Mutex } from 'async-mutex';
 import { Server, Socket } from 'socket.io';
 import { io, Socket as ClientSocket } from 'socket.io-client';
 
-type gameMode = 'normal' | 'ladder';
-type theme = 'default' | 'soccer' | 'swimming' | 'badminton' | 'basketball';
 type gameRequest = {
   userId: string;
-  gameMode: gameMode;
-  theme: theme;
+  gameMode: GAME_MODE;
+  theme: THEME;
 };
 type gameResponse = {
   matchId: string;
@@ -34,13 +39,6 @@ type gameResponse = {
 };
 type gameCancel = {
   matchId: string;
-};
-
-type MatchStore = {
-  srcId: string;
-  destId: string;
-  gameMode: gameMode;
-  theme: theme;
 };
 
 @WebSocketGateway({ namespace: 'alarm' })
@@ -64,12 +62,19 @@ export class NotificationGateway
     private readonly userUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
     private readonly friendUseCase: FriendUseCase,
-  ) {}
+    private readonly ladderQueueService: LadderQueueService,
+  ) {
+    this.matchLadderQueue();
+    this.tickLadderQueue();
+  }
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
-  private requestQueue: Map<string, MatchStore> = new Map();
+  private normalRequestQueue: Map<string, NormalMatch> = new Map();
   private gameClientSocket: ClientSocket;
+  private ladderQueueMutex: Mutex = new Mutex();
+  private ladderMatchQueue: LadderMatchQueue = new LadderMatchQueue();
+
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
@@ -83,12 +88,6 @@ export class NotificationGateway
       return;
     }
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
-    if (this.sockets.has(user.id)) {
-      console.log('이미 연결된 소켓이 있습니다.');
-      socket.emit('error', '이미 연결된 소켓이 있습니다.');
-      socket.disconnect();
-      return;
-    }
     this.sockets.set(user.id, socket.id);
     this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
@@ -114,58 +113,79 @@ export class NotificationGateway
     });
   }
 
-  @SubscribeMessage('gameRequest')
-  async handleGameRequest(client, { userId, gameMode, theme }: gameRequest) {
-    const receiverSocketId = this.sockets.get(userId);
-    const user = await getUserFromSocket(client, this.usersService);
-    if (!user) return;
-    const srcId = user.id; //게임 요청을 보낸 사람의 아이디
+  @SubscribeMessage('normalGameRequest')
+  async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
+    const destSocketId = this.sockets.get(userId);
+    const srcUser = await getUserFromSocket(client, this.usersService);
+    if (!srcUser) return;
+    const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
-    //만약 Map에 이미 srcId와 destId 가 같은 경우가 있다면, 그것을 먼저 pop해준다.
-    //이전에 할당된 매칭 큐를 확인해서 pop해준다.
-    //MAP으로, 새로운 requestId할당.
-    //객체 == [{requestId, userA, userB, theme} ...]
-    //두명의 유저에게 gameStart를 동시에 emit해준다.
-    const destUser = await this.userUseCase.findOne(userId);
     const matchId = srcId + destId;
-    this.requestQueue.set(matchId, { srcId, destId, gameMode, theme });
-    console.log(this.requestQueue);
 
-    console.log('socket gameRequest', 'userId: ', userId, gameMode, theme);
+    this.normalRequestQueue.set(matchId, {
+      srcId,
+      destId,
+      gameMode: GAME_MODE.normal,
+      theme,
+    });
+    console.log(
+      'socket gameRequest',
+      'srcUserId',
+      srcId,
+      'destUserId: ',
+      destId,
+      'normal',
+      theme,
+    );
 
-    this.server.to(receiverSocketId).emit('gameRequest', {
-      profileImage: destUser.profileImage,
-      userName: destUser.name,
+    this.server.to(destSocketId).emit('gameRequest', {
+      profileImage: srcUser.profileImage,
+      userName: srcUser.name,
       matchId: matchId,
-      gameMode: gameMode,
+      gameMode: GAME_MODE.normal,
       theme: theme,
     });
-    console.log('socket gameRequest');
-    console.log(this.sockets);
     return { msg: 'gameRequestSuccess!', matchId: matchId };
-    //실패한 경우
-    //자유로은 실패 메시지
   }
 
-  @SubscribeMessage('gameResponse')
+  @SubscribeMessage('ladderGameRequest')
+  async handleLadderGameRequest(client) {
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
+    await this.ladderQueueMutex.runExclusive(() => {
+      console.log('ladder game request');
+      this.ladderMatchQueue.insert(
+        new LadderMatch({
+          id: user.id,
+          socketId: client.id,
+          tier: user.tier,
+          exp: user.exp,
+        }),
+      );
+    });
+    return { msg: 'gameRequestSuccess!' };
+  }
+
+  @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
     //이전에 할당된 매칭 큐를 확인해서 pop해준다.
     //MAP으로, 새로운 requestId할당.
     //객체 == [{requestId, userA, userB, theme} ...]
     //두명의 유저에게 gameStart를 동시에 emit해준다.
     console.log('socket gameResponse');
-    console.log(this.requestQueue);
+    console.log(this.normalRequestQueue);
     console.log(isAccept, matchId);
-    const matchInfo = this.requestQueue.get(matchId);
-    if (!matchInfo && isAccept == true) {
-      return 'gameResponse Fail!';
-    }
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
+    const matchInfo = this.normalRequestQueue.get(matchId);
+    if (!matchInfo || matchInfo.destId !== user.id) return;
+
     const destSocketId = this.sockets.get(matchInfo.destId);
     const userSocketId = this.sockets.get(matchInfo.srcId);
     const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
     const destUser = await this.userUseCase.findOne(matchInfo.destId);
-    // 	const userA,B;
     if (isAccept) {
+      console.log('game accept');
       this.server.to(userSocketId).emit('gameStart', {
         matchId: matchId,
         aName: srcUser.name,
@@ -174,7 +194,7 @@ export class NotificationGateway
         bProfileImage: destUser.profileImage,
         side: 'A',
         theme: matchInfo.theme,
-        gameMode: 'normal',
+        gameMode: GAME_MODE.normal,
       });
       this.server.to(destSocketId).emit('gameStart', {
         matchId: matchId,
@@ -184,30 +204,43 @@ export class NotificationGateway
         bProfileImage: destUser.profileImage,
         side: 'B',
         theme: matchInfo.theme,
-        gameMode: 'normal',
+        gameMode: GAME_MODE.normal,
       });
       this.gameClientSocket.emit('createRoom', {
         matchId: matchId,
         aId: matchInfo.srcId,
         bId: matchInfo.destId,
-        gameMode: 'normal',
+        gameMode: GAME_MODE.normal,
       });
+    } else {
+      console.log('game reject');
+      this.server.to(userSocketId).emit('normalGameReject');
     }
-    this.requestQueue.delete(matchId);
-    return 'gameRequest success!';
-    //실패한 경우
-    //자유로은 실패 메시지
+    this.normalRequestQueue.delete(matchId);
+    return 'gameResponse success!';
   }
 
-  @SubscribeMessage('gameCancel')
-  async handleGameCancel(client, { matchId }: gameCancel) {
+  @SubscribeMessage('normalGameCancel')
+  async handleNormalGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel');
-    const matchInfo = this.requestQueue.get(matchId);
+    const user = await getUserFromSocket(client, this.usersService);
+    if (!user) return;
+    const matchInfo = this.normalRequestQueue.get(matchId);
     console.log(matchInfo);
+    if (!matchInfo || matchInfo.srcId !== user.id) return;
     const destId = this.sockets.get(matchInfo.destId);
-    this.requestQueue.delete(matchId);
-    this.server.to(destId).emit('gameCancel', { matchId });
-    console.log(this.requestQueue);
+    this.server.to(destId).emit('normalGameCancel', { matchId });
+    this.normalRequestQueue.delete(matchId);
+    console.log(this.normalRequestQueue);
+    return 'gameCancel Success!';
+  }
+
+  @SubscribeMessage('ladderGameCancel')
+  async handleLadderGameCancel(client) {
+    console.log('socket gameCancel');
+    this.ladderQueueMutex.runExclusive(() =>
+      this.ladderMatchQueue.removeUserMatch(client.id),
+    );
     return 'gameCancel Success!';
   }
 
@@ -289,5 +322,125 @@ export class NotificationGateway
       introduction: user.introduction,
       currentStatus: user.currentStatus,
     };
+  }
+
+  tickLadderQueue() {
+    console.log('start tick ladder queue cron');
+    setInterval(async () => {
+      this.ladderQueueMutex.runExclusive(async () => {
+        this.ladderMatchQueue.tickQueue();
+      });
+    }, 1000);
+  }
+
+  matchLadderQueue() {
+    console.log('start update ladder queue cron');
+    setInterval(async () => {
+      this.ladderQueueMutex.runExclusive(async () => {
+        const matchArray: Array<LadderMatch> =
+          this.ladderMatchQueue.getMatchArrayByTime();
+        for (const match of matchArray) {
+          console.log('check about' + match.id);
+          if (!match || match.removed === true) continue;
+          let prevMatch: LadderMatch = match.prev;
+          while (prevMatch && prevMatch.removed === true) {
+            prevMatch = prevMatch.prev;
+          }
+          let nextMatch: LadderMatch = match.next;
+          while (nextMatch && nextMatch.removed === true) {
+            nextMatch = nextMatch.next;
+          }
+          const matchPoint = match.tierNum * 100 + match.exp;
+          const prevMatchPoint = prevMatch
+            ? prevMatch.tierNum * 100 + prevMatch.exp
+            : 0;
+          const nextMatchPoint = nextMatch
+            ? nextMatch.tierNum * 100 + nextMatch.exp
+            : 0;
+          let canMatchOtherTier = false;
+          let canMatchWithPrev = false;
+          let canMatchWithNext = false;
+          let result: LadderMatch;
+
+          const matchRange = match.time * 10;
+          if (match.exp + matchRange >= 100 && match.exp - matchRange < 0) {
+            canMatchOtherTier = true;
+          }
+          if (
+            prevMatch &&
+            prevMatchPoint <= matchPoint + matchRange &&
+            prevMatchPoint >= matchPoint - matchRange
+          ) {
+            if (canMatchOtherTier) canMatchWithPrev = true;
+            else if (prevMatch.tier === match.tier) canMatchWithPrev = true;
+          }
+          if (
+            nextMatch &&
+            nextMatchPoint <= matchPoint + matchRange &&
+            nextMatchPoint >= matchPoint - matchRange
+          ) {
+            if (canMatchOtherTier) canMatchWithNext = true;
+            else if (nextMatch.tier === match.tier) canMatchWithNext = true;
+          }
+          if (canMatchWithPrev || canMatchWithNext) {
+            if (canMatchWithPrev && canMatchWithNext) {
+              if (
+                prevMatch.tier === match.tier &&
+                nextMatch.tier === match.tier
+              ) {
+                result =
+                  prevMatch.time < nextMatch.time ? nextMatch : prevMatch;
+              } else {
+                result = prevMatch.tier === match.tier ? prevMatch : nextMatch;
+              }
+            } else if (canMatchWithPrev) result = prevMatch;
+            else result = nextMatch;
+            console.log('match success!' + match.id + ' vs ' + result.id);
+
+            const playerA = await this.userUseCase.findOne(match.id);
+            const playerB = await this.userUseCase.findOne(result.id);
+            const matchId = match.id + result.id;
+            this.server.to(match.socketId).emit('gameStart', {
+              matchId: matchId,
+              aName: playerA.name,
+              aProfileImage: playerA.profileImage,
+              bName: playerB.name,
+              bProfileImage: playerB.profileImage,
+              side: 'A',
+              theme: THEME.default,
+              gameMode: GAME_MODE.ladder,
+            });
+            this.server.to(result.socketId).emit('gameStart', {
+              matchId: matchId,
+              aName: playerA.name,
+              aProfileImage: playerA.profileImage,
+              bName: playerB.name,
+              bProfileImage: playerB.profileImage,
+              side: 'B',
+              theme: THEME.default,
+              gameMode: GAME_MODE.ladder,
+            });
+            this.gameClientSocket.emit('createRoom', {
+              matchId: matchId,
+              aId: playerA.id,
+              bId: playerB.id,
+              gameMode: GAME_MODE.ladder,
+            });
+
+            this.ladderMatchQueue.remove(match);
+            this.ladderMatchQueue.remove(result);
+            return;
+          } else if (
+            matchPoint - matchRange < 0 &&
+            matchPoint + matchRange >= 400
+          ) {
+            console.log('there is no match for ' + match.id + ', reject game');
+            this.server.to(match.socketId).emit('ladderGameReject');
+            this.ladderMatchQueue.remove(match);
+            return;
+          }
+        }
+      });
+    }, 500);
   }
 }
