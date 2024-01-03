@@ -100,6 +100,18 @@ export class NotificationGateway
     const user = await getUserFromSocket(socket, this.usersService);
     if (!user) return;
     this.handleLadderGameCancel(socket);
+    this.normalQueueMutex.runExclusive(() => {
+      for (const [matchId, match] of this.normalMatchQueue) {
+        if (match.destId === user.id) {
+          const srcId = this.sockets.get(match.srcId);
+          this.server.to(srcId).emit('normalGameReject');
+        } else if (match.srcId === user.id) {
+          const destId = this.sockets.get(match.destId);
+          this.server.to(destId).emit('normalGameCancel', { matchId });
+        }
+        this.normalMatchQueue.delete(matchId);
+      }
+    });
     this.sockets.delete(user.id);
     this.userUseCase.updateStatus(user.intraId, 'off-line');
   }
@@ -170,10 +182,6 @@ export class NotificationGateway
 
   @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
-    //이전에 할당된 매칭 큐를 확인해서 pop해준다.
-    //MAP으로, 새로운 requestId할당.
-    //객체 == [{requestId, userA, userB, theme} ...]
-    //두명의 유저에게 gameStart를 동시에 emit해준다.
     console.log('socket gameResponse');
     console.log(this.normalMatchQueue);
     console.log(isAccept, matchId);
