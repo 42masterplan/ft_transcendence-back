@@ -131,6 +131,7 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('rank/:name')
   async getRank(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
@@ -142,6 +143,7 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('challenges/:id')
   async getChallenges(@Param('id') id: string): Promise<any> {
     const user = await this.usersUseCase.findOneByName(id);
@@ -149,6 +151,7 @@ export class UsersController {
     return achieves;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
     console.log('matches');
