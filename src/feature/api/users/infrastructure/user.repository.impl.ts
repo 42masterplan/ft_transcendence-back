@@ -1,4 +1,5 @@
 import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
+import { TIER } from '../../game/presentation/type/tier.enum';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
@@ -90,8 +91,21 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
+  async updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User> {
+    const user = await this.userRepository.findOne({ id });
+    user.tier = tier as string;
+    user.exp = exp;
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
+  }
+
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.create(createUserDto);
+    const user = await this.userRepository.create({
+      ...createUserDto,
+      currentStatus: 'on-line',
+      tier: TIER.silver as string,
+      exp: 0,
+    });
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
@@ -149,6 +163,8 @@ export class UserRepositoryImpl implements UserRepository {
       isEmailValidated: userEntity.isEmailValidated,
       is2faValidated: userEntity.is2faValidated,
       verificationCode: userEntity.verificationCode,
+      tier: userEntity.tier,
+      exp: userEntity.exp,
       isDeleted: userEntity.isDeleted,
       updatedAt: userEntity.updatedAt,
     });
@@ -165,6 +181,8 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
     userEntity.verificationCode = user.verificationCode;
+    userEntity.tier = user.tier;
+    userEntity.exp = user.exp;
     userEntity.isEmailValidated = user.isEmailValidated;
     userEntity.isDeleted = user.isDeleted;
 
