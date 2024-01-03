@@ -30,7 +30,7 @@ export class PlayerScore {
     return this._value;
   }
 
-  get status(): string {
+  get status(): GAME_STATUS {
     return this._status;
   }
 }

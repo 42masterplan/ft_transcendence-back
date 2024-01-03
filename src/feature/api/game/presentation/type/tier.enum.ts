@@ -1,6 +1,6 @@
 export enum TIER {
-  bronze = 'bronze',
-  silver = 'silver',
-  gold = 'gold',
-  platinum = 'platinum',
+  bronze = 'Bronze',
+  silver = 'Silver',
+  gold = 'Gold',
+  platinum = 'Platinum',
 }
