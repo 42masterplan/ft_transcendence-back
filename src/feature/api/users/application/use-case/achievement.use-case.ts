@@ -33,11 +33,13 @@ export class AchievementUseCase {
       }
     }
 
-    async handleGameAchievement(userId: string, isWin: boolean, score: number) {
+    async handleGameAchievement(userId: string, isWin: boolean, myScore: number, opponentScore: number) {
       if (isWin)  {
         await this.handleFirstWin(userId);
         await this.handleThreeWins(userId);
         await this.resetThreeLoses(userId);
+        if (myScore >= opponentScore * 2)
+          await this.handleDoubleScoreWin(userId);
       }
       else {
         await this.handleFirstLose(userId);
@@ -103,4 +105,71 @@ export class AchievementUseCase {
       achievementStatus.updateCount(0);
       await this.achievementStatusRepository.updateOne(achievementStatus);
     }
+
+    async handleDoubleScoreWin(userId: string) {
+      const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 5);
+      if (achievementStatus.isAchieved) return;
+      achievementStatus.updateCount(achievementStatus.count + 1);
+      const achievement = await this.achievementRepository.findOneById(5);
+      if (achievementStatus.count >= achievement.criterionNumber) {
+        achievementStatus.updateIsAchieved(true);
+      }
+      await this.achievementStatusRepository.updateOne(achievementStatus);
+    }
+
+    async handleTenMessages(userId: string) {
+      const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 6);
+      if (achievementStatus.isAchieved) return;
+      achievementStatus.updateCount(achievementStatus.count + 1);
+      const achievement = await this.achievementRepository.findOneById(6);
+      if (achievementStatus.count >= achievement.criterionNumber) {
+        achievementStatus.updateIsAchieved(true);
+      }
+      await this.achievementStatusRepository.updateOne(achievementStatus);
+    }
+
+    async handleFirstChannel(userId: string) {
+      const  achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 7);
+      if (achievementStatus.isAchieved) return;
+      achievementStatus.updateCount(achievementStatus.count + 1);
+      const achievement = await this.achievementRepository.findOneById(7);
+      if (achievementStatus.count >= achievement.criterionNumber) {
+        achievementStatus.updateIsAchieved(true);
+      }
+      await this.achievementStatusRepository.updateOne(achievementStatus);
+    }
+
+  async handleFirstMute(userId: string) {
+    const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 8);
+    if (achievementStatus.isAchieved) return;
+    achievementStatus.updateCount(achievementStatus.count + 1);
+    const achievement = await this.achievementRepository.findOneById(8);
+    if (achievementStatus.count >= achievement.criterionNumber) {
+      achievementStatus.updateIsAchieved(true);
+    }
+    await this.achievementStatusRepository.updateOne(achievementStatus);
+  }
+
+  async handleFirstBan(userId: string) {
+    const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 9);
+    if (achievementStatus.isAchieved) return;
+    achievementStatus.updateCount(achievementStatus.count + 1);
+    const achievement = await this.achievementRepository.findOneById(9);
+    if (achievementStatus.count >= achievement.criterionNumber) {
+      achievementStatus.updateIsAchieved(true);
+    }
+    await this.achievementStatusRepository.updateOne(achievementStatus);
+  }
+
+  async handleFirstKick(userId: string) {
+    const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 10);
+    if (achievementStatus.isAchieved) return;
+    achievementStatus.updateCount(achievementStatus.count + 1);
+    const achievement = await this.achievementRepository.findOneById(10);
+    if (achievementStatus.count >= achievement.criterionNumber) {
+      achievementStatus.updateIsAchieved(true);
+    }
+    await this.achievementStatusRepository.updateOne(achievementStatus);
+  }
+    
 }
