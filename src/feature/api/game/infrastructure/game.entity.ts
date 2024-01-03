@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { DateTimeType, Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { bool } from 'joi';
 
 @Entity({ tableName: 'game' })
@@ -8,4 +8,14 @@ export class GameEntity {
 
   @Property({ type: bool, default: false })
   isLadder: boolean;
+
+  @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
+  createdAt: Date;
+
+  @Property({
+    type: DateTimeType,
+    defaultRaw: 'current_timestamp',
+    onUpdate: () => new Date(),
+  })
+  updatedAt: Date = new Date();
 }
