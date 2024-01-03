@@ -15,7 +15,7 @@ export class AchievementStatusRepositoryImpl implements AchievementStatusReposit
     async findAllByUserId(userId: string): Promise<AchievementStatus[]> {
       const achievements = await this.repository.find({
         userId: userId,
-      });
+      },{orderBy: { isAchieved: 'DESC', achievementId: 'ASC'}});
       return achievements.map((achievement) => this.toDomain(achievement));
     }
 
