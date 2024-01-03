@@ -20,7 +20,7 @@ import { Module, forwardRef } from '@nestjs/common';
   imports: [
     MikroOrmModule.forFeature([GameEntity, PlayerScoreEntity]),
     forwardRef(() => UsersModule),
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   providers: [
     GameService,
