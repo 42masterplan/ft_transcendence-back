@@ -61,6 +61,19 @@ export class GameUseCase {
     return game;
   }
 
+  async findGamesByUserName(name: string): Promise<Array<Game>> {
+    const result: Array<Game> = [];
+
+    const user = await this.usersUseCase.findOneByName(name);
+    if (!user) return;
+
+    const scores = await this.playerScoreRepository.findManyByUserId(user.id);
+    for await (const score of scores) {
+      result.push(await this.gameRepository.findOneById(score.gameId));
+    }
+    return result;
+  }
+
   private async getTierNumById(playerId: string): Promise<number> {
     const player = await this.usersUseCase.findOne(playerId);
     if (!player) return;

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { GameWithPlayerUseCase } from '../../../game/application/game-with-player.use-case';
 import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
 import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
@@ -6,6 +7,7 @@ import { UsersService } from '../../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { FindBlockedUserViewModel } from '../view-models/users/find-blocked-user.vm';
 import { FindUsersViewModel } from '../view-models/users/find-users.vm';
+import { MatchViewModel } from '../view-models/users/match.vm';
 import {
   BadRequestException,
   Body,
@@ -33,6 +35,7 @@ export class UsersController {
     private readonly usersUseCase: UsersUseCase,
     private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
     private readonly blockedUserUseCase: BlockedUserUseCase,
+    private readonly gameWithPlayerUseCase: GameWithPlayerUseCase,
   ) {}
 
   @UseGuards(AuthGuard('jwt'))
@@ -233,9 +236,11 @@ export class UsersController {
     ];
   }
 
-  @Get('matches')
-  getMatch(@Param(':id') id: string) {
+  @Get('matches/:name')
+  async getMatch(@Param('name') name: string) {
     console.log('matches');
+    const games = await this.gameWithPlayerUseCase.findGamesWithPlayer(name);
+    return games.map((game) => new MatchViewModel(game));
     return [
       {
         createdAt: '2021-05-01',
