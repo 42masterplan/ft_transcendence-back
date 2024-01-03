@@ -1,3 +1,4 @@
-npx mikro-orm migration:create
-npx mikro-orm migration:up
+npm run migration:create
+npm run migration:up
+npm run migration:seed
 npm run start:dev

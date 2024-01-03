@@ -2,6 +2,7 @@ import path from 'node:path';
 import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
 import { JwtSignInGuard } from '../../../auth/jwt/jwt-sign-in.guard';
 import { GameWithPlayerUseCase } from '../../../game/application/game-with-player.use-case';
+import { AchievementUseCase } from '../../application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
 import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
@@ -37,6 +38,7 @@ export class UsersController {
     private readonly findBlockedUserUseCase: FindBlockedUserUseCase,
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly gameWithPlayerUseCase: GameWithPlayerUseCase,
+    private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -129,6 +131,7 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('rank/:name')
   async getRank(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
@@ -141,108 +144,14 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('challenges')
-  getChallenges(@Param(':id') id: string) {
-    return [
-      {
-        name: 'Challenge1',
-        description: 'This is challenge1',
-        progressRate: 25,
-      },
-      {
-        name: 'Challenge2',
-        description: 'This is challenge2',
-        progressRate: 0,
-      },
-      {
-        name: 'Challenge3',
-        description: 'This is challenge3',
-        progressRate: 14,
-      },
-      {
-        name: 'Challenge4',
-        description: 'This is challenge4',
-        progressRate: 23,
-      },
-      {
-        name: 'Challenge5',
-        description: 'This is challenge5',
-        progressRate: 33,
-      },
-      {
-        name: 'Challenge6',
-        description: 'This is challenge6',
-        progressRate: 44,
-      },
-      {
-        name: 'Challenge7',
-        description: 'This is challenge7',
-        progressRate: 55,
-        achieveRatio: 1,
-      },
-      {
-        name: 'Challenge8',
-        description: 'This is challenge8',
-        progressRate: 66,
-      },
-      {
-        name: 'Challenge9',
-        description: 'This is challenge9',
-        progressRate: 77,
-      },
-      {
-        name: 'Challenge10',
-        description: 'This is challenge10',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge11',
-        description: 'This is challenge11',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge12',
-        description: 'This is challenge12',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge13',
-        description: 'This is challenge13',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge14',
-        description: 'This is challenge14',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge15',
-        description: 'This is challenge15',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge16',
-        description: 'This is challenge16',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge17',
-        description: 'This is challenge17',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge18',
-        description: 'This is challenge18',
-        progressRate: 100,
-      },
-      {
-        name: 'Challenge19',
-        description: 'This is challenge19',
-        progressRate: 100,
-      },
-    ];
+  @Get('challenges/:id')
+  async getChallenges(@Param('id') id: string): Promise<any> {
+    const user = await this.usersUseCase.findOneByName(id);
+    const achieves = await this.achievementUseCase.findAllByUserId(user.id);
+    return achieves;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
     console.log('matches');

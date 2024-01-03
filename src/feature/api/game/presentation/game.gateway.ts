@@ -1,6 +1,7 @@
 import { AuthService } from '../../auth/auth.service';
 import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
 import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
+import { AchievementUseCase } from '../../users/application/use-case/achievement.use-case';
 import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
 import { GameUseCase } from '../application/game.use-case';
@@ -51,6 +52,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gameService: GameService,
     private readonly usersService: UsersService,
     private readonly gameUseCase: GameUseCase,
+    private readonly achievementUseCase: AchievementUseCase,
   ) {
     this.updateGameStateCron();
     this.updateGameTimeCron();
@@ -101,6 +103,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             playerBScore: match.score.playerB,
             isLadder: match.gameMode === GAME_MODE.normal ? false : true,
           });
+
+          await this.achievementUseCase.handleGameAchievement(
+            match.playerA.id,
+            match.score.playerA > match.score.playerB,
+            1,
+            1,
+          );
+          await this.achievementUseCase.handleGameAchievement(
+            match.playerB.id,
+            match.score.playerB > match.score.playerA,
+            1,
+            1,
+          );
         }
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
         this.gameStates.delete(matchId);
@@ -279,6 +294,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 playerBScore: match.score.playerB,
                 isLadder: match.gameMode === GAME_MODE.normal ? false : true,
               });
+              await this.achievementUseCase.handleGameAchievement(
+                match.playerA.id,
+                match.score.playerA > match.score.playerB,
+                match.score.playerA,
+                match.score.playerB,
+              );
+              await this.achievementUseCase.handleGameAchievement(
+                match.playerB.id,
+                match.score.playerB > match.score.playerA,
+                match.score.playerB,
+                match.score.playerA,
+              );
               return;
             } else {
               isGameReset = true;
