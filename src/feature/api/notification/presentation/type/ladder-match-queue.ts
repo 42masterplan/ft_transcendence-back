@@ -1,3 +1,4 @@
+import { User } from '../../../users/domain/user';
 import { LadderMatch } from './ladder-match';
 
 export class LadderMatchQueue {
@@ -33,6 +34,17 @@ export class LadderMatchQueue {
       current = current.next;
       current.time++;
     }
+  }
+
+  hasUser(user: User): LadderMatch {
+    let current = this._head;
+
+    if (current.id === user.id) return current;
+    while (current.next) {
+      current = current.next;
+      if (current.id === user.id) return current;
+    }
+    return;
   }
 
   getMatchArrayByTime(): Array<LadderMatch> {

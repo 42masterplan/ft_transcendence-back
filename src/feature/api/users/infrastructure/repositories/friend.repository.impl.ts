@@ -47,7 +47,7 @@ export class FriendRepositoryImpl implements FriendRepository {
       friendId: myId,
     });
 
-    this.repository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
 
     return this.toDomain(meAndFriend);
   }
@@ -59,21 +59,22 @@ export class FriendRepositoryImpl implements FriendRepository {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    const meAndFriend = await this.repository.findOneOrFail({
+    const meAndFriend = await this.repository.findOne({
       myId,
       friendId,
       isDeleted: false,
     });
-    const friendAndMe = await this.repository.findOneOrFail({
+    const friendAndMe = await this.repository.findOne({
       myId: friendId,
       friendId: myId,
       isDeleted: false,
     });
+    if (!meAndFriend || !friendAndMe) return;
 
     meAndFriend.isDeleted = true;
     friendAndMe.isDeleted = true;
 
-    this.repository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
 
     return this.toDomain(meAndFriend);
   }

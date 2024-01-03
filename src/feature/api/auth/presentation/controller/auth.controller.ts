@@ -30,7 +30,7 @@ export class AuthController {
       isSignInFinish = true;
       if (user.email !== null && user.isEmailValidated) {
         isExist = true;
-        if (is2faEnabled) is2faEnabled = true;
+        if (user.is2faEnabled) is2faEnabled = true;
       }
     }
     await this.usersUseCase.resetTwoFactorAuthValidation(intraId);

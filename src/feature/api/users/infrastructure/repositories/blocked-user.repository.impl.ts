@@ -42,11 +42,12 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
     myId: string;
     targetId: string;
   }): Promise<BlockedUser> {
-    const block = await this.repository.findOneOrFail({
+    const block = await this.repository.findOne({
       primaryUserId: myId,
       targetUserId: targetId,
       isDeleted: false,
     });
+    if (!block) return;
 
     block.isDeleted = true;
 

@@ -7,7 +7,6 @@ import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
-import { LadderQueueService } from '../application/ladder-queue.service';
 import { LadderMatch } from './type/ladder-match';
 import { LadderMatchQueue } from './type/ladder-match-queue';
 import { NormalMatch } from './type/normal-match.type';
@@ -66,7 +65,6 @@ export class NotificationGateway
     private readonly userUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
     private readonly friendUseCase: FriendUseCase,
-    private readonly ladderQueueService: LadderQueueService,
   ) {
     this.matchLadderQueue();
     this.tickLadderQueue();
@@ -74,8 +72,9 @@ export class NotificationGateway
   @WebSocketServer()
   private readonly server: Server;
   private sockets: Map<string, string> = new Map();
-  private normalRequestQueue: Map<string, NormalMatch> = new Map();
   private gameClientSocket: ClientSocket;
+  private normalMatchQueue: Map<string, NormalMatch> = new Map();
+  private normalQueueMutex: Mutex = new Mutex();
   private ladderQueueMutex: Mutex = new Mutex();
   private ladderMatchQueue: LadderMatchQueue = new LadderMatchQueue();
 
@@ -107,6 +106,19 @@ export class NotificationGateway
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
+    this.handleLadderGameCancel(socket);
+    this.normalQueueMutex.runExclusive(() => {
+      for (const [matchId, match] of this.normalMatchQueue) {
+        if (match.destId === user.id) {
+          const srcId = this.sockets.get(match.srcId);
+          this.server.to(srcId).emit('normalGameReject');
+        } else if (match.srcId === user.id) {
+          const destId = this.sockets.get(match.destId);
+          this.server.to(destId).emit('normalGameCancel', { matchId });
+        }
+        this.normalMatchQueue.delete(matchId);
+      }
+    });
     this.sockets.delete(user.id);
     this.userUseCase.updateStatus(user.intraId, 'off-line');
   }
@@ -132,11 +144,13 @@ export class NotificationGateway
     const destId = userId; //요청을 받는 사람의 아이디
     const matchId = srcId + destId;
 
-    this.normalRequestQueue.set(matchId, {
-      srcId,
-      destId,
-      gameMode: GAME_MODE.normal,
-      theme,
+    this.normalQueueMutex.runExclusive(() => {
+      this.normalMatchQueue.set(matchId, {
+        srcId,
+        destId,
+        gameMode: GAME_MODE.normal,
+        theme,
+      });
     });
     console.log(
       'socket gameRequest',
@@ -182,57 +196,55 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
-    //이전에 할당된 매칭 큐를 확인해서 pop해준다.
-    //MAP으로, 새로운 requestId할당.
-    //객체 == [{requestId, userA, userB, theme} ...]
-    //두명의 유저에게 gameStart를 동시에 emit해준다.
     console.log('socket gameResponse');
-    console.log(this.normalRequestQueue);
+    console.log(this.normalMatchQueue);
     console.log(isAccept, matchId);
     const user = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!user) return;
-    const matchInfo = this.normalRequestQueue.get(matchId);
-    if (!matchInfo || matchInfo.destId !== user.id) return;
+    this.normalQueueMutex.runExclusive(async () => {
+      const matchInfo = this.normalMatchQueue.get(matchId);
+      if (!matchInfo || matchInfo.destId !== user.id) return;
 
-    const destSocketId = this.sockets.get(matchInfo.destId);
-    const userSocketId = this.sockets.get(matchInfo.srcId);
-    const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
-    const destUser = await this.userUseCase.findOne(matchInfo.destId);
-    if (isAccept) {
-      console.log('game accept');
-      this.server.to(userSocketId).emit('gameStart', {
-        matchId: matchId,
-        aName: srcUser.name,
-        aProfileImage: srcUser.profileImage,
-        bName: destUser.name,
-        bProfileImage: destUser.profileImage,
-        side: 'A',
-        theme: matchInfo.theme,
-        gameMode: GAME_MODE.normal,
-      });
-      this.server.to(destSocketId).emit('gameStart', {
-        matchId: matchId,
-        aName: srcUser.name,
-        aProfileImage: srcUser.profileImage,
-        bName: destUser.name,
-        bProfileImage: destUser.profileImage,
-        side: 'B',
-        theme: matchInfo.theme,
-        gameMode: GAME_MODE.normal,
-      });
-      this.gameClientSocket.emit('createRoom', {
-        matchId: matchId,
-        aId: matchInfo.srcId,
-        bId: matchInfo.destId,
-        gameMode: GAME_MODE.normal,
-      });
-    } else {
-      console.log('game reject');
-      this.server.to(userSocketId).emit('normalGameReject');
-    }
-    this.normalRequestQueue.delete(matchId);
+      const destSocketId = this.sockets.get(matchInfo.destId);
+      const userSocketId = this.sockets.get(matchInfo.srcId);
+      const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
+      const destUser = await this.userUseCase.findOne(matchInfo.destId);
+      if (isAccept) {
+        console.log('game accept');
+        this.server.to(userSocketId).emit('gameStart', {
+          matchId: matchId,
+          aName: srcUser.name,
+          aProfileImage: srcUser.profileImage,
+          bName: destUser.name,
+          bProfileImage: destUser.profileImage,
+          side: 'A',
+          theme: matchInfo.theme,
+          gameMode: GAME_MODE.normal,
+        });
+        this.server.to(destSocketId).emit('gameStart', {
+          matchId: matchId,
+          aName: srcUser.name,
+          aProfileImage: srcUser.profileImage,
+          bName: destUser.name,
+          bProfileImage: destUser.profileImage,
+          side: 'B',
+          theme: matchInfo.theme,
+          gameMode: GAME_MODE.normal,
+        });
+        this.gameClientSocket.emit('createRoom', {
+          matchId: matchId,
+          aId: matchInfo.srcId,
+          bId: matchInfo.destId,
+          gameMode: GAME_MODE.normal,
+        });
+      } else {
+        console.log('game reject');
+        this.server.to(userSocketId).emit('normalGameReject');
+      }
+      this.normalMatchQueue.delete(matchId);
+    });
     return 'gameResponse success!';
   }
 
@@ -244,13 +256,15 @@ export class NotificationGateway
       getIntraIdFromSocket(client),
     );
     if (!user) return;
-    const matchInfo = this.normalRequestQueue.get(matchId);
-    console.log(matchInfo);
-    if (!matchInfo || matchInfo.srcId !== user.id) return;
-    const destId = this.sockets.get(matchInfo.destId);
-    this.server.to(destId).emit('normalGameCancel', { matchId });
-    this.normalRequestQueue.delete(matchId);
-    console.log(this.normalRequestQueue);
+    this.normalQueueMutex.runExclusive(() => {
+      const matchInfo = this.normalMatchQueue.get(matchId);
+      console.log(matchInfo);
+      if (!matchInfo || matchInfo.srcId !== user.id) return;
+      const destId = this.sockets.get(matchInfo.destId);
+      this.server.to(destId).emit('normalGameCancel', { matchId });
+      this.normalMatchQueue.delete(matchId);
+      console.log(this.normalMatchQueue);
+    });
     return 'gameCancel Success!';
   }
 

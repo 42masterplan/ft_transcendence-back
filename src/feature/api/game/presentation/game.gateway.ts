@@ -58,8 +58,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.updateGameTimeCron();
   }
 
-  //TODO: jwt 적용
-
   async handleConnection(client: any, ...args: any[]) {
     if (
       client.handshake.headers.server_secret_key ===
@@ -202,15 +200,37 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return;
           }
           client.join(matchId);
-          client.emit('joinedRoom');
           console.log(client.id + ' join room finish ' + matchId);
-          this.server
-            .to(matchId)
-            .emit('updatePlayers', new GameStateViewModel(match));
         } else {
           client.emit('gameFull');
           client.disconnect();
         }
+      });
+    });
+  }
+
+  @SubscribeMessage('gameReady')
+  async startGame(client: Socket) {
+    await this.joinMutex.runExclusive(async () => {
+      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      if (!matchId)
+        throw new WsException('Invalid Request: there is no game(mutex)');
+      const mutex = this.gameStateMutexes.get(matchId);
+      if (!mutex)
+        throw new WsException('Invalid Request: there is no game(state)');
+      await mutex.runExclusive(() => {
+        const match = this.gameStates.get(matchId);
+        if (
+          match.playerA.socketId !== client.id &&
+          match.playerB.socketId !== client.id
+        )
+          return;
+        this.server.to(matchId).emit('joinedRoom');
+        this.server
+          .to(matchId)
+          .emit('updatePlayers', new GameStateViewModel(match));
+        if (match.playerA.socketId !== null && match.playerB.socketId !== null)
+          match.isReady = true;
       });
     });
   }
