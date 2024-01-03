@@ -7,7 +7,7 @@ import {
   SCREEN_WIDTH,
 } from '../util';
 import { Ball } from './ball';
-import { GAME_MODE } from './game-mode.type';
+import { GAME_MODE } from './game-mode.enum';
 import { Player } from './player';
 import { Score } from './score';
 

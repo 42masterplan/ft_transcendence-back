@@ -15,7 +15,16 @@ export class ChannelRepository {
 
   async findOneById(id: string): Promise<Channel> {
     console.log('repository: findOneById');
-    const channel = await this.repository.findOne({ id: id });
+    const channel = await this.repository.findOne({ id: id, isDeleted: false });
+    return this.toDomain(channel);
+  }
+
+  async findOneByName(name: string): Promise<Channel> {
+    console.log('repository: findOneByName');
+    const channel = await this.repository.findOne({
+      name: name,
+      isDeleted: false,
+    });
     return this.toDomain(channel);
   }
 
@@ -54,6 +63,7 @@ export class ChannelRepository {
   }
 
   private toDomain(entity: ChannelEntity): Channel {
+    if (!entity) return null;
     return new Channel({
       id: entity.id,
       name: entity.name,

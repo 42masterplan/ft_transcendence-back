@@ -70,6 +70,7 @@ export class UsersController {
     return true;
   }
 
+  @UseGuards(AuthGuard('signIn'))
   @Get('is-duplicated-name')
   async isDuplicatedName(@Query('name') name: string) {
     const isDuplicated = await this.usersService.isDuplicatedName(name);
@@ -78,6 +79,7 @@ export class UsersController {
     };
   }
 
+  @UseGuards(AuthGuard('signIn'))
   @Post('profile-image')
   @UseInterceptors(
     FileInterceptor('profileImage', {
@@ -108,26 +110,24 @@ export class UsersController {
     return true;
   }
 
-  @Get('info')
-  async getInfo(@Param(':id') id: string) {
-    console.log(id);
-    const user = await this.usersService.findOneByIntraId(id);
+  @Get('info/:name')
+  async getInfo(@Param('name') name: string) {
+    const user = await this.usersUseCase.findOneByName(name);
     return {
-      id: '1',
-      name: 'Seoyoo',
-      profileImage: 'https://www.w3schools.com/howto/img_avatar.png',
-      currentStatus: 'on-line',
-      introduction: 'Hello, I am User1 and this is a very very very very long long long long long long introduction. ',
-    }
-  };
+      id: user.id,
+      name: user.name,
+      profileImage: user.profileImage,
+      currentStatus: user.currentStatus,
+      introduction: user.introduction,
+    };
+  }
 
   @Get('rank')
-  getRank(@Param(':id') id:string) {
-
+  getRank(@Param(':id') id: string) {
     return {
       win: 10,
       lose: 5,
-      tier: 'Silver'
+      tier: 'Silver',
     };
   }
 
@@ -137,102 +137,102 @@ export class UsersController {
       {
         name: 'Challenge1',
         description: 'This is challenge1',
-        progressRate: 25
+        progressRate: 25,
       },
       {
         name: 'Challenge2',
         description: 'This is challenge2',
-        progressRate: 0
+        progressRate: 0,
       },
       {
         name: 'Challenge3',
         description: 'This is challenge3',
-        progressRate: 14
+        progressRate: 14,
       },
       {
         name: 'Challenge4',
         description: 'This is challenge4',
-        progressRate: 23
+        progressRate: 23,
       },
       {
         name: 'Challenge5',
         description: 'This is challenge5',
-        progressRate: 33
+        progressRate: 33,
       },
       {
         name: 'Challenge6',
         description: 'This is challenge6',
-        progressRate: 44
+        progressRate: 44,
       },
       {
         name: 'Challenge7',
         description: 'This is challenge7',
         progressRate: 55,
-        achieveRatio: 1
+        achieveRatio: 1,
       },
       {
         name: 'Challenge8',
         description: 'This is challenge8',
-        progressRate: 66
+        progressRate: 66,
       },
       {
         name: 'Challenge9',
         description: 'This is challenge9',
-        progressRate: 77
+        progressRate: 77,
       },
       {
         name: 'Challenge10',
         description: 'This is challenge10',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge11',
         description: 'This is challenge11',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge12',
         description: 'This is challenge12',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge13',
         description: 'This is challenge13',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge14',
         description: 'This is challenge14',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge15',
         description: 'This is challenge15',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge16',
         description: 'This is challenge16',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge17',
         description: 'This is challenge17',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge18',
         description: 'This is challenge18',
-        progressRate: 100
+        progressRate: 100,
       },
       {
         name: 'Challenge19',
         description: 'This is challenge19',
-        progressRate: 100
-      }
-    ]
+        progressRate: 100,
+      },
+    ];
   }
-  
+
   @Get('matches')
   getMatch(@Param(':id') id: string) {
     console.log('matches');
@@ -243,7 +243,7 @@ export class UsersController {
         playerBName: 'User2',
         playerAScore: 0,
         playerBScore: 0,
-		    gameId: 'blablabla1'
+        gameId: 'blablabla1',
       },
       {
         createdAt: '2021-05-02',
@@ -251,7 +251,7 @@ export class UsersController {
         playerBName: 'User3',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla2'
+        gameId: 'blablabla2',
       },
       {
         createdAt: '2021-05-03',
@@ -259,7 +259,7 @@ export class UsersController {
         playerBName: 'User4',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla3'
+        gameId: 'blablabla3',
       },
       {
         createdAt: '2021-05-04',
@@ -267,7 +267,7 @@ export class UsersController {
         playerBName: 'User5',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla4'
+        gameId: 'blablabla4',
       },
       {
         createdAt: '2021-05-05',
@@ -275,7 +275,7 @@ export class UsersController {
         playerBName: 'User6',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla5'
+        gameId: 'blablabla5',
       },
       {
         createdAt: '2021-05-06',
@@ -283,7 +283,7 @@ export class UsersController {
         playerBName: 'User7',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla6'
+        gameId: 'blablabla6',
       },
       {
         createdAt: '2021-05-07',
@@ -291,7 +291,7 @@ export class UsersController {
         playerBName: 'User8',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla7'
+        gameId: 'blablabla7',
       },
       {
         createdAt: '2021-05-08',
@@ -299,7 +299,7 @@ export class UsersController {
         playerBName: 'User9',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla8'
+        gameId: 'blablabla8',
       },
       {
         createdAt: '2021-05-09',
@@ -307,7 +307,7 @@ export class UsersController {
         playerBName: 'User10',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla9'
+        gameId: 'blablabla9',
       },
       {
         createdAt: '2021-05-10',
@@ -315,7 +315,7 @@ export class UsersController {
         playerBName: 'User11',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla10'
+        gameId: 'blablabla10',
       },
       {
         createdAt: '2021-05-11',
@@ -323,7 +323,7 @@ export class UsersController {
         playerBName: 'User12',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla11'
+        gameId: 'blablabla11',
       },
       {
         createdAt: '2021-05-12',
@@ -331,7 +331,7 @@ export class UsersController {
         playerBName: 'User13',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla12'
+        gameId: 'blablabla12',
       },
       {
         createdAt: '2021-05-13',
@@ -339,7 +339,7 @@ export class UsersController {
         playerBName: 'User14',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla13'
+        gameId: 'blablabla13',
       },
       {
         createdAt: '2021-05-14',
@@ -347,7 +347,7 @@ export class UsersController {
         playerBName: 'User15',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla14'
+        gameId: 'blablabla14',
       },
       {
         createdAt: '2021-05-15',
@@ -355,7 +355,7 @@ export class UsersController {
         playerBName: 'User16',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla15'
+        gameId: 'blablabla15',
       },
       {
         createdAt: '2021-05-16',
@@ -363,7 +363,7 @@ export class UsersController {
         playerBName: 'User17',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla16'
+        gameId: 'blablabla16',
       },
       {
         createdAt: '2021-05-17',
@@ -371,7 +371,7 @@ export class UsersController {
         playerBName: 'User18',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla17'
+        gameId: 'blablabla17',
       },
       {
         createdAt: '2021-05-18',
@@ -379,7 +379,7 @@ export class UsersController {
         playerBName: 'User19',
         playerAScore: 5,
         playerBScore: 10,
-		    gameId: 'blablabla18'
+        gameId: 'blablabla18',
       },
       {
         createdAt: '2021-05-19',
@@ -387,8 +387,8 @@ export class UsersController {
         playerBName: 'User20',
         playerAScore: 10,
         playerBScore: 5,
-		    gameId: 'blablabla19'
-      }
+        gameId: 'blablabla19',
+      },
     ];
   }
 
