@@ -36,8 +36,6 @@ export class GameService {
       console.log(socketId + ' join as playerB ' + state.matchId);
       state.playerB.socketId = socketId;
     }
-    if (state.playerA.socketId !== null && state.playerB.socketId !== null)
-      state.isReady = true;
     return true;
   }
 

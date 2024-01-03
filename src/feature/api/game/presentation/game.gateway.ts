@@ -56,8 +56,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.updateGameTimeCron();
   }
 
-  //TODO: jwt 적용
-
   async handleConnection(client: any, ...args: any[]) {
     if (
       client.handshake.headers.server_secret_key ===
@@ -196,6 +194,28 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           client.emit('gameFull');
           client.disconnect();
         }
+      });
+    });
+  }
+
+  @SubscribeMessage('gameReady')
+  async startGame(client: Socket) {
+    await this.joinMutex.runExclusive(async () => {
+      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      if (!matchId)
+        throw new WsException('Invalid Request: there is no game(mutex)');
+      const mutex = this.gameStateMutexes.get(matchId);
+      if (!mutex)
+        throw new WsException('Invalid Request: there is no game(state)');
+      await mutex.runExclusive(() => {
+        const match = this.gameStates.get(matchId);
+        if (
+          match.playerA.socketId !== client.id &&
+          match.playerB.socketId !== client.id
+        )
+          return;
+        if (match.playerA.socketId !== null && match.playerB.socketId !== null)
+          match.isReady = true;
       });
     });
   }
