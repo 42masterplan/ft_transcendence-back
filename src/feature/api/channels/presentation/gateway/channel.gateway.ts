@@ -1,6 +1,5 @@
 import { AuthService } from '../../../auth/auth.service';
 import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
-import { getUserFromSocket } from '../../../auth/tools/socketTools';
 import { AchievementUseCase } from '../../../users/application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
@@ -179,7 +178,12 @@ export class ChannelGateway
       id,
     );
     this.newMessageInRoom(id, newMessage);
-    this.server.to(id).emit("getParticipants", await this.channelService.getParticipants(myId, id));
+    this.server
+      .to(id)
+      .emit(
+        'getParticipants',
+        await this.channelService.getParticipants(myId, id),
+      );
     await this.getPublicChannelsToAll();
     return ret;
   }
@@ -365,7 +369,7 @@ export class ChannelGateway
     const result = await this.channelService.muteUser(myId, channelId, userId);
     if (result != 'muteUser Success!') return result;
     await this.achievementUseCase.handleFirstMute(myId);
-    
+
     const newMessage = await this.channelService.newMessage(
       myId,
       '[system] ' +

@@ -1,7 +1,13 @@
-import { DateTimeType, Entity, PrimaryKey, Property, Unique } from "@mikro-orm/core";
+import {
+  DateTimeType,
+  Entity,
+  PrimaryKey,
+  Property,
+  Unique,
+} from '@mikro-orm/core';
 
 @Entity({ tableName: 'achievement' })
-export class AchievementEntity{
+export class AchievementEntity {
   @PrimaryKey()
   id: number;
 

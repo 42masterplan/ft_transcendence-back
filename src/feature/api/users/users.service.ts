@@ -7,8 +7,10 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersUseCase: UsersUseCase,
-    private readonly achievementUseCase: AchievementUseCase) {}
+  constructor(
+    private readonly usersUseCase: UsersUseCase,
+    private readonly achievementUseCase: AchievementUseCase,
+  ) {}
 
   async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
     return await this.usersUseCase.updateOne(intraId, updateUserDto);

@@ -2,6 +2,7 @@ import path from 'node:path';
 import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
 import { JwtSignInGuard } from '../../../auth/jwt/jwt-sign-in.guard';
 import { GameWithPlayerUseCase } from '../../../game/application/game-with-player.use-case';
+import { AchievementUseCase } from '../../application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../application/use-case/blocked-user.use-case';
 import { FindBlockedUserUseCase } from '../../application/use-case/find-blocked-user.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
@@ -28,7 +29,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { AchievementUseCase } from '../../application/use-case/achievement.use-case';
 
 @Controller('users')
 export class UsersController {
@@ -147,7 +147,7 @@ export class UsersController {
   @Get('challenges/:id')
   async getChallenges(@Param('id') id: string): Promise<any> {
     const user = await this.usersUseCase.findOneByName(id);
-    const achieves= await this.achievementUseCase.findAllByUserId(user.id);
+    const achieves = await this.achievementUseCase.findAllByUserId(user.id);
     return achieves;
   }
 

@@ -1,4 +1,4 @@
-import { Achievement } from "./achievement";
+import { Achievement } from './achievement';
 
 export interface AchievementRepository {
   findAll(): Promise<Achievement[]>;
