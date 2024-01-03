@@ -47,7 +47,7 @@ export class FriendRepositoryImpl implements FriendRepository {
       friendId: myId,
     });
 
-    this.repository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
 
     return this.toDomain(meAndFriend);
   }
@@ -74,7 +74,7 @@ export class FriendRepositoryImpl implements FriendRepository {
     meAndFriend.isDeleted = true;
     friendAndMe.isDeleted = true;
 
-    this.repository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
 
     return this.toDomain(meAndFriend);
   }
