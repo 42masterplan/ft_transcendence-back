@@ -1,6 +1,5 @@
 import { UsersModule } from '../users/users.module';
 import { DmUseCase } from './application/dm.use-case';
-import { LadderQueueService } from './application/ladder-queue.service';
 import { DmMessageRepository } from './domain/repositories/dm-message.repository';
 import { DmRepository } from './domain/repositories/dm.repository';
 import { DmMessageEntity } from './infrastructure/dm-message.entity';
@@ -16,7 +15,6 @@ import { Module, forwardRef } from '@nestjs/common';
   ],
   providers: [
     NotificationGateway,
-    LadderQueueService,
     DmUseCase,
     DmRepository,
     DmMessageRepository,
