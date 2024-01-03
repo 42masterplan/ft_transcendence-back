@@ -11,15 +11,15 @@ export class AchievementUseCase {
     private readonly achievementStatusRepository: AchievementStatusRepository
   ) {}
 
-  private names: string[] = ["너진짜잘한다", "너진짜못한다", "와우! 첫 승리!", "이런! 첫 패배!", "힘의 차이가 느껴지십니까?", "스토커", "여기여기 모여라", "쉿! 조용히 해!", "꼴보기 싫어", "잠깐 나가줄래?"];
-  private descriptions: string[] = ["게임으로 3연승을 거두세요.", "게임으로 3연패를 당하세요.", "게임으로 첫 승리를 거두세요.", "게임으로 첫 패배를 당하세요.", "두배 점수차로 승리하세요", "연속으로 10개의 메세지를 보내세요", "채팅창을 만들어 보세요!", "참가자를 뮤트해 보세요", "참가자를 밴해 보세요", "참가자를 킥해 보세요"];
+  private names: string[] = ["너진짜잘한다", "너진짜못한다", "와우! 첫 승리!", "이런! 첫 패배!", "힘의 차이가 느껴지십니까?", "여기여기 모여라", "쉿! 조용히 해!", "꼴보기 싫어", "잠깐 나가줄래?"];
+  private descriptions: string[] = ["게임으로 3연승을 거두세요.", "게임으로 3연패를 당하세요.", "게임으로 첫 승리를 거두세요.", "게임으로 첫 패배를 당하세요.", "두배 점수차로 승리하세요", "채팅창을 만들어 보세요!", "참가자를 뮤트해 보세요", "참가자를 밴해 보세요", "참가자를 킥해 보세요"];
 
     async findAllByUserId(userId: string): Promise<any> {
       const achievementStatuses = await this.achievementStatusRepository.findAllByUserId(userId);
       return Promise.all(achievementStatuses.map(async (achievementStatus) => {
         const achievement = await this.achievementRepository.findOneById(achievementStatus.achievementId);
         return {
-          name: this.names[achievement.id - 1],
+          name: achievement.name,
           description: this.descriptions[achievement.id - 1],
           progressRate: achievementStatus.count / achievement.criterionNumber * 100,
         };
@@ -117,8 +117,8 @@ export class AchievementUseCase {
       await this.achievementStatusRepository.updateOne(achievementStatus);
     }
 
-    async handleTenMessages(userId: string) {
-      const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 6);
+    async handleFirstChannel(userId: string) {
+      const  achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 6);
       if (achievementStatus.isAchieved) return;
       achievementStatus.updateCount(achievementStatus.count + 1);
       const achievement = await this.achievementRepository.findOneById(6);
@@ -128,18 +128,18 @@ export class AchievementUseCase {
       await this.achievementStatusRepository.updateOne(achievementStatus);
     }
 
-    async handleFirstChannel(userId: string) {
-      const  achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 7);
-      if (achievementStatus.isAchieved) return;
-      achievementStatus.updateCount(achievementStatus.count + 1);
-      const achievement = await this.achievementRepository.findOneById(7);
-      if (achievementStatus.count >= achievement.criterionNumber) {
-        achievementStatus.updateIsAchieved(true);
-      }
-      await this.achievementStatusRepository.updateOne(achievementStatus);
-    }
-
   async handleFirstMute(userId: string) {
+    const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 7);
+    if (achievementStatus.isAchieved) return;
+    achievementStatus.updateCount(achievementStatus.count + 1);
+    const achievement = await this.achievementRepository.findOneById(7);
+    if (achievementStatus.count >= achievement.criterionNumber) {
+      achievementStatus.updateIsAchieved(true);
+    }
+    await this.achievementStatusRepository.updateOne(achievementStatus);
+  }
+
+  async handleFirstBan(userId: string) {
     const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 8);
     if (achievementStatus.isAchieved) return;
     achievementStatus.updateCount(achievementStatus.count + 1);
@@ -150,22 +150,11 @@ export class AchievementUseCase {
     await this.achievementStatusRepository.updateOne(achievementStatus);
   }
 
-  async handleFirstBan(userId: string) {
+  async handleFirstKick(userId: string) {
     const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 9);
     if (achievementStatus.isAchieved) return;
     achievementStatus.updateCount(achievementStatus.count + 1);
     const achievement = await this.achievementRepository.findOneById(9);
-    if (achievementStatus.count >= achievement.criterionNumber) {
-      achievementStatus.updateIsAchieved(true);
-    }
-    await this.achievementStatusRepository.updateOne(achievementStatus);
-  }
-
-  async handleFirstKick(userId: string) {
-    const achievementStatus = await this.achievementStatusRepository.findOneByUserIdAndAchievementId(userId, 10);
-    if (achievementStatus.isAchieved) return;
-    achievementStatus.updateCount(achievementStatus.count + 1);
-    const achievement = await this.achievementRepository.findOneById(10);
     if (achievementStatus.count >= achievement.criterionNumber) {
       achievementStatus.updateIsAchieved(true);
     }
