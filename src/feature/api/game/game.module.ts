@@ -1,3 +1,4 @@
+import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { GameWithPlayerUseCase } from './application/game-with-player.use-case';
 import { GameService } from './application/game.service';
@@ -19,6 +20,7 @@ import { Module, forwardRef } from '@nestjs/common';
   imports: [
     MikroOrmModule.forFeature([GameEntity, PlayerScoreEntity]),
     forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
   ],
   providers: [
     GameService,
