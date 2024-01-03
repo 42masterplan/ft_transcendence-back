@@ -45,9 +45,13 @@ export async function getUserFromSocket(
 }
 
 export function getIntraIdFromSocket(socket: Socket): string {
-  const accesstoken = socket.handshake.auth?.Authorization?.split(' ')[1];
-  const payload = jwt.verify(accesstoken, process.env.AUTH_JWT_SECRET);
-  return payload?.sub as string;
+  try {
+    const accesstoken = socket.handshake.auth?.Authorization?.split(' ')[1];
+    const payload = jwt.verify(accesstoken, process.env.AUTH_JWT_SECRET);
+    return payload?.sub as string;
+  } catch (e) {
+    return;
+  }
 }
 
 export function sendToAllSockets(

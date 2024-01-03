@@ -1,9 +1,6 @@
 import { AuthService } from '../../auth/auth.service';
 import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
-import {
-  getIntraIdFromSocket,
-  getUserFromSocket,
-} from '../../auth/tools/socketTools';
+import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
 import { GAME_MODE } from '../../game/presentation/type/game-mode.enum';
 import { THEME } from '../../game/presentation/type/theme.enum';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
@@ -106,7 +103,9 @@ export class NotificationGateway
    * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
    */
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    const user = await getUserFromSocket(socket, this.usersService);
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(socket),
+    );
     if (!user) return;
     this.sockets.delete(user.id);
     this.userUseCase.updateStatus(user.intraId, 'off-line');
