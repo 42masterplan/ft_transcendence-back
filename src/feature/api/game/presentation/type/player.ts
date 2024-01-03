@@ -1,9 +1,4 @@
-import {
-  BALL_SPEED,
-  PLAYER_A_COLOR,
-  PLAYER_HEIGHT,
-  PLAYER_WIDTH,
-} from '../util';
+import { PLAYER_A_COLOR, PLAYER_HEIGHT, PLAYER_WIDTH } from '../util';
 import { Ball } from './ball';
 
 export class Player {
@@ -110,14 +105,14 @@ export class Player {
     let speed = Math.sqrt(
       ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
     );
-    ball.velocity.x = BALL_SPEED * (ball.velocity.x / speed);
-    ball.velocity.y = BALL_SPEED * (ball.velocity.y / speed);
+    ball.velocity.x = ball.speed * (ball.velocity.x / speed);
+    ball.velocity.y = ball.speed * (ball.velocity.y / speed);
     if (ball.velocity.x > 0.75) ball.velocity.x = 0.75;
     else if (ball.velocity.x < -0.75) ball.velocity.x = -0.75;
     speed = Math.sqrt(
       ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
     );
-    ball.velocity.x = BALL_SPEED * (ball.velocity.x / speed);
-    ball.velocity.y = BALL_SPEED * (ball.velocity.y / speed);
+    ball.velocity.x = ball.speed * (ball.velocity.x / speed);
+    ball.velocity.y = ball.speed * (ball.velocity.y / speed);
   }
 }
