@@ -11,7 +11,7 @@ export class AchievementUseCase {
     private readonly achievementStatusRepository: AchievementStatusRepository
   ) {}
 
-  private descriptions: string[] = [ "게임으로 첫 승리를 거두세요.", "게임으로 첫 패배를 당하세요.", "게임으로 3연승을 거두세요.", "게임으로 3연패를 당하세요.", "두배 점수차로 승리하세요", "채팅창을 만들어 보세요!", "참가자를 뮤트해 보세요", "참가자를 밴해 보세요", "참가자를 킥해 보세요"];
+  private descriptions: string[] = [ "게임으로 첫 승리를 거두세요.", "게임으로 첫 패배를 당하세요.", "게임으로 3연승을 거두세요.", "게임으로 3연패를 당하세요.", "두배 점수차로 승리하세요.(기권패 제외)", "채팅창을 만들어 보세요!", "참가자를 뮤트해 보세요.", "참가자를 밴해 보세요.", "참가자를 킥해 보세요."];
 
     async findAllByUserId(userId: string): Promise<any> {
       const achievementStatuses = await this.achievementStatusRepository.findAllByUserId(userId);
@@ -19,7 +19,7 @@ export class AchievementUseCase {
         const achievement = await this.achievementRepository.findOneById(achievementStatus.achievementId);
         return {
           name: achievement.name,
-          description: this.descriptions[achievement.id - 1],
+          description: this.descriptions[achievement.id],
           progressRate: achievementStatus.count / achievement.criterionNumber * 100,
         };
       }));
