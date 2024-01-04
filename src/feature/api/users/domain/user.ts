@@ -64,7 +64,7 @@ export class User {
     return this._intraId;
   }
 
-  get name(): string {
+  get name(): string | null {
     return this._name;
   }
 

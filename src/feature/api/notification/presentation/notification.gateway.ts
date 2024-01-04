@@ -77,6 +77,8 @@ export class NotificationGateway
   private normalQueueMutex: Mutex = new Mutex();
   private ladderQueueMutex: Mutex = new Mutex();
   private ladderMatchQueue: LadderMatchQueue = new LadderMatchQueue();
+  private normalMatchId: number = 0;
+  private ladderMatchId: number = 0;
 
   /**
    * 'alarm' 네임스페이스에 연결되었을 때 실행되는 메서드입니다.
@@ -93,7 +95,7 @@ export class NotificationGateway
     console.log('알림 소켓 연결!!', user);
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
-    this.userUseCase.updateStatus(user.intraId, 'on-line');
+    await this.userUseCase.updateStatus(user.intraId, 'on-line');
     this.server.emit('changeStatus');
   }
 
@@ -107,8 +109,9 @@ export class NotificationGateway
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
+    await this.userUseCase.updateStatus(user.intraId, 'off-line');
     this.handleLadderGameCancel(socket);
-    this.normalQueueMutex.runExclusive(() => {
+    await this.normalQueueMutex.runExclusive(() => {
       for (const [matchId, match] of this.normalMatchQueue) {
         if (match.destId === user.id || match.srcId === user.id) {
           if (match.destId === user.id) {
@@ -125,7 +128,7 @@ export class NotificationGateway
       }
     });
     this.sockets.delete(user.id);
-    this.userUseCase.updateStatus(user.intraId, 'off-line');
+    await this.userUseCase.updateStatus(user.intraId, 'off-line');
     this.server.emit('changeStatus');
   }
 
@@ -146,12 +149,25 @@ export class NotificationGateway
     const srcUser = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
-    if (!srcUser) return;
+    const destUser = await this.userUseCase.findOne(userId);
+    if (!srcUser || !destUser) return;
     const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
-    const matchId = srcSocketId + destSocketId;
+    let matchId: string;
 
-    this.normalQueueMutex.runExclusive(() => {
+    if (
+      destUser.currentStatus === 'in-game' ||
+      destUser.currentStatus === 'off-line'
+    ) {
+      this.server
+        .to(srcSocketId)
+        .emit('normalGameReject', '상대방이 게임 가능 상태가 아닙니다.');
+      return;
+    }
+    await this.normalQueueMutex.runExclusive(() => {
+      matchId = 'normal-' + this.normalMatchId.toString();
+      this.normalMatchId++;
+      console.log('game request' + matchId);
       this.normalMatchQueue.set(matchId, {
         srcId,
         destId,
@@ -167,6 +183,7 @@ export class NotificationGateway
       destId,
       'normal',
       theme,
+      matchId,
     );
 
     this.server.to(destSocketId).emit('gameRequest', {
@@ -188,6 +205,10 @@ export class NotificationGateway
     if (!user) return;
     await this.ladderQueueMutex.runExclusive(() => {
       console.log('ladder game request');
+      if (this.ladderMatchQueue.hasUser(user)) {
+        console.log('you are already in ladder match queue!');
+        return;
+      }
       this.ladderMatchQueue.insert(
         new LadderMatch({
           id: user.id,
@@ -210,7 +231,7 @@ export class NotificationGateway
       getIntraIdFromSocket(client),
     );
     if (!user) return;
-    this.normalQueueMutex.runExclusive(async () => {
+    await this.normalQueueMutex.runExclusive(async () => {
       const matchInfo = this.normalMatchQueue.get(matchId);
       if (!matchInfo || matchInfo.destId !== user.id) return;
 
@@ -248,7 +269,9 @@ export class NotificationGateway
         });
       } else {
         console.log('game reject');
-        this.server.to(userSocketId).emit('normalGameReject');
+        this.server
+          .to(userSocketId)
+          .emit('normalGameReject', '상대방이 게임 요청을 거절했습니다.');
       }
       this.normalMatchQueue.delete(matchId);
     });
@@ -263,7 +286,7 @@ export class NotificationGateway
       getIntraIdFromSocket(client),
     );
     if (!user) return;
-    this.normalQueueMutex.runExclusive(() => {
+    await this.normalQueueMutex.runExclusive(() => {
       const matchInfo = this.normalMatchQueue.get(matchId);
       console.log(matchInfo);
       if (!matchInfo || matchInfo.srcId !== user.id) return;
@@ -278,7 +301,7 @@ export class NotificationGateway
   @SubscribeMessage('ladderGameCancel')
   async handleLadderGameCancel(client) {
     console.log('socket gameCancel');
-    this.ladderQueueMutex.runExclusive(() =>
+    await this.ladderQueueMutex.runExclusive(() =>
       this.ladderMatchQueue.removeUserMatch(client.id),
     );
     return 'gameCancel Success!';
@@ -296,6 +319,7 @@ export class NotificationGateway
       getIntraIdFromSocket(client),
     );
     const friend = await this.userUseCase.findOneByName(userName);
+    if (!user || !friend) return;
     const user1Id = friend.id > user.id ? user.id : friend.id;
     const user2Id = friend.id > user.id ? friend.id : user.id;
     if (
@@ -382,7 +406,7 @@ export class NotificationGateway
   tickLadderQueue() {
     console.log('start tick ladder queue cron');
     setInterval(async () => {
-      this.ladderQueueMutex.runExclusive(async () => {
+      await this.ladderQueueMutex.runExclusive(async () => {
         this.ladderMatchQueue.tickQueue();
       });
     }, 1000);
@@ -391,7 +415,7 @@ export class NotificationGateway
   matchLadderQueue() {
     console.log('start update ladder queue cron');
     setInterval(async () => {
-      this.ladderQueueMutex.runExclusive(async () => {
+      await this.ladderQueueMutex.runExclusive(async () => {
         const matchArray: Array<LadderMatch> =
           this.ladderMatchQueue.getMatchArrayByTime();
         for (const match of matchArray) {
@@ -454,7 +478,8 @@ export class NotificationGateway
 
             const playerA = await this.userUseCase.findOne(match.id);
             const playerB = await this.userUseCase.findOne(result.id);
-            const matchId = match.socketId + result.socketId;
+            const matchId = 'ladder-' + this.ladderMatchId.toString();
+            this.ladderMatchId++;
             this.server.to(match.socketId).emit('gameStart', {
               matchId: matchId,
               aName: playerA.name,

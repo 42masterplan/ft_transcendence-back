@@ -37,6 +37,9 @@ export class LadderMatchQueue {
   }
 
   hasUser(user: User): LadderMatch {
+    if (this.isEmpty()) {
+      return;
+    }
     let current = this._head;
 
     if (current.id === user.id) return current;
