@@ -1,4 +1,3 @@
-import { QueryOrder } from '@mikro-orm/core';
 import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
 import { TIER } from '../../game/presentation/type/tier.enum';
 import { User } from '../domain/user';
@@ -6,6 +5,7 @@ import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../presentation/dto/update-user.dto';
 import { UserEntity } from './user.entity';
+import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
@@ -21,7 +21,8 @@ export class UserRepositoryImpl implements UserRepository {
     const users = await this.userRepository.find(
       { isDeleted: false },
       { orderBy: { name: QueryOrder.ASC } },
-    );    if (!users) return [];
+    );
+    if (!users) return [];
     return users.map((user) => this.toDomain(user));
   }
 

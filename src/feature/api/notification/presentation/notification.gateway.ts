@@ -165,6 +165,17 @@ export class NotificationGateway
       return;
     }
     await this.normalQueueMutex.runExclusive(() => {
+      for (const [, match] of this.normalMatchQueue) {
+        if (match.destId === destId && match.srcId === srcId) {
+          match.theme = theme;
+          return;
+        } else if (match.destId === srcId && match.srcId === destId) {
+          this.server
+            .to(srcSocketId)
+            .emit('normalGameReject', '상대방에게서 온 게임이 존재합니다.');
+          return;
+        }
+      }
       matchId = 'normal-' + this.normalMatchId.toString();
       this.normalMatchId++;
       console.log('game request' + matchId);
