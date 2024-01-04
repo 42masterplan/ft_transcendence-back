@@ -17,12 +17,12 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
   Query,
   Request,
-  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -67,7 +67,6 @@ export class UsersController {
   @UseGuards(JwtSignInGuard)
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    if (!req.user.sub) throw new UnauthorizedException();
     await this.usersService.updateOne(req.user.sub, updateUserDto);
   }
 
@@ -118,6 +117,7 @@ export class UsersController {
   @Get('info/:name')
   async getInfo(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     return {
       id: user.id,
       name: user.name,
@@ -131,6 +131,7 @@ export class UsersController {
   @Get('rank/:name')
   async getRank(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     const gameStat = await this.gameWithPlayerUseCase.getPlayerGameStat(name);
     return {
       win: gameStat.win,
@@ -140,9 +141,10 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('challenges/:id')
-  async getChallenges(@Param('id') id: string): Promise<any> {
-    const user = await this.usersUseCase.findOneByName(id);
+  @Get('challenges/:name')
+  async getChallenges(@Param('name') name: string): Promise<any> {
+    const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     const achieves = await this.achievementUseCase.findAllByUserId(user.id);
     return achieves;
   }
@@ -151,6 +153,8 @@ export class UsersController {
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
     console.log('matches');
+    const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     const games = await this.gameWithPlayerUseCase.findGamesWithPlayer(name);
     return games.map((game) => new MatchViewModel(game));
   }
