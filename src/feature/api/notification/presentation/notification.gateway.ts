@@ -109,14 +109,18 @@ export class NotificationGateway
     this.handleLadderGameCancel(socket);
     this.normalQueueMutex.runExclusive(() => {
       for (const [matchId, match] of this.normalMatchQueue) {
-        if (match.destId === user.id) {
-          const srcId = this.sockets.get(match.srcId);
-          this.server.to(srcId).emit('normalGameReject');
-        } else if (match.srcId === user.id) {
-          const destId = this.sockets.get(match.destId);
-          this.server.to(destId).emit('normalGameCancel', { matchId });
+        if (match.destId === user.id || match.srcId === user.id) {
+          if (match.destId === user.id) {
+            const srcId = this.sockets.get(match.srcId);
+            console.log('game reject');
+            this.server.to(srcId).emit('normalGameReject');
+          } else if (match.srcId === user.id) {
+            const destId = this.sockets.get(match.destId);
+            console.log('game cancel');
+            this.server.to(destId).emit('normalGameCancel', { matchId });
+          }
+          this.normalMatchQueue.delete(matchId);
         }
-        this.normalMatchQueue.delete(matchId);
       }
     });
     this.sockets.delete(user.id);
