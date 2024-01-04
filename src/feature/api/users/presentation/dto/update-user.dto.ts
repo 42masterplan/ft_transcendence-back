@@ -29,4 +29,16 @@ export class UpdateUserDto {
   @IsBoolean()
   @IsOptional()
   is2faEnabled?: boolean;
+
+  constructor(props: {
+    name?: string;
+    profileImage?: string;
+    introduction?: string;
+    is2faEnabled?: boolean;
+  }) {
+    this.name = props?.name;
+    this.profileImage = props?.profileImage;
+    this.introduction = props?.introduction;
+    this.is2faEnabled = props?.is2faEnabled;
+  }
 }

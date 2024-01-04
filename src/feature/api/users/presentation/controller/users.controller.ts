@@ -17,12 +17,12 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
   Query,
   Request,
-  UnauthorizedException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -67,7 +67,6 @@ export class UsersController {
   @UseGuards(JwtSignInGuard)
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    if (!req.user.sub) throw new UnauthorizedException();
     await this.usersService.updateOne(req.user.sub, updateUserDto);
   }
 
@@ -79,8 +78,11 @@ export class UsersController {
 
   @UseGuards(JwtSignInGuard)
   @Get('is-duplicated-name')
-  async isDuplicatedName(@Query('name') name: string) {
-    const isDuplicated = await this.usersService.isDuplicatedName(name);
+  async isDuplicatedName(@Request() req, @Query('name') name: string) {
+    const isDuplicated = await this.usersService.isDuplicatedName(
+      name,
+      req.user.sub,
+    );
     return {
       isDuplicated: isDuplicated,
     };
@@ -112,16 +114,10 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('game-setting')
-  updateGameSetting(@Body('theme') theme: string) {
-    console.log(theme);
-    return true;
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('info/:name')
   async getInfo(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     return {
       id: user.id,
       name: user.name,
@@ -135,6 +131,7 @@ export class UsersController {
   @Get('rank/:name')
   async getRank(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     const gameStat = await this.gameWithPlayerUseCase.getPlayerGameStat(name);
     return {
       win: gameStat.win,
@@ -144,9 +141,10 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('challenges/:id')
-  async getChallenges(@Param('id') id: string): Promise<any> {
-    const user = await this.usersUseCase.findOneByName(id);
+  @Get('challenges/:name')
+  async getChallenges(@Param('name') name: string): Promise<any> {
+    const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     const achieves = await this.achievementUseCase.findAllByUserId(user.id);
     return achieves;
   }
@@ -155,16 +153,30 @@ export class UsersController {
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
     console.log('matches');
+    const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new NotFoundException('There is no such user.');
     const games = await this.gameWithPlayerUseCase.findGamesWithPlayer(name);
     return games.map((game) => new MatchViewModel(game));
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('myName')
+  @Get('my-name')
   async getMyName(@Request() req) {
     const intraId = req.user.sub;
     const user = await this.usersService.findOneByIntraId(intraId);
     return { name: user.name };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-info')
+  async getMyInfo(@Request() req) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    return {
+      name: user.name,
+      profileImage: user.profileImage,
+      introduction: user.introduction,
+    };
   }
 
   /* BLOCK */

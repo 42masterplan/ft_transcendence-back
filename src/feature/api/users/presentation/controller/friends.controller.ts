@@ -21,6 +21,7 @@ import {
   UseGuards,
   Request,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 
 @Controller('users/friends')
@@ -52,6 +53,7 @@ export class FriendsController {
     const intraId = req.user.sub;
     const user = await this.userUseCase.findOneByIntraId(intraId);
     const friend = await this.userUseCase.findOneByName(friendName);
+    if (!friend) throw new NotFoundException('There is no such user.');
     const isFriend = await this.friendUseCase.isFriend({
       myId: user.id,
       friendId: friend.id,
@@ -117,7 +119,7 @@ export class FriendsController {
     await this.friendRequestUseCase.acceptFriendRequest({
       requestId: requestId,
     });
-    //TODO:  양쪽으로 해줘야하는지 재고해보기
+
     return true;
   }
 
