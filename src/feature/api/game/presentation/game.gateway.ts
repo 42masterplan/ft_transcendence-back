@@ -2,6 +2,7 @@ import { AuthService } from '../../auth/auth.service';
 import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
 import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
 import { AchievementUseCase } from '../../users/application/use-case/achievement.use-case';
+import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
 import { GameUseCase } from '../application/game.use-case';
@@ -52,6 +53,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gameService: GameService,
     private readonly usersService: UsersService,
     private readonly gameUseCase: GameUseCase,
+    private readonly userUseCase: UsersUseCase,
     private readonly achievementUseCase: AchievementUseCase,
   ) {
     this.updateGameStateCron();
@@ -67,10 +69,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.notificationSocket = client;
     } else {
       const token = client.handshake.auth?.Authorization?.split(' ')[1];
-      if (!(await this.authService.verifySocket(token))) {
+      const user = await this.authService.verifySocket(token);
+      if (!user) {
         client.disconnect();
         return;
       }
+      await this.userUseCase.updateStatus(user.intraId, 'in-game');
     }
     console.log('Game is get connected!');
   }
@@ -120,6 +124,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       this.gameStateMutexes.delete(matchId);
     });
+    const token = client.handshake.auth?.Authorization?.split(' ')[1];
+    const user = await this.authService.verifySocket(token);
+    await this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
 
   @SubscribeMessage('createRoom')

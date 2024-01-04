@@ -160,11 +160,23 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('myName')
+  @Get('my-name')
   async getMyName(@Request() req) {
     const intraId = req.user.sub;
     const user = await this.usersService.findOneByIntraId(intraId);
     return { name: user.name };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-info')
+  async getMyInfo(@Request() req) {
+    const intraId = req.user.sub;
+    const user = await this.usersService.findOneByIntraId(intraId);
+    return {
+      name: user.name,
+      profileImage: user.profileImage,
+      introduction: user.introduction,
+    };
   }
 
   /* BLOCK */

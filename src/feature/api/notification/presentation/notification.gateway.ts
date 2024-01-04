@@ -93,7 +93,7 @@ export class NotificationGateway
     console.log('알림 소켓 연결!!', user);
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
-    this.userUseCase.updateStatus(user.intraId, 'on-line');
+    await this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
 
   /**
@@ -120,7 +120,7 @@ export class NotificationGateway
       }
     });
     this.sockets.delete(user.id);
-    this.userUseCase.updateStatus(user.intraId, 'off-line');
+    await this.userUseCase.updateStatus(user.intraId, 'off-line');
   }
 
   onModuleInit() {
