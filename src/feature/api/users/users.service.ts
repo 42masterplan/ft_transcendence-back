@@ -26,9 +26,9 @@ export class UsersService {
     return await this.usersUseCase.findOneByIntraId(intraId);
   }
 
-  async isDuplicatedName(name: string): Promise<boolean> {
+  async isDuplicatedName(name: string, intraId: string): Promise<boolean> {
     const user = await this.usersUseCase.findOneByName(name);
-    if (user) return true;
+    if (user.intraId !== intraId) return true;
     return false;
   }
 }

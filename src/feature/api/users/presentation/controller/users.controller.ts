@@ -79,8 +79,11 @@ export class UsersController {
 
   @UseGuards(JwtSignInGuard)
   @Get('is-duplicated-name')
-  async isDuplicatedName(@Query('name') name: string) {
-    const isDuplicated = await this.usersService.isDuplicatedName(name);
+  async isDuplicatedName(@Request() req, @Query('name') name: string) {
+    const isDuplicated = await this.usersService.isDuplicatedName(
+      name,
+      req.user.sub,
+    );
     return {
       isDuplicated: isDuplicated,
     };
