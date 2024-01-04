@@ -140,13 +140,14 @@ export class NotificationGateway
   @SubscribeMessage('normalGameRequest')
   async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
     const destSocketId = this.sockets.get(userId);
+    const srcSocketId = client.id;
     const srcUser = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!srcUser) return;
     const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
-    const matchId = srcId + destId;
+    const matchId = srcSocketId + destSocketId;
 
     this.normalQueueMutex.runExclusive(() => {
       this.normalMatchQueue.set(matchId, {
@@ -441,7 +442,7 @@ export class NotificationGateway
 
             const playerA = await this.userUseCase.findOne(match.id);
             const playerB = await this.userUseCase.findOne(result.id);
-            const matchId = match.id + result.id;
+            const matchId = match.socketId + result.socketId;
             this.server.to(match.socketId).emit('gameStart', {
               matchId: matchId,
               aName: playerA.name,
