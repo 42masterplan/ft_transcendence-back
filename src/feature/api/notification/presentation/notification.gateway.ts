@@ -94,6 +94,7 @@ export class NotificationGateway
 
     console.log('알림 소켓 연결!!', user);
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
+    if (this.sockets.has(user.id)) return;
     this.sockets.set(user.id, socket.id);
     await this.userUseCase.updateStatus(user.intraId, 'on-line');
     this.server.emit('changeStatus');
@@ -221,6 +222,17 @@ export class NotificationGateway
     return { msg: 'gameRequestSuccess!' };
   }
 
+  @UseGuards(JwtSocketGuard)
+  @SubscribeMessage('isDoubleLogin')
+  async handleDoubleLogin(socket) {
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(socket),
+    );
+    if (!user) return;
+    if (this.sockets.has(user.id) && this.sockets.get(user.id) !== socket.id)
+      return true;
+    return false;
+  }
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
