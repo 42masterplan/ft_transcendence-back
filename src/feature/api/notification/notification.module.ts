@@ -21,6 +21,6 @@ import { Module, forwardRef } from '@nestjs/common';
     DmRepository,
     DmMessageRepository,
   ],
-  exports: [DmUseCase],
+  exports: [DmUseCase, NotificationGateway],
 })
 export class NotificationModule {}
