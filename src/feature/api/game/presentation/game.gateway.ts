@@ -8,7 +8,7 @@ import { GameService } from '../application/game.service';
 import { GameUseCase } from '../application/game.use-case';
 import { GAME_MODE } from './type/game-mode.enum';
 import { GameState } from './type/game-state';
-import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR } from './util';
+import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR, SCORE_LIMIT } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
 import {
   UseGuards,
@@ -280,12 +280,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         let isGameOver = false;
         let isGameReset = false;
         let gameWinner;
+        let match: GameState = null;
+
         await mutex.runExclusive(async () => {
-          const match: GameState = this.gameStates.get(matchId);
+          match = this.gameStates.get(matchId);
           if (!match || !match.isReady) {
             skip = true;
             return;
           } // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+          if (this.gameService.isGameOver(match)) {
+            isGameOver = true;
+            return;
+          }
           const winnerStr = this.gameService.moveBall(match.ball);
           if (winnerStr === '') {
             this.gameService.handleCollision(
@@ -382,45 +388,26 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('start update game time cron');
     setInterval(async () => {
       for (const [matchId, mutex] of this.gameStateMutexes) {
-        let isGameOver = false;
-
         await mutex.runExclusive(() => {
           const match: GameState = this.gameStates.get(matchId);
           if (!match || !match.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-          if (this.gameService.updateTimeAndCheckFinish(match)) {
-            if (match.score.playerA !== match.score.playerB) {
-              isGameOver = true;
-              this.server
-                .to(match.matchId)
-                .emit('gameOver', new GameStateViewModel(match));
-            } else {
-              this.gameService.setDeuce(match);
+          this.gameService.updateTime(match);
+          if (match.time >= 0) {
+            this.server
+              .to(match.matchId)
+              .emit('updateTime', new GameStateViewModel(match));
+          } else if (
+            match.score.playerA === match.score.playerB &&
+            match.score.playerA !== SCORE_LIMIT &&
+            match.score.playerB !== SCORE_LIMIT
+          ) {
+            if (this.gameService.setDeuce(match)) {
               this.server
                 .to(match.matchId)
                 .emit('deuce', new GameStateViewModel(match));
             }
-          } else {
-            this.server
-              .to(match.matchId)
-              .emit('updateTime', new GameStateViewModel(match));
           }
         });
-        if (isGameOver) {
-          await this.joinMutex.runExclusive(async () => {
-            /* get game's mutex */
-            const mutex = this.gameStateMutexes.get(matchId);
-            if (!mutex) return;
-            /* get game match and join */
-            await mutex.runExclusive(() => {
-              const match = this.gameStates.get(matchId);
-              if (!match) return;
-              if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
-              this.gameStates.delete(matchId);
-            });
-            this.gameStateMutexes.delete(matchId);
-            this.server.socketsLeave(matchId);
-          });
-        }
       }
     }, 1000);
   }
