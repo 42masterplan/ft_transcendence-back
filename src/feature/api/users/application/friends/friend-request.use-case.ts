@@ -14,7 +14,6 @@ export class FriendRequestUseCase {
   ) {}
 
   async acceptFriendRequest({ requestId }: { requestId: number }) {
-    // TODO: jwt
     const friendRequest = await this.repository.findOneByRequestId({
       requestId,
     });
