@@ -36,9 +36,12 @@ export class PlayerScoreRepositoryImpl implements PlayerScoreRepository {
   }
 
   async findManyByUserId(userId: string): Promise<Array<PlayerScore>> {
-    const scores = await this.repository.find({
-      playerId: userId,
-    });
+    const scores = await this.repository.find(
+      {
+        playerId: userId,
+      },
+      { orderBy: { createdAt: QueryOrder.DESC } },
+    );
 
     return scores.map((score) => this.toDomain(score));
   }

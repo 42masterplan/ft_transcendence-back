@@ -115,8 +115,13 @@ export class GameService {
 
   isGameOver(state: GameState): boolean {
     if (
-      (!state.isDeuce && state.score.playerA === SCORE_LIMIT) ||
-      state.score.playerB === SCORE_LIMIT ||
+      (!state.isDeuce &&
+        state.time > 0 &&
+        (state.score.playerA === SCORE_LIMIT ||
+          state.score.playerB === SCORE_LIMIT)) ||
+      (!state.isDeuce &&
+        state.time <= 0 &&
+        state.score.playerA !== state.score.playerB) ||
       (state.isDeuce &&
         Math.abs(state.score.playerA - state.score.playerB) >= 2)
     )
@@ -153,17 +158,23 @@ export class GameService {
     }
   }
 
+  updateTime(state: GameState) {
+    if (state.time >= 0) state.time--;
+  }
+
   updateTimeAndCheckFinish(state: GameState): boolean {
     state.time--;
     if (state.time <= 0) return true;
     return false;
   }
 
-  setDeuce(state: GameState) {
+  setDeuce(state: GameState): boolean {
     // 듀스!! 공의 속력이 1.5배로 증가합니다. 먼저 2점차를 만들면 승리합니다.
+    if (state.isDeuce === true) return false;
     state.isDeuce = true;
-    state.ball.velocity.x *= 1.8;
-    state.ball.velocity.y *= 1.8;
-    state.ball.speed *= 1.8;
+    state.ball.velocity.x *= 1.2;
+    state.ball.velocity.y *= 1.2;
+    state.ball.speed *= 1.5;
+    return true;
   }
 }
