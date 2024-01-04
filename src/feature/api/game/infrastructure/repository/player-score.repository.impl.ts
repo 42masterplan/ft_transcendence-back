@@ -1,8 +1,8 @@
 import { PlayerScoreRepository } from '../../domain/interface/player-score.repository';
 import { PlayerScore } from '../../domain/player-score';
-import { GAME_STATUS } from '../../presentation/type/game-status.type';
+import { GAME_STATUS } from '../../presentation/type/game-status.enum';
 import { PlayerScoreEntity } from '../player-score.entity';
-import { EntityRepository } from '@mikro-orm/core';
+import { EntityRepository, QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 
@@ -33,6 +33,25 @@ export class PlayerScoreRepositoryImpl implements PlayerScoreRepository {
 
     await this.repository.getEntityManager().flush();
     return this.toDomain(score);
+  }
+
+  async findManyByUserId(userId: string): Promise<Array<PlayerScore>> {
+    const scores = await this.repository.find({
+      playerId: userId,
+    });
+
+    return scores.map((score) => this.toDomain(score));
+  }
+
+  async findManyByGameId(gameId: number): Promise<Array<PlayerScore>> {
+    const scores = await this.repository.find(
+      {
+        gameId,
+      },
+      { orderBy: { createdAt: QueryOrder.ASC } },
+    );
+
+    return scores.map((score) => this.toDomain(score));
   }
 
   private toDomain(entity: PlayerScoreEntity): PlayerScore {

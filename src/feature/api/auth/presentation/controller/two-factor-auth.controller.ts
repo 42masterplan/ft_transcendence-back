@@ -1,6 +1,8 @@
 import { MailService } from '../../../mail/mail.service';
 import { UsersService } from '../../../users/users.service';
 import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
+import { JwtEmailGuard } from '../../jwt/jwt-email.guard';
+import { JwtRegisterGuard } from '../../jwt/jwt-register.guard';
 import { TwoFactorAuthEmailValidateDto } from '../dto/two-factor-auth-email-validate.dto';
 import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
 import {
@@ -12,7 +14,6 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import * as bcrypt from 'bcrypt';
 
 @Controller('users/two-factor-auth')
@@ -23,7 +24,7 @@ export class TwoFactorAuthController {
     private readonly mailService: MailService,
   ) {}
 
-  @UseGuards(AuthGuard('register'))
+  @UseGuards(JwtRegisterGuard)
   @Put('email')
   async updateEmail(
     @Request() req,
@@ -40,7 +41,7 @@ export class TwoFactorAuthController {
     return true;
   }
 
-  @UseGuards(AuthGuard('register'))
+  @UseGuards(JwtRegisterGuard)
   @Post('email/validate')
   async validateEmail(
     @Request() req,
@@ -65,7 +66,7 @@ export class TwoFactorAuthController {
     return isMatch;
   }
 
-  @UseGuards(AuthGuard('email'))
+  @UseGuards(JwtEmailGuard)
   @Post('')
   async request2fa(@Request() req) {
     const intraId = req.user.sub;
@@ -75,7 +76,7 @@ export class TwoFactorAuthController {
     return { email: email };
   }
 
-  @UseGuards(AuthGuard('email'))
+  @UseGuards(JwtEmailGuard)
   @Post('validate')
   async validate2fa(
     @Request() req,

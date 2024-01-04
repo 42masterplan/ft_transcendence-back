@@ -5,6 +5,7 @@ import {
   PrimaryKey,
   Property,
   Unique,
+  types,
 } from '@mikro-orm/core';
 import { bool } from 'joi';
 import { v4 } from 'uuid';
@@ -46,8 +47,14 @@ export class UserEntity {
   @Property({ type: bool, default: false })
   is2faValidated: boolean;
 
+  @Property({ length: 32 })
+  tier: string;
+
+  @Property({ type: types.double })
+  exp: number;
+
   @Property({ type: DateTimeType, defaultRaw: 'current_timestamp' })
-  createdAt: Date = new Date();
+  createdAt: Date;
 
   @Property({
     type: DateTimeType,

@@ -16,6 +16,7 @@ export class ChannelRepository {
   async findOneById(id: string): Promise<Channel> {
     console.log('repository: findOneById');
     const channel = await this.repository.findOne({ id: id, isDeleted: false });
+    if (!channel) return;
     return this.toDomain(channel);
   }
 
@@ -25,6 +26,7 @@ export class ChannelRepository {
       name: name,
       isDeleted: false,
     });
+    if (!channel) return;
     return this.toDomain(channel);
   }
 

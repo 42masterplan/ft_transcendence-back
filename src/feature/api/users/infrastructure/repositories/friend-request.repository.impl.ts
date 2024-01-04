@@ -64,15 +64,17 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     const friendRequest = await this.repository.findOne({
       id: requestId,
     });
+    if (!friendRequest) return;
     return this.toDomain(friendRequest);
   }
 
   async update(friendRequest: FriendRequest): Promise<FriendRequest> {
-    const entity = await this.repository.findOneOrFail(friendRequest.id);
+    const entity = await this.repository.findOne(friendRequest.id);
+    if (!entity) return;
 
     entity.isAccepted = friendRequest.isAccepted;
     //TODO: 동작하는지 확인 필요
-    this.repository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
 
     return this.toDomain(entity);
   }

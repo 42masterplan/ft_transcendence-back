@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindAcceptableFriendRequestUseCase } from '../../application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
@@ -20,8 +21,9 @@ import {
   UseGuards,
   Request,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 
 @Controller('users/friends')
 export class FriendsController {
@@ -35,8 +37,9 @@ export class FriendsController {
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
     private readonly userService: UsersService,
     private readonly userUseCase: UsersUseCase,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('')
   async getFriends(@Request() req) {
     this.logger.log('getFriends');
@@ -46,12 +49,13 @@ export class FriendsController {
     return friends.map((friend) => new FindFriendViewModel(friend));
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('isFriend')
   async isFriend(@Request() req, @Query('name') friendName: string) {
     const intraId = req.user.sub;
     const user = await this.userUseCase.findOneByIntraId(intraId);
     const friend = await this.userUseCase.findOneByName(friendName);
+    if (!friend) throw new NotFoundException('There is no such user.');
     const isFriend = await this.friendUseCase.isFriend({
       myId: user.id,
       friendId: friend.id,
@@ -61,7 +65,7 @@ export class FriendsController {
     };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Delete('/:friendId')
   async deleteFriends(
     @Request() req,
@@ -73,11 +77,12 @@ export class FriendsController {
       myId: user.id,
       friendId,
     });
-
+    this.notificationGateway.handleSocialUpdate(user.id);
+    this.notificationGateway.handleSocialUpdate(friendId);
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('request')
   async getFriendsRequest(
     @Request() req,
@@ -95,7 +100,7 @@ export class FriendsController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Post('request')
   async createFriendRequest(
     @Request() req,
@@ -111,17 +116,17 @@ export class FriendsController {
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Put('request')
   async acceptFriendRequest(@Body('requestId') requestId: number) {
     await this.friendRequestUseCase.acceptFriendRequest({
       requestId: requestId,
     });
-    //TODO:  양쪽으로 해줘야하는지 재고해보기
+
     return true;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Delete('request/:requestId')
   async rejectFriendRequest(@Param('requestId') requestId: number) {
     await this.friendRequestUseCase.rejectFriendRequest({

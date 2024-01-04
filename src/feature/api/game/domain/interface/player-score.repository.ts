@@ -1,4 +1,4 @@
-import { GAME_STATUS } from '../../presentation/type/game-status.type';
+import { GAME_STATUS } from '../../presentation/type/game-status.enum';
 import { PlayerScore } from '../player-score';
 
 export interface PlayerScoreRepository {
@@ -13,6 +13,8 @@ export interface PlayerScoreRepository {
     value: number;
     status: GAME_STATUS;
   }): Promise<PlayerScore>;
+  findManyByUserId(userId): Promise<Array<PlayerScore>>;
+  findManyByGameId(gameId: number): Promise<Array<PlayerScore>>;
 }
 
 export const PlayerScoreRepository = Symbol('PLAYER_SCORE_REPOSITORY');

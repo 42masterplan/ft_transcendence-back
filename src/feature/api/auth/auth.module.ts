@@ -8,7 +8,7 @@ import { JwtRegisterStrategy } from './jwt/jwt-register.strategy';
 import { JwtSignInStrategy } from './jwt/jwt-sign-in.strategy';
 import { AuthController } from './presentation/controller/auth.controller';
 import { TwoFactorAuthController } from './presentation/controller/two-factor-auth.controller';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -21,7 +21,7 @@ import { JwtModule } from '@nestjs/jwt';
       }),
       inject: [ConfigService],
     }),
-    UsersModule,
+    forwardRef(() => UsersModule),
     MailModule,
   ],
   controllers: [AuthController, TwoFactorAuthController],
@@ -33,5 +33,6 @@ import { JwtModule } from '@nestjs/jwt';
     JwtSignInStrategy,
     TwoFactorAuthUseCase,
   ],
+  exports: [AuthService, TwoFactorAuthUseCase],
 })
 export class AuthModule {}

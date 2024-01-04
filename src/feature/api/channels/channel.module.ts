@@ -1,3 +1,4 @@
+import { AuthModule } from '../auth/auth.module';
 import { ChannelService } from './application/channel.service';
 import { ChannelMessageRepository } from './domain/repositories/channel-message.repository';
 import { ChannelParticipantRepository } from './domain/repositories/channel-participant.repository';
@@ -14,6 +15,7 @@ import { UsersModule } from 'src/feature/api/users/users.module';
 
 @Module({
   imports: [
+    AuthModule,
     MikroOrmModule.forFeature([
       ChannelEntity,
       ChannelParticipantEntity,

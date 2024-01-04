@@ -20,7 +20,9 @@ export class AuthController {
     const jwtToken: string = await this.authService.getJwtToken(intraId);
     const user = await this.usersService.findOneByIntraId(intraId);
     let isExist = false;
+    let isExist = false;
     let is2faEnabled = false;
+    let isSignInFinish = false;
     let isSignInFinish = false;
 
     if (!user) {
@@ -30,7 +32,7 @@ export class AuthController {
       isSignInFinish = true;
       if (user.email !== null && user.isEmailValidated) {
         isExist = true;
-        if (is2faEnabled) is2faEnabled = true;
+        if (user.is2faEnabled) is2faEnabled = true;
       }
     }
     await this.usersUseCase.resetTwoFactorAuthValidation(intraId);

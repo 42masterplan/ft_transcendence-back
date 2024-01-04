@@ -1,33 +1,33 @@
+import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { GameWithPlayerUseCase } from './application/game-with-player.use-case';
 import { GameService } from './application/game.service';
 import { GameUseCase } from './application/game.use-case';
 import { GameRepository } from './domain/interface/game.repository';
 import { PlayerScoreRepository } from './domain/interface/player-score.repository';
-import { PlayerTierRepository } from './domain/interface/player-tier.repository';
+
 import { GameEntity } from './infrastructure/game.entity';
 import { PlayerScoreEntity } from './infrastructure/player-score.entity';
-import { PlayerTierEntity } from './infrastructure/player-tier.entity';
+
 import { GameRepositoryImpl } from './infrastructure/repository/game.repository.impl';
 import { PlayerScoreRepositoryImpl } from './infrastructure/repository/player-score.repository.impl';
-import { PlayerTierRepositoryImpl } from './infrastructure/repository/player-tier.repository.impl';
+
 import { GameGateway } from './presentation/game.gateway';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([
-      GameEntity,
-      PlayerScoreEntity,
-      PlayerTierEntity,
-    ]),
-    UsersModule,
+    MikroOrmModule.forFeature([GameEntity, PlayerScoreEntity]),
+    forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
   ],
   providers: [
     GameService,
     GameGateway,
 
     GameUseCase,
+    GameWithPlayerUseCase,
 
     {
       provide: GameRepository,
@@ -37,10 +37,7 @@ import { Module } from '@nestjs/common';
       provide: PlayerScoreRepository,
       useClass: PlayerScoreRepositoryImpl,
     },
-    {
-      provide: PlayerTierRepository,
-      useClass: PlayerTierRepositoryImpl,
-    },
-  ], // 게임 관련 서비스와 게이트웨이 등록
+  ],
+  exports: [GameWithPlayerUseCase],
 })
 export class GameModule {}

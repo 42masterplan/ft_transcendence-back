@@ -1,3 +1,5 @@
+import { TwoFactorAuthUseCase } from '../../../auth/application/use-case/two-factor-auth.use-case';
+import { TIER } from '../../../game/presentation/type/tier.enum';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
@@ -9,6 +11,7 @@ export class UsersUseCase {
   constructor(
     @Inject(UserRepository)
     private readonly repository: UserRepository,
+    private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -31,10 +34,53 @@ export class UsersUseCase {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    return await this.repository.updateOne(intraId, updateUserDto);
+    const user = await this.repository.updateOne(intraId, updateUserDto);
+    if (updateUserDto.is2faEnabled && user.email && user.isEmailValidated) {
+      await this.twoFactorAuthUseCase.validate2fa(intraId);
+    }
+    return await this.repository.findOneByIntraId(intraId);
   }
+
   async updateStatus(intraId: string, status: string): Promise<User> {
     return await this.repository.updateStatus(intraId, status);
+  }
+
+  async updateTierAndExp(id: string, exp: number): Promise<User> {
+    const user = await this.repository.findOneById(id);
+    let newExp: number = user.exp + exp;
+    let newTier: TIER;
+    if (newExp < 0) {
+      if (user.tier === TIER.Bronze) {
+        newTier = TIER.Bronze;
+        newExp = 0;
+      } else if (user.tier === TIER.Silver) {
+        newTier = TIER.Bronze;
+        newExp += 100;
+      } else if (user.tier === TIER.Gold) {
+        newTier = TIER.Silver;
+        newExp += 100;
+      } else {
+        newTier = TIER.Gold;
+        newExp += 100;
+      }
+    } else if (newExp >= 100) {
+      if (user.tier === TIER.Bronze) {
+        newTier = TIER.Silver;
+        newExp -= 100;
+      } else if (user.tier === TIER.Silver) {
+        newTier = TIER.Gold;
+        newExp -= 100;
+      } else if (user.tier === TIER.Gold) {
+        newTier = TIER.Platinum;
+        newExp -= 100;
+      } else {
+        newTier = TIER.Platinum;
+        newExp = 100;
+      }
+    } else {
+      newTier = user.tier;
+    }
+    return await this.repository.updateTierAndExp(id, newTier, newExp);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {

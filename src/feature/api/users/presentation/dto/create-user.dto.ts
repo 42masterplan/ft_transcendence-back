@@ -5,7 +5,7 @@ export class CreateUserDto {
   intraId: string;
 
   @IsUrl()
-  profileImage: string = 'http://localhost:8080/resources/panda_health.svg';
+  profileImage: string = process.env.SERVER_URL + '/resources/panda_health.svg';
 
   @IsString()
   introduction: string = '';

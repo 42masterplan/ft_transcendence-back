@@ -1,4 +1,6 @@
+import { QueryOrder } from '@mikro-orm/core';
 import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
+import { TIER } from '../../game/presentation/type/tier.enum';
 import { User } from '../domain/user';
 import { UserRepository } from '../domain/user.repository';
 import { CreateUserDto } from '../presentation/dto/create-user.dto';
@@ -16,8 +18,10 @@ export class UserRepositoryImpl implements UserRepository {
   ) {}
 
   async findAll(): Promise<User[]> {
-    const users = await this.userRepository.find({ isDeleted: false });
-    if (!users) return [];
+    const users = await this.userRepository.find(
+      { isDeleted: false },
+      { orderBy: { name: QueryOrder.ASC } },
+    );    if (!users) return [];
     return users.map((user) => this.toDomain(user));
   }
 
@@ -40,7 +44,9 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
-    if (user) return this.toDomain(user);
+    if (!user) return;
+
+    return this.toDomain(user);
   }
 
   async updateOne(
@@ -51,6 +57,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
       user.name = updateUserDto.name;
     }
@@ -85,13 +92,28 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     user.currentStatus = status;
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
+  async updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User> {
+    const user = await this.userRepository.findOne({ id });
+    if (!user) return;
+    user.tier = tier as string;
+    user.exp = exp;
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
+  }
+
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.create(createUserDto);
+    const user = await this.userRepository.create({
+      ...createUserDto,
+      currentStatus: 'on-line',
+      tier: TIER.Silver as string,
+      exp: 0,
+    });
     await this.userRepository.getEntityManager().flush();
     return this.toDomain(user);
   }
@@ -101,6 +123,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     user.is2faValidated = false;
     await this.userRepository.getEntityManager().flush();
   }
@@ -113,6 +136,7 @@ export class UserRepositoryImpl implements UserRepository {
       intraId,
       isDeleted: false,
     });
+    if (!user) return;
     if (twoFactorAuth.email !== undefined) {
       user.email = twoFactorAuth.email;
     }
@@ -149,6 +173,8 @@ export class UserRepositoryImpl implements UserRepository {
       isEmailValidated: userEntity.isEmailValidated,
       is2faValidated: userEntity.is2faValidated,
       verificationCode: userEntity.verificationCode,
+      tier: userEntity.tier,
+      exp: userEntity.exp,
       isDeleted: userEntity.isDeleted,
       updatedAt: userEntity.updatedAt,
     });
@@ -165,6 +191,8 @@ export class UserRepositoryImpl implements UserRepository {
     userEntity.currentStatus = user.currentStatus;
     userEntity.introduction = user.introduction;
     userEntity.verificationCode = user.verificationCode;
+    userEntity.tier = user.tier;
+    userEntity.exp = user.exp;
     userEntity.isEmailValidated = user.isEmailValidated;
     userEntity.isDeleted = user.isDeleted;
 
