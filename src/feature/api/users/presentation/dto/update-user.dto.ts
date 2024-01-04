@@ -36,9 +36,9 @@ export class UpdateUserDto {
     introduction?: string;
     is2faEnabled?: boolean;
   }) {
-    this.name = props.name;
-    this.profileImage = props.profileImage;
-    this.introduction = props.introduction;
-    this.is2faEnabled = props.is2faEnabled;
+    this.name = props?.name;
+    this.profileImage = props?.profileImage;
+    this.introduction = props?.introduction;
+    this.is2faEnabled = props?.is2faEnabled;
   }
 }

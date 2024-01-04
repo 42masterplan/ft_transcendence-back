@@ -1,3 +1,4 @@
+import { AuthModule } from '../auth/auth.module';
 import { GameModule } from '../game/game.module';
 import { MailModule } from '../mail/mail.module';
 import { NotificationModule } from '../notification/notification.module';
@@ -47,6 +48,7 @@ import { Module, forwardRef } from '@nestjs/common';
     MailModule,
     forwardRef(() => NotificationModule),
     forwardRef(() => GameModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [UsersController, FriendsController],
   providers: [

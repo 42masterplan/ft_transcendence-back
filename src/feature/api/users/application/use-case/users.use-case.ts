@@ -1,3 +1,4 @@
+import { TwoFactorAuthUseCase } from '../../../auth/application/use-case/two-factor-auth.use-case';
 import { TIER } from '../../../game/presentation/type/tier.enum';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
@@ -10,6 +11,7 @@ export class UsersUseCase {
   constructor(
     @Inject(UserRepository)
     private readonly repository: UserRepository,
+    private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -32,7 +34,11 @@ export class UsersUseCase {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    return await this.repository.updateOne(intraId, updateUserDto);
+    const user = await this.repository.updateOne(intraId, updateUserDto);
+    if (updateUserDto.is2faEnabled && user.email && user.isEmailValidated) {
+      await this.twoFactorAuthUseCase.validate2fa(intraId);
+    }
+    return await this.repository.findOneByIntraId(intraId);
   }
 
   async updateStatus(intraId: string, status: string): Promise<User> {
