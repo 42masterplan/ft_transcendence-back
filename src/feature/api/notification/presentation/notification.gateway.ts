@@ -144,11 +144,21 @@ export class NotificationGateway
     const srcUser = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
-    if (!srcUser) return;
+    const destUser = await this.userUseCase.findOne(userId);
+    if (!srcUser || !destUser) return;
     const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     const matchId = srcSocketId + destSocketId;
 
+    if (
+      destUser.currentStatus === 'in-game' ||
+      destUser.currentStatus === 'off-line'
+    ) {
+      this.server
+        .to(srcSocketId)
+        .emit('normalGameReject', '상대방이 게임 가능 상태가 아닙니다.');
+      return;
+    }
     this.normalQueueMutex.runExclusive(() => {
       this.normalMatchQueue.set(matchId, {
         srcId,
@@ -246,7 +256,9 @@ export class NotificationGateway
         });
       } else {
         console.log('game reject');
-        this.server.to(userSocketId).emit('normalGameReject');
+        this.server
+          .to(userSocketId)
+          .emit('normalGameReject', '상대방이 게임 요청을 거절했습니다.');
       }
       this.normalMatchQueue.delete(matchId);
     });
