@@ -126,6 +126,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     const token = client.handshake.auth?.Authorization?.split(' ')[1];
     const user = await this.authService.verifySocket(token);
+    if (!user) return;
     await this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
 
