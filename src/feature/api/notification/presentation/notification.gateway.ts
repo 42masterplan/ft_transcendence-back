@@ -95,7 +95,6 @@ export class NotificationGateway
     this.sockets.set(user.id, socket.id);
     this.userUseCase.updateStatus(user.intraId, 'on-line');
     this.server.emit('changeStatus', "");
-    console.log("hi");
   }
 
   /**
@@ -368,6 +367,11 @@ export class NotificationGateway
       introduction: user.introduction,
       currentStatus: user.currentStatus,
     };
+  }
+
+  handleSocialUpdate(userId: string) {
+    const socketId = this.sockets.get(userId);
+    this.server.to(socketId).emit('changeStatus');
   }
 
   handleNewFriendRequest(userId: string) {

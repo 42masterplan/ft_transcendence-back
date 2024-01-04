@@ -55,6 +55,7 @@ export class CreateFriendRequestUseCase {
       primaryUserId,
       targetUserId,
     });
+    this.notificationGateway.handleNewFriendRequest(targetUserId);
 
     return friendRequest;
   }
