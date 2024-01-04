@@ -29,6 +29,7 @@ export class UsersService {
   async isDuplicatedName(name: string, intraId: string): Promise<boolean> {
     const user = await this.usersUseCase.findOneByName(name);
     if (user && user.intraId !== intraId) return true;
+    await this.usersUseCase.updateOne(intraId, new UpdateUserDto({ name }));
     return false;
   }
 }
