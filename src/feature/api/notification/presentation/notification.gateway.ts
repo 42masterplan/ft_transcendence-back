@@ -155,6 +155,7 @@ export class NotificationGateway
     const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
     let matchId: string;
+    let flag = false;
 
     if (
       destUser.currentStatus === 'in-game' ||
@@ -166,6 +167,19 @@ export class NotificationGateway
       return;
     }
     await this.normalQueueMutex.runExclusive(() => {
+      for (const [, match] of this.normalMatchQueue) {
+        if (match.destId === destId && match.srcId === srcId) {
+          match.theme = theme;
+          flag = true;
+          return;
+        } else if (match.destId === srcId && match.srcId === destId) {
+          this.server
+            .to(srcSocketId)
+            .emit('normalGameReject', '상대방에게서 온 게임이 존재합니다.');
+          flag = true;
+          return;
+        }
+      }
       matchId = 'normal-' + this.normalMatchId.toString();
       this.normalMatchId++;
       console.log('game request' + matchId);
@@ -176,6 +190,7 @@ export class NotificationGateway
         theme,
       });
     });
+    if (flag) return;
     console.log(
       'socket gameRequest',
       'srcUserId',
@@ -293,7 +308,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameCancel')
   async handleNormalGameCancel(client, { matchId }: gameCancel) {
-    console.log('socket gameCancel');
+    console.log('socket gameCancel' + matchId);
     const user = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
