@@ -1,4 +1,5 @@
 import { DmUseCase } from '../../../notification/application/dm.use-case';
+import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { FriendUseCase } from './friend.use-case';
@@ -11,6 +12,7 @@ export class FriendRequestUseCase {
     private readonly repository: FriendRequestRepository,
     private readonly friendUseCase: FriendUseCase,
     private readonly dmUseCase: DmUseCase,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   async acceptFriendRequest({ requestId }: { requestId: number }) {
@@ -30,7 +32,10 @@ export class FriendRequestUseCase {
       myId,
       friendId,
     });
+    
     await this.dmUseCase.createDm(myId, friendId);
+    this.notificationGateway.handleSocialUpdate(myId);
+    this.notificationGateway.handleSocialUpdate(friendId);
 
     return await this.repository.update(friendRequest);
   }

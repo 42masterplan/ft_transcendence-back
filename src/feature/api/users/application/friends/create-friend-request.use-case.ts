@@ -1,3 +1,4 @@
+import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { UserRepository } from '../../domain/user.repository';
 import { BlockedUserUseCase } from '../use-case/blocked-user.use-case';
@@ -15,6 +16,7 @@ export class CreateFriendRequestUseCase {
     private readonly userRepository: UserRepository,
     private readonly friendUseCase: FriendUseCase,
     private readonly blockedUserUseCase: BlockedUserUseCase,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   async execute({
@@ -49,10 +51,13 @@ export class CreateFriendRequestUseCase {
       throw new Error('Target user not found');
     }
     this.logger.log(targetUser);
-    return this.repository.save({
+    const friendRequest = await this.repository.save({
       primaryUserId,
       targetUserId,
     });
+    this.notificationGateway.handleNewFriendRequest(targetUserId);
+
+    return friendRequest;
   }
 
   async hasExistingFriendRequest({

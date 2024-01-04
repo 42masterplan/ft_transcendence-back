@@ -1,3 +1,4 @@
+import { QueryOrder } from '@mikro-orm/core';
 import { TwoFactorAuthType } from '../../auth/presentation/type/two-factor-auth.type';
 import { TIER } from '../../game/presentation/type/tier.enum';
 import { User } from '../domain/user';
@@ -17,10 +18,11 @@ export class UserRepositoryImpl implements UserRepository {
   ) {}
 
   async findAll(): Promise<User[]> {
-    const users = await this.userRepository.find({ isDeleted: false });
-    const notNullUsers = users.filter((user) => user.name !== null);
-    if (!notNullUsers) return [];
-    return notNullUsers.map((user) => this.toDomain(user));
+    const users = await this.userRepository.find(
+      { isDeleted: false },
+      { orderBy: { name: QueryOrder.ASC } },
+    );    if (!users) return [];
+    return users.map((user) => this.toDomain(user));
   }
 
   async findOneById(id: string): Promise<User | null> {

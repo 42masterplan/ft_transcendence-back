@@ -96,6 +96,7 @@ export class NotificationGateway
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
     await this.userUseCase.updateStatus(user.intraId, 'on-line');
+    this.server.emit('changeStatus');
   }
 
   /**
@@ -127,6 +128,8 @@ export class NotificationGateway
       }
     });
     this.sockets.delete(user.id);
+    await this.userUseCase.updateStatus(user.intraId, 'off-line');
+    this.server.emit('changeStatus');
   }
 
   onModuleInit() {
@@ -388,6 +391,16 @@ export class NotificationGateway
       introduction: user.introduction,
       currentStatus: user.currentStatus,
     };
+  }
+
+  handleSocialUpdate(userId: string) {
+    const socketId = this.sockets.get(userId);
+    this.server.to(socketId).emit('changeStatus');
+  }
+
+  handleNewFriendRequest(userId: string) {
+    const socketId = this.sockets.get(userId);
+    this.server.to(socketId).emit('newFriendRequest');
   }
 
   tickLadderQueue() {

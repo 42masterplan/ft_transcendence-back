@@ -23,6 +23,7 @@ import {
   Query,
   NotFoundException,
 } from '@nestjs/common';
+import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 
 @Controller('users/friends')
 export class FriendsController {
@@ -36,6 +37,7 @@ export class FriendsController {
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
     private readonly userService: UsersService,
     private readonly userUseCase: UsersUseCase,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   @UseGuards(JwtAuthGuard)
   @Get('')
@@ -75,7 +77,8 @@ export class FriendsController {
       myId: user.id,
       friendId,
     });
-
+    this.notificationGateway.handleSocialUpdate(user.id);
+    this.notificationGateway.handleSocialUpdate(friendId);
     return true;
   }
 
