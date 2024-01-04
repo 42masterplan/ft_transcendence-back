@@ -380,7 +380,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   updateGameTimeCron() {
     console.log('start update game time cron');
-    const timerId = setInterval(async () => {
+    setInterval(async () => {
       for (const [matchId, mutex] of this.gameStateMutexes) {
         let isGameOver = false;
 
@@ -399,7 +399,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 .to(match.matchId)
                 .emit('deuce', new GameStateViewModel(match));
             }
-            clearInterval(timerId);
           } else {
             this.server
               .to(match.matchId)
