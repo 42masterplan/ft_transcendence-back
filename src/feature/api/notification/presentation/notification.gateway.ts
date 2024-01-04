@@ -106,6 +106,7 @@ export class NotificationGateway
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
+    await this.userUseCase.updateStatus(user.intraId, 'off-line');
     this.handleLadderGameCancel(socket);
     this.normalQueueMutex.runExclusive(() => {
       for (const [matchId, match] of this.normalMatchQueue) {
@@ -124,7 +125,6 @@ export class NotificationGateway
       }
     });
     this.sockets.delete(user.id);
-    await this.userUseCase.updateStatus(user.intraId, 'off-line');
   }
 
   onModuleInit() {

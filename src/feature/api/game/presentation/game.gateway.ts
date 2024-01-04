@@ -81,6 +81,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: any) {
     console.log('Game is get disconnected!');
+    const user = await this.usersService.findOneByIntraId(
+      getIntraIdFromSocket(client),
+    );
+    if (!user) return;
+    await this.userUseCase.updateStatus(user.intraId, 'on-line');
     await this.joinMutex.runExclusive(async () => {
       const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
       if (!matchId) return;
@@ -109,10 +114,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       this.gameStateMutexes.delete(matchId);
     });
-    const token = client.handshake.auth?.Authorization?.split(' ')[1];
-    const user = await this.authService.verifySocket(token);
-    if (!user) return;
-    await this.userUseCase.updateStatus(user.intraId, 'on-line');
   }
 
   @SubscribeMessage('createRoom')
