@@ -306,6 +306,7 @@ export class NotificationGateway
       getIntraIdFromSocket(client),
     );
     const friend = await this.userUseCase.findOneByName(userName);
+    if (!user || !friend) return;
     const user1Id = friend.id > user.id ? user.id : friend.id;
     const user2Id = friend.id > user.id ? friend.id : user.id;
     if (
