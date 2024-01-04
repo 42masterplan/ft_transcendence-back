@@ -103,6 +103,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
         this.gameStates.delete(matchId);
+        this.server.socketsLeave(matchId);
       });
       this.gameStateMutexes.delete(matchId);
     });
@@ -335,8 +336,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
               this.gameStates.delete(matchId);
             });
-            this.gameStateMutexes.delete(matchId);
             this.server.socketsLeave(matchId);
+            this.gameStateMutexes.delete(matchId);
           });
           continue;
         }
