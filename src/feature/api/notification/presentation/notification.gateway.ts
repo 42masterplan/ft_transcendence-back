@@ -94,6 +94,7 @@ export class NotificationGateway
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     this.sockets.set(user.id, socket.id);
     this.userUseCase.updateStatus(user.intraId, 'on-line');
+    this.server.emit('changeStatus');
   }
 
   /**
@@ -125,6 +126,7 @@ export class NotificationGateway
     });
     this.sockets.delete(user.id);
     this.userUseCase.updateStatus(user.intraId, 'off-line');
+    this.server.emit('changeStatus');
   }
 
   onModuleInit() {
