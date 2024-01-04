@@ -115,13 +115,6 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('game-setting')
-  updateGameSetting(@Body('theme') theme: string) {
-    console.log(theme);
-    return true;
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('info/:name')
   async getInfo(@Param('name') name: string) {
     const user = await this.usersUseCase.findOneByName(name);
