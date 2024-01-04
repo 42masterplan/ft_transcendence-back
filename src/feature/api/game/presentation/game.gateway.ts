@@ -176,6 +176,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) {
         console.log('there is no such match(mutex)');
+        client.emit('invalidMatch');
+        client.disconnect();
         return;
       }
       /* get game state and join */
@@ -183,6 +185,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const match = this.gameStates.get(matchId);
         if (!match) {
           console.log('there is no such match(state)');
+          client.emit('invalidMatch');
+          client.disconnect();
           return;
         }
         if (match.gameMode !== gameMode)

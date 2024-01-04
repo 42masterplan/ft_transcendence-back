@@ -18,8 +18,9 @@ export class UserRepositoryImpl implements UserRepository {
 
   async findAll(): Promise<User[]> {
     const users = await this.userRepository.find({ isDeleted: false });
-    if (!users) return [];
-    return users.map((user) => this.toDomain(user));
+    const notNullUsers = users.filter((user) => user.name !== null);
+    if (!notNullUsers) return [];
+    return notNullUsers.map((user) => this.toDomain(user));
   }
 
   async findOneById(id: string): Promise<User | null> {
