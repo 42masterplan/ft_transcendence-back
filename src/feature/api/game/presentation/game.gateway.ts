@@ -88,11 +88,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!match) return;
         this.gameService.matchForfeit(match, client.id);
         this.server
-          .to(match.matchId)
+          .to(matchId)
           .emit('updateScore', new GameStateViewModel(match));
-        this.server
-          .to(match.matchId)
-          .emit('gameOver', new GameStateViewModel(match));
+        this.server.to(matchId).emit('gameOver', new GameStateViewModel(match));
         await this.gameUseCase.saveGame({
           playerAId: match.playerA.id,
           playerBId: match.playerB.id,
