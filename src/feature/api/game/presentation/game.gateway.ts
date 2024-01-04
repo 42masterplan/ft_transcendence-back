@@ -86,35 +86,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await mutex.runExclusive(async () => {
         const match = this.gameStates.get(matchId);
         if (!match) return;
-        if (match.isReady) {
-          this.gameService.matchForfeit(match, client.id);
-          this.server
-            .to(match.matchId)
-            .emit('updateScore', new GameStateViewModel(match));
-          this.server
-            .to(match.matchId)
-            .emit('gameOver', new GameStateViewModel(match));
-          await this.gameUseCase.saveGame({
-            playerAId: match.playerA.id,
-            playerBId: match.playerB.id,
-            playerAScore: match.score.playerA,
-            playerBScore: match.score.playerB,
-            isLadder: match.gameMode === GAME_MODE.normal ? false : true,
-          });
+        this.gameService.matchForfeit(match, client.id);
+        this.server
+          .to(match.matchId)
+          .emit('updateScore', new GameStateViewModel(match));
+        this.server
+          .to(match.matchId)
+          .emit('gameOver', new GameStateViewModel(match));
+        await this.gameUseCase.saveGame({
+          playerAId: match.playerA.id,
+          playerBId: match.playerB.id,
+          playerAScore: match.score.playerA,
+          playerBScore: match.score.playerB,
+          isLadder: match.gameMode === GAME_MODE.normal ? false : true,
+        });
 
-          await this.achievementUseCase.handleGameAchievement(
-            match.playerA.id,
-            match.score.playerA > match.score.playerB,
-            1,
-            1,
-          );
-          await this.achievementUseCase.handleGameAchievement(
-            match.playerB.id,
-            match.score.playerB > match.score.playerA,
-            1,
-            1,
-          );
-        }
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
         this.gameStates.delete(matchId);
       });
