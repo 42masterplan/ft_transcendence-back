@@ -32,7 +32,7 @@ export class FriendRequestUseCase {
       myId,
       friendId,
     });
-    
+
     await this.dmUseCase.createDm(myId, friendId);
     this.notificationGateway.handleSocialUpdate(myId);
     this.notificationGateway.handleSocialUpdate(friendId);
@@ -54,17 +54,33 @@ export class FriendRequestUseCase {
     return await this.repository.update(friendRequest);
   }
 
-  getAcceptableFriendRequest(
-    friendRequests: FriendRequest[],
-  ): FriendRequest | null {
-    const acceptedFriendRequest = friendRequests.filter(
+  async getFriendRequestBetween({
+    myId,
+    targetId,
+  }: {
+    myId: string;
+    targetId: string;
+  }): Promise<FriendRequest[]> {
+    const friendRequestsByMe =
+      await this.repository.findManyByPrimaryUserIdTargetUserId({
+        primaryUserId: myId,
+        targetUserId: targetId,
+      });
+    const friendRequestsToMe =
+      await this.repository.findManyByPrimaryUserIdTargetUserId({
+        primaryUserId: myId,
+        targetUserId: targetId,
+      });
+    const acceptableRequestsByMe = friendRequestsByMe.filter(
+      (friendRequest) => friendRequest.isAccepted === null,
+    );
+    const acceptableRequestsToMe = friendRequestsToMe.filter(
       (friendRequest) => friendRequest.isAccepted === null,
     );
 
-    if (acceptedFriendRequest.length > 0) {
-      return acceptedFriendRequest[0];
-    }
-
-    return null;
+    const requests = acceptableRequestsByMe.filter((friendRequest) =>
+      acceptableRequestsToMe.includes(friendRequest),
+    );
+    return requests;
   }
 }
