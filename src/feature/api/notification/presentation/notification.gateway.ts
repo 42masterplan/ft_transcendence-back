@@ -378,6 +378,7 @@ export class NotificationGateway
   @SubscribeMessage('DmNewMessage')
   async handleDMNewMessage(client, { dmId, participantId, content }) {
     console.log('socket DmNewMessage');
+    if (content.length >= 512) return 'Dm New message fail: Too long!';
     const user = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
