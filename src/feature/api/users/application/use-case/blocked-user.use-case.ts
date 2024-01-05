@@ -1,5 +1,6 @@
 import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 import { BlockedUserRepository } from '../../domain/friend/interface/blocked-user.repository';
+import { FriendRequestUseCase } from '../friends/friend-request.use-case';
 import { FriendUseCase } from '../friends/friend.use-case';
 import { Inject, Injectable } from '@nestjs/common';
 
@@ -9,6 +10,7 @@ export class BlockedUserUseCase {
     @Inject(BlockedUserRepository)
     private readonly repository: BlockedUserRepository,
     private readonly friendUseCase: FriendUseCase,
+    private readonly friendRequestUseCase: FriendRequestUseCase,
     private readonly notificationGateway: NotificationGateway,
   ) {}
 
@@ -21,6 +23,17 @@ export class BlockedUserUseCase {
         friendId: targetId,
       });
     }
+
+    const requests = await this.friendRequestUseCase.getFriendRequestBetween({
+      myId,
+      targetId,
+    });
+    for (const request of requests) {
+      await this.friendRequestUseCase.rejectFriendRequest({
+        requestId: request.id,
+      });
+    }
+
     this.notificationGateway.handleSocialUpdate(myId);
     this.notificationGateway.handleSocialUpdate(targetId);
     await this.repository.block({ myId, targetId });

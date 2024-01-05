@@ -42,9 +42,9 @@ export class ChannelService {
 
   async getPublicChannels(userId: string): Promise<PublicChannelDto[]> {
     console.log('service publicChannels');
-    const myChannels = (
+    const myChannels = await Promise.all((
       await this.channelParticipantRepository.findAllByUserId(userId)
-    ).map((channel) => channel.channelId);
+    ).map((channel) => channel.channelId));
     const channels = await this.channelRepository.findPublicChannels(
       userId,
       myChannels,
@@ -143,9 +143,9 @@ export class ChannelService {
 
   async getChannelHistory(userId: string, channelId: string) {
     console.log('service channelHistory');
-    const blockedUsers = (
+    const blockedUsers = await Promise.all((
       await this.findBlockedUserUseCase.execute(userId)
-    ).map((user) => user.id);
+    ).map((user) => user.id));
     const message = await this.channelMessageRepository.findAllByChannelId(
       channelId,
       blockedUsers,
@@ -297,7 +297,7 @@ export class ChannelService {
       return 'Admin can only ban user';
     if (isTargetBanned) {
       isTargetBanned.updatedIsDeleted(false);
-      this.channelUserBannedRepository.updateOne(isTargetBanned);
+      await this.channelUserBannedRepository.updateOne(isTargetBanned);
     } else this.channelUserBannedRepository.saveOne(targetId, channelId);
     return 'success';
   }
