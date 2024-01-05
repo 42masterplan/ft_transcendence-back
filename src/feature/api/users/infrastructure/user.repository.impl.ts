@@ -89,9 +89,20 @@ export class UserRepositoryImpl implements UserRepository {
     return this.toDomain(user);
   }
 
-  async updateStatus(intraId: string, status: string): Promise<User> {
+  async updateStatusByIntraId(intraId: string, status: string): Promise<User> {
     const user = await this.userRepository.findOne({
       intraId,
+      isDeleted: false,
+    });
+    if (!user) return;
+    user.currentStatus = status;
+    await this.userRepository.getEntityManager().flush();
+    return this.toDomain(user);
+  }
+
+  async updateStatusById(id: string, status: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      id,
       isDeleted: false,
     });
     if (!user) return;

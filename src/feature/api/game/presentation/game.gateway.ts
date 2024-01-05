@@ -1,6 +1,7 @@
 import { AuthService } from '../../auth/auth.service';
 import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
 import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
+import { NotificationGateway } from '../../notification/presentation/notification.gateway';
 import { AchievementUseCase } from '../../users/application/use-case/achievement.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
@@ -43,6 +44,10 @@ import { Server, Socket } from 'socket.io';
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private gameStateMutexes: Map<string, Mutex> = new Map();
   private gameStates: Map<string, GameState> = new Map();
+  private gameTimeCrons: Map<string, ReturnType<typeof setInterval>> =
+    new Map();
+  private gameStateCrons: Map<string, ReturnType<typeof setInterval>> =
+    new Map();
   private joinMutex = new Mutex();
   private notificationSocket: Socket;
 
@@ -55,10 +60,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gameUseCase: GameUseCase,
     private readonly userUseCase: UsersUseCase,
     private readonly achievementUseCase: AchievementUseCase,
-  ) {
-    this.updateGameStateCron();
-    this.updateGameTimeCron();
-  }
+    private readonly notificationGateway: NotificationGateway,
+  ) {}
 
   async handleConnection(client: any, ...args: any[]) {
     if (
@@ -70,12 +73,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } else {
       const token = client.handshake.auth?.Authorization?.split(' ')[1];
       const user = await this.authService.verifySocket(token);
+      let flag = true;
+
       if (!user) {
         client.disconnect();
         return;
       }
-      await this.userUseCase.updateStatus(user.intraId, 'in-game');
-      this.server.emit('changeStatus');
+      await this.joinMutex.runExclusive(() => {
+        if (this.gameService.getMyMatchId(this.gameStates, user.id) === null) {
+          client.disconnect();
+          flag = false;
+          return;
+        }
+      });
+      if (!flag) return;
+      await this.userUseCase.updateStatusByIntraId(user.intraId, 'in-game');
+      this.notificationGateway.handleSocialUpdateToServer();
     }
     console.log('Game is get connected!');
   }
@@ -86,10 +99,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       getIntraIdFromSocket(client),
     );
     if (!user) return;
-    await this.userUseCase.updateStatus(user.intraId, 'on-line');
-    this.server.emit('changeStatus');
+
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId) return;
       const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) return;
@@ -101,6 +116,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server
           .to(matchId)
           .emit('updateScore', new GameStateViewModel(match));
+        clearInterval(this.gameStateCrons.get(matchId));
+        clearInterval(this.gameTimeCrons.get(matchId));
         this.server.to(matchId).emit('gameOver', new GameStateViewModel(match));
         await this.gameUseCase.saveGame({
           playerAId: match.playerA.id,
@@ -111,6 +128,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
 
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
+        if (this.notificationGateway.getSocketById(match.playerA.id))
+          await this.userUseCase.updateStatusById(match.playerA.id, 'on-line');
+        if (this.notificationGateway.getSocketById(match.playerB.id))
+          await this.userUseCase.updateStatusById(match.playerB.id, 'on-line');
+        this.notificationGateway.handleSocialUpdateToServer();
         this.gameStates.delete(matchId);
         this.server.socketsLeave(matchId);
       });
@@ -212,7 +234,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('gameReady')
   async startGame(client: Socket) {
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId)
         throw new WsException('Invalid Request: there is no game(mutex)');
       const mutex = this.gameStateMutexes.get(matchId);
@@ -229,8 +254,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server
           .to(matchId)
           .emit('updatePlayers', new GameStateViewModel(match));
-        if (match.playerA.socketId !== null && match.playerB.socketId !== null)
+        if (
+          match.playerA.socketId !== null &&
+          match.playerB.socketId !== null
+        ) {
           match.isReady = true;
+          if (!this.gameStateCrons.has(matchId)) {
+            this.gameStateCrons.set(
+              matchId,
+              this.updateSingleGameStateCron(matchId),
+            );
+          }
+          if (!this.gameTimeCrons.has(matchId)) {
+            this.gameTimeCrons.set(
+              matchId,
+              this.updateSingleGameTimeCron(matchId),
+            );
+          }
+        }
       });
     });
   }
@@ -239,7 +280,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('keyDown')
   async playerKeyDown(client: Socket, keycode: string) {
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId)
         throw new WsException('Invalid Request: you are not in game');
       const mutex = this.gameStateMutexes.get(matchId);
@@ -259,7 +303,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('keyUp')
   async playerKeyUp(client: Socket) {
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId)
         throw new WsException('Invalid Request: you are not in game');
       const mutex = this.gameStateMutexes.get(matchId);
@@ -274,135 +321,150 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  updateGameStateCron() {
-    console.log('start update game state cron');
-    setInterval(async () => {
-      for (const [matchId, mutex] of this.gameStateMutexes) {
-        let skip = false;
-        let isGameOver = false;
-        let isGameReset = false;
-        let gameWinner;
-        let match: GameState = null;
+  updateSingleGameTimeCron(matchId: string): ReturnType<typeof setInterval> {
+    console.log('start update single game time cron' + matchId);
+    const intervalId = setInterval(async () => {
+      const mutex = this.gameStateMutexes.get(matchId);
+      if (!mutex) return;
 
-        await mutex.runExclusive(async () => {
-          match = this.gameStates.get(matchId);
-          if (!match || !match.isReady) {
-            skip = true;
-            return;
-          } // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+      await mutex.runExclusive(() => {
+        const match: GameState = this.gameStates.get(matchId);
+        if (!match || !match.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+        this.gameService.updateTime(match);
+        if (match.time >= 0) {
+          this.server
+            .to(match.matchId)
+            .emit('updateTime', new GameStateViewModel(match));
+        } else if (
+          match.score.playerA === match.score.playerB &&
+          match.score.playerA !== SCORE_LIMIT &&
+          match.score.playerB !== SCORE_LIMIT
+        ) {
+          if (this.gameService.setDeuce(match)) {
+            this.server
+              .to(match.matchId)
+              .emit('deuce', new GameStateViewModel(match));
+          }
+        }
+      });
+    }, 1000);
+    return intervalId;
+  }
+
+  updateSingleGameStateCron(matchId: string): ReturnType<typeof setInterval> {
+    console.log('start update game state cron');
+    const intervalId = setInterval(async () => {
+      const mutex = this.gameStateMutexes.get(matchId);
+      if (!mutex) return;
+
+      let skip = false;
+      let isGameOver = false;
+      let gameWinner;
+      let match: GameState = null;
+
+      await mutex.runExclusive(async () => {
+        match = this.gameStates.get(matchId);
+        if (!match || !match.isReady) {
+          skip = true;
+          return;
+        } // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
+        if (this.gameService.isGameOver(match)) {
+          isGameOver = true;
+          return;
+        }
+        const winnerStr = this.gameService.moveBall(match.ball);
+        if (winnerStr === '') {
+          this.gameService.handleCollision(
+            match.ball,
+            match.playerA,
+            match.playerB,
+          );
+        } else {
+          if (winnerStr === 'A') match.score.playerA++;
+          if (winnerStr === 'B') match.score.playerB++;
+          this.server
+            .to(match.matchId)
+            .emit('updateScore', new GameStateViewModel(match));
+
           if (this.gameService.isGameOver(match)) {
             isGameOver = true;
             return;
-          }
-          const winnerStr = this.gameService.moveBall(match.ball);
-          if (winnerStr === '') {
-            this.gameService.handleCollision(
-              match.ball,
-              match.playerA,
-              match.playerB,
-            );
           } else {
-            if (winnerStr === 'A') match.score.playerA++;
-            if (winnerStr === 'B') match.score.playerB++;
+            gameWinner = winnerStr === 'A' ? match.playerA : match.playerB;
+            this.gameService.resetBall(match.ball);
+            const resetId = setTimeout(async () => {
+              const mutex = this.gameStateMutexes.get(matchId);
+              if (!mutex) return;
+              await mutex.runExclusive(() => {
+                const match = this.gameStates.get(matchId);
+                if (!match) return;
+                match.resetTimeout = null;
+                this.gameService.readyBall(match.ball, gameWinner);
+                this.server
+                  .to(match.matchId)
+                  .emit('updateBall', new GameStateViewModel(match));
+              });
+            }, 3000);
+            match.resetTimeout = resetId;
+          }
+        }
+        this.server
+          .to(match.matchId)
+          .emit('updateBall', new GameStateViewModel(match));
+      });
+      if (skip) return;
+      if (isGameOver) {
+        await this.joinMutex.runExclusive(async () => {
+          /* get game's mutex */
+          const mutex = this.gameStateMutexes.get(matchId);
+          if (!mutex) return;
+          /* get game state and join */
+          await mutex.runExclusive(async () => {
+            const match = this.gameStates.get(matchId);
+            if (!match) return;
+            clearInterval(this.gameStateCrons.get(matchId));
+            clearInterval(this.gameTimeCrons.get(matchId));
             this.server
               .to(match.matchId)
-              .emit('updateScore', new GameStateViewModel(match));
-
-            if (this.gameService.isGameOver(match)) {
-              isGameOver = true;
-              return;
-            } else {
-              isGameReset = true;
-              gameWinner = winnerStr === 'A' ? match.playerA : match.playerB;
-              this.gameService.resetBall(match.ball);
-              const resetId = setTimeout(async () => {
-                const mutex = this.gameStateMutexes.get(matchId);
-                if (!mutex) return;
-                await mutex.runExclusive(() => {
-                  const match = this.gameStates.get(matchId);
-                  if (!match) return;
-                  match.resetTimeout = null;
-                  this.gameService.readyBall(match.ball, gameWinner);
-                  this.server
-                    .to(match.matchId)
-                    .emit('updateBall', new GameStateViewModel(match));
-                });
-              }, 3000);
-              match.resetTimeout = resetId;
-            }
-          }
-          this.server
-            .to(match.matchId)
-            .emit('updateBall', new GameStateViewModel(match));
-        });
-        if (skip) continue;
-        if (isGameOver) {
-          await this.joinMutex.runExclusive(async () => {
-            /* get game's mutex */
-            const mutex = this.gameStateMutexes.get(matchId);
-            if (!mutex) return;
-            /* get game state and join */
-            await mutex.runExclusive(async () => {
-              const match = this.gameStates.get(matchId);
-              if (!match) return;
-              this.server
-                .to(match.matchId)
-                .emit('gameOver', new GameStateViewModel(match));
-              await this.gameUseCase.saveGame({
-                playerAId: match.playerA.id,
-                playerBId: match.playerB.id,
-                playerAScore: match.score.playerA,
-                playerBScore: match.score.playerB,
-                isLadder: match.gameMode === GAME_MODE.normal ? false : true,
-              });
-              await this.achievementUseCase.handleGameAchievement(
-                match.playerA.id,
-                match.score.playerA > match.score.playerB,
-                match.score.playerA,
-                match.score.playerB,
-              );
-              await this.achievementUseCase.handleGameAchievement(
-                match.playerB.id,
-                match.score.playerB > match.score.playerA,
-                match.score.playerB,
-                match.score.playerA,
-              );
-              if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
-              this.gameStates.delete(matchId);
+              .emit('gameOver', new GameStateViewModel(match));
+            await this.gameUseCase.saveGame({
+              playerAId: match.playerA.id,
+              playerBId: match.playerB.id,
+              playerAScore: match.score.playerA,
+              playerBScore: match.score.playerB,
+              isLadder: match.gameMode === GAME_MODE.normal ? false : true,
             });
-            this.server.socketsLeave(matchId);
-            this.gameStateMutexes.delete(matchId);
+            await this.achievementUseCase.handleGameAchievement(
+              match.playerA.id,
+              match.score.playerA > match.score.playerB,
+              match.score.playerA,
+              match.score.playerB,
+            );
+            await this.achievementUseCase.handleGameAchievement(
+              match.playerB.id,
+              match.score.playerB > match.score.playerA,
+              match.score.playerB,
+              match.score.playerA,
+            );
+            if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
+            if (this.notificationGateway.getSocketById(match.playerA.id))
+              await this.userUseCase.updateStatusById(
+                match.playerA.id,
+                'on-line',
+              );
+            if (this.notificationGateway.getSocketById(match.playerB.id))
+              await this.userUseCase.updateStatusById(
+                match.playerB.id,
+                'on-line',
+              );
+            this.notificationGateway.handleSocialUpdateToServer();
+            this.gameStates.delete(matchId);
           });
-        }
+          this.server.socketsLeave(matchId);
+          this.gameStateMutexes.delete(matchId);
+        });
       }
     }, GAME_STATE_UPDATE_RATE);
-  }
-
-  updateGameTimeCron() {
-    console.log('start update game time cron');
-    setInterval(async () => {
-      for (const [matchId, mutex] of this.gameStateMutexes) {
-        await mutex.runExclusive(() => {
-          const match: GameState = this.gameStates.get(matchId);
-          if (!match || !match.isReady) return; // 아직 게임이 시작되지 않은 상태라면 업데이트하지 않습니다.
-          this.gameService.updateTime(match);
-          if (match.time >= 0) {
-            this.server
-              .to(match.matchId)
-              .emit('updateTime', new GameStateViewModel(match));
-          } else if (
-            match.score.playerA === match.score.playerB &&
-            match.score.playerA !== SCORE_LIMIT &&
-            match.score.playerB !== SCORE_LIMIT
-          ) {
-            if (this.gameService.setDeuce(match)) {
-              this.server
-                .to(match.matchId)
-                .emit('deuce', new GameStateViewModel(match));
-            }
-          }
-        });
-      }
-    }, 1000);
+    return intervalId;
   }
 }

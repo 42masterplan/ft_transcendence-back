@@ -10,7 +10,8 @@ export interface UserRepository {
   findOneByName(name: string): Promise<User>;
   findOneByIntraId(intraId: string): Promise<User>;
   updateOne(intraId: string, updateUserDto: UpdateUserDto): Promise<User>;
-  updateStatus(intraId: string, status: string): Promise<User>;
+  updateStatusByIntraId(intraId: string, status: string): Promise<User>;
+  updateStatusById(id: string, status: string): Promise<User>;
   updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User>;
   createOne(createUserDto: CreateUserDto): Promise<User>;
   updateTwoFactorAuth(
