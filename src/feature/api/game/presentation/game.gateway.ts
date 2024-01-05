@@ -75,6 +75,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.disconnect();
         return;
       }
+      if (this.gameService.getMyMatchId(this.gameStates, client.id) === null) {
+        client.disconnect();
+        return;
+      }
       await this.userUseCase.updateStatus(user.intraId, 'in-game');
       this.server.emit('changeStatus');
     }
