@@ -110,6 +110,8 @@ export class NotificationGateway
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
+    if (socket.id != this.sockets.get(user.id))
+      return ;
     await this.userUseCase.updateStatus(user.intraId, 'off-line');
     this.handleLadderGameCancel(socket);
     await this.normalQueueMutex.runExclusive(() => {
