@@ -23,7 +23,7 @@ export class GameUseCase {
     playerBScore,
     isLadder,
   }): Promise<Game> {
-    console.log('save game!!');
+    // console.log('save game!!');
     const game = await this.gameRepository.createOne({ isLadder });
     const playerAStatus =
       playerAScore > playerBScore ? GAME_STATUS.win : GAME_STATUS.lose;

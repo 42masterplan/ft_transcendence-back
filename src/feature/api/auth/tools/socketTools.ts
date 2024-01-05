@@ -28,17 +28,17 @@ export async function getUserFromSocket(
     accesstoken === 'null' ||
     accesstoken === 'undefined'
   ) {
-    console.log('no token', socket.id);
+    // console.log('no token', socket.id);
     return null;
   }
   try {
     const userToken = jwtService.verify(accesstoken);
     const intraId = userToken?.sub;
-    console.log('유저: ', intraId);
+    // console.log('유저: ', intraId);
     const user = await usersService.findOneByIntraId(intraId);
     return user;
   } catch (e) {
-    // console.log(accesstoken, e);
+    // // console.log(accesstoken, e);
     // throw new UnauthorizedException();
     return null;
   }
