@@ -73,6 +73,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } else {
       const token = client.handshake.auth?.Authorization?.split(' ')[1];
       const user = await this.authService.verifySocket(token);
+      let flag = true;
+
       if (!user) {
         client.disconnect();
         return;
@@ -80,11 +82,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.joinMutex.runExclusive(() => {
         if (this.gameService.getMyMatchId(this.gameStates, user.id) === null) {
           client.disconnect();
+          flag = false;
           return;
         }
       });
+      if (!flag) return;
       await this.userUseCase.updateStatusByIntraId(user.intraId, 'in-game');
-      this.server.emit('changeStatus');
+      this.notificationGateway.handleSocialUpdateToServer();
     }
     console.log('Game is get connected!');
   }
@@ -109,11 +113,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const match = this.gameStates.get(matchId);
         if (!match) return;
         this.gameService.matchForfeit(match, client.id);
-        if (this.notificationGateway.getSocketById(match.playerA.id))
-          await this.userUseCase.updateStatusById(match.playerA.id, 'on-line');
-        if (this.notificationGateway.getSocketById(match.playerB.id))
-          await this.userUseCase.updateStatusById(match.playerB.id, 'on-line');
-        this.server.emit('changeStatus');
         this.server
           .to(matchId)
           .emit('updateScore', new GameStateViewModel(match));
@@ -129,6 +128,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
 
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
+        if (this.notificationGateway.getSocketById(match.playerA.id))
+          await this.userUseCase.updateStatusById(match.playerA.id, 'on-line');
+        if (this.notificationGateway.getSocketById(match.playerB.id))
+          await this.userUseCase.updateStatusById(match.playerB.id, 'on-line');
+        this.notificationGateway.handleSocialUpdateToServer();
         this.gameStates.delete(matchId);
         this.server.socketsLeave(matchId);
       });
@@ -443,6 +447,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               match.score.playerA,
             );
             if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
+            if (this.notificationGateway.getSocketById(match.playerA.id))
+              await this.userUseCase.updateStatusById(
+                match.playerA.id,
+                'on-line',
+              );
+            if (this.notificationGateway.getSocketById(match.playerB.id))
+              await this.userUseCase.updateStatusById(
+                match.playerB.id,
+                'on-line',
+              );
+            this.notificationGateway.handleSocialUpdateToServer();
             this.gameStates.delete(matchId);
           });
           this.server.socketsLeave(matchId);

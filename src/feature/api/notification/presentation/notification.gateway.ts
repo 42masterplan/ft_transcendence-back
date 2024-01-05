@@ -430,6 +430,10 @@ export class NotificationGateway
     this.server.to(socketId).emit('changeStatus');
   }
 
+  handleSocialUpdateToServer() {
+    this.server.emit('changeStatus');
+  }
+
   handleNewFriendRequest(userId: string) {
     const socketId = this.sockets.get(userId);
     this.server.to(socketId).emit('newFriendRequest');
