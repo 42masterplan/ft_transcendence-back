@@ -117,12 +117,16 @@ export class ChannelService {
       participant.chatableAt > new Date(Date.now()) &&
       !content.startsWith('[system]')
     )
+    {
+      const offset = 1000 * 60 * 60 * 9;
+      const muteTime = new Date(participant.chatableAt.getTime() + offset)
       throw new ForbiddenException(
-        participant.chatableAt.getHours() +
+        muteTime.getHours() +
           '시 ' +
-          participant.chatableAt.getMinutes() +
+          muteTime.getMinutes() +
           '분 까지 뮤트되었습니다.ㅋ',
       );
+    }
     await this.channelMessageRepository.saveOne({
       channelId: channelId,
       participantId: userId,
@@ -323,8 +327,8 @@ export class ChannelService {
         targetId,
         channelId,
       );
-    if (participant.role !== 'owner' && target.role !== 'user')
-      return 'Admin can only ban user';
+    if (target.role === 'owner')
+      return 'Admin cannot ban owner!';
 
     isTargetBanned.updatedIsDeleted(true);
     await this.channelUserBannedRepository.updateOne(isTargetBanned);
@@ -354,8 +358,8 @@ export class ChannelService {
       );
     if (!target || target.isDeleted === true)
       return 'Target is not in this channel';
-    if (participant.role !== 'owner' && target.role !== 'user')
-      return 'Admin can only kick user';
+    if (target.role === 'owner')
+      return 'Admin cannot kick owner!';
     target.updatedRole('user');
     target.updatedIsDeleted(true);
     await this.channelParticipantRepository.updateOne(target);
@@ -385,8 +389,8 @@ export class ChannelService {
       );
     if (!target || target.isDeleted === true)
       return 'Target is not in this channel';
-    if (participant.role !== 'owner' && target.role !== 'user')
-      return 'Admin can only kick user';
+    if (target.role === 'owner')
+      return 'Admin cannot mute owner!';
 
     target.updatedChatableAt(new Date(Date.now() + 3 * 60000));
     await this.channelParticipantRepository.updateOne(target);
