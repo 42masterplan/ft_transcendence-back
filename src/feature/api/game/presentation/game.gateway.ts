@@ -313,13 +313,28 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
               isGameReset = true;
               gameWinner = winnerStr === 'A' ? match.playerA : match.playerB;
               this.gameService.resetBall(match.ball);
+              const resetId = setTimeout(async () => {
+                const mutex = this.gameStateMutexes.get(matchId);
+                if (!mutex) return;
+                await mutex.runExclusive(() => {
+                  const match = this.gameStates.get(matchId);
+                  if (!match) return;
+                  match.resetTimeout = null;
+                  this.gameService.readyBall(match.ball, gameWinner);
+                  this.server
+                    .to(match.matchId)
+                    .emit('updateBall', new GameStateViewModel(match));
+                });
+              }, 3000);
+              match.resetTimeout = resetId;
             }
           }
           this.server
             .to(match.matchId)
             .emit('updateBall', new GameStateViewModel(match));
         });
-        if (!skip && isGameOver) {
+        if (skip) continue;
+        if (isGameOver) {
           await this.joinMutex.runExclusive(async () => {
             /* get game's mutex */
             const mutex = this.gameStateMutexes.get(matchId);
@@ -355,29 +370,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             });
             this.server.socketsLeave(matchId);
             this.gameStateMutexes.delete(matchId);
-          });
-          continue;
-        }
-        if (!skip && isGameReset) {
-          const resetId = setTimeout(async () => {
-            const mutex = this.gameStateMutexes.get(matchId);
-            if (!mutex) return;
-            await mutex.runExclusive(() => {
-              const match = this.gameStates.get(matchId);
-              if (!match) return;
-              match.resetTimeout = null;
-              this.gameService.readyBall(match.ball, gameWinner);
-              this.server
-                .to(match.matchId)
-                .emit('updateBall', new GameStateViewModel(match));
-            });
-          }, 3000);
-          const mutex = this.gameStateMutexes.get(matchId);
-          if (!mutex) continue;
-          await mutex.runExclusive(() => {
-            const match = this.gameStates.get(matchId);
-            if (!match) return;
-            match.resetTimeout = resetId;
           });
         }
       }

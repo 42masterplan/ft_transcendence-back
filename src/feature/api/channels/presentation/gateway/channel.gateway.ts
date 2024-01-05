@@ -91,6 +91,7 @@ export class ChannelGateway
   async handleMessage(client, { content, channelId }) {
     const myId = this.socketToUser.get(client.id);
     console.log('socket newMessage');
+    if (content.length >= 512) return 'New message fail: Too long!';
     try {
       const newMessage = await this.channelService.newMessage(
         myId,
