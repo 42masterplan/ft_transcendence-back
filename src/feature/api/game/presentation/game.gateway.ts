@@ -75,6 +75,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
       await this.userUseCase.updateStatus(user.intraId, 'in-game');
+      this.server.emit('changeStatus');
     }
     console.log('Game is get connected!');
   }
@@ -86,6 +87,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
     if (!user) return;
     await this.userUseCase.updateStatus(user.intraId, 'on-line');
+    this.server.emit('changeStatus');
     await this.joinMutex.runExclusive(async () => {
       const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
       if (!matchId) return;
