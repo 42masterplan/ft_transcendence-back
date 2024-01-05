@@ -41,8 +41,12 @@ export class UsersUseCase {
     return await this.repository.findOneByIntraId(intraId);
   }
 
-  async updateStatus(intraId: string, status: string): Promise<User> {
-    return await this.repository.updateStatus(intraId, status);
+  async updateStatusByIntraId(intraId: string, status: string): Promise<User> {
+    return await this.repository.updateStatusByIntraId(intraId, status);
+  }
+
+  async updateStatusById(intraId: string, status: string): Promise<User> {
+    return await this.repository.updateStatusById(intraId, status);
   }
 
   async updateTierAndExp(id: string, exp: number): Promise<User> {

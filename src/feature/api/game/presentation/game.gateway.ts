@@ -1,6 +1,7 @@
 import { AuthService } from '../../auth/auth.service';
 import { JwtSocketGuard } from '../../auth/jwt/jwt-socket.guard';
 import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
+import { NotificationGateway } from '../../notification/presentation/notification.gateway';
 import { AchievementUseCase } from '../../users/application/use-case/achievement.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
 import { UsersService } from '../../users/users.service';
@@ -59,6 +60,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gameUseCase: GameUseCase,
     private readonly userUseCase: UsersUseCase,
     private readonly achievementUseCase: AchievementUseCase,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   async handleConnection(client: any, ...args: any[]) {
@@ -75,11 +77,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.disconnect();
         return;
       }
-      if (this.gameService.getMyMatchId(this.gameStates, client.id) === null) {
-        client.disconnect();
-        return;
-      }
-      await this.userUseCase.updateStatus(user.intraId, 'in-game');
+      await this.joinMutex.runExclusive(() => {
+        if (this.gameService.getMyMatchId(this.gameStates, user.id) === null) {
+          client.disconnect();
+          return;
+        }
+      });
+      await this.userUseCase.updateStatusByIntraId(user.intraId, 'in-game');
       this.server.emit('changeStatus');
     }
     console.log('Game is get connected!');
@@ -93,7 +97,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!user) return;
 
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId) return;
       const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) return;
@@ -102,6 +109,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const match = this.gameStates.get(matchId);
         if (!match) return;
         this.gameService.matchForfeit(match, client.id);
+        if (this.notificationGateway.getSocketById(match.playerA.id))
+          await this.userUseCase.updateStatusById(match.playerA.id, 'on-line');
+        if (this.notificationGateway.getSocketById(match.playerB.id))
+          await this.userUseCase.updateStatusById(match.playerB.id, 'on-line');
+        this.server.emit('changeStatus');
         this.server
           .to(matchId)
           .emit('updateScore', new GameStateViewModel(match));
@@ -115,8 +127,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           playerBScore: match.score.playerB,
           isLadder: match.gameMode === GAME_MODE.normal ? false : true,
         });
-        await this.userUseCase.updateStatus(user.intraId, 'on-line');
-        this.server.emit('changeStatus');
 
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
         this.gameStates.delete(matchId);
@@ -220,7 +230,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('gameReady')
   async startGame(client: Socket) {
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId)
         throw new WsException('Invalid Request: there is no game(mutex)');
       const mutex = this.gameStateMutexes.get(matchId);
@@ -263,7 +276,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('keyDown')
   async playerKeyDown(client: Socket, keycode: string) {
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId)
         throw new WsException('Invalid Request: you are not in game');
       const mutex = this.gameStateMutexes.get(matchId);
@@ -283,7 +299,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('keyUp')
   async playerKeyUp(client: Socket) {
     await this.joinMutex.runExclusive(async () => {
-      const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
+      const matchId = this.gameService.getMyMatchIdBySocket(
+        this.gameStates,
+        client.id,
+      );
       if (!matchId)
         throw new WsException('Invalid Request: you are not in game');
       const mutex = this.gameStateMutexes.get(matchId);

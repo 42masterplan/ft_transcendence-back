@@ -39,7 +39,7 @@ export class GameService {
     return true;
   }
 
-  getMyMatchId(
+  getMyMatchIdBySocket(
     gameStates: Map<string, GameState>,
     socketId: string,
   ): string | null {
@@ -49,6 +49,13 @@ export class GameService {
         match.playerB.socketId === socketId
       )
         return matchId;
+    }
+    return null;
+  }
+
+  getMyMatchId(gameStates: Map<string, GameState>, id: string): string | null {
+    for (const [matchId, match] of gameStates) {
+      if (match.playerA.id === id || match.playerB.id === id) return matchId;
     }
     return null;
   }

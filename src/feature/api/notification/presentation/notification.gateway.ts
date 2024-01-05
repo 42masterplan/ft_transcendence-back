@@ -96,7 +96,7 @@ export class NotificationGateway
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     if (this.sockets.has(user.id)) return;
     this.sockets.set(user.id, socket.id);
-    await this.userUseCase.updateStatus(user.intraId, 'on-line');
+    await this.userUseCase.updateStatusByIntraId(user.intraId, 'on-line');
     this.server.emit('changeStatus');
   }
 
@@ -110,9 +110,7 @@ export class NotificationGateway
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
-    if (socket.id != this.sockets.get(user.id))
-      return ;
-    await this.userUseCase.updateStatus(user.intraId, 'off-line');
+    if (socket.id != this.sockets.get(user.id)) return;
     this.handleLadderGameCancel(socket);
     await this.normalQueueMutex.runExclusive(() => {
       for (const [matchId, match] of this.normalMatchQueue) {
@@ -131,7 +129,7 @@ export class NotificationGateway
       }
     });
     this.sockets.delete(user.id);
-    await this.userUseCase.updateStatus(user.intraId, 'off-line');
+    await this.userUseCase.updateStatusByIntraId(user.intraId, 'off-line');
     this.server.emit('changeStatus');
   }
 
@@ -142,6 +140,10 @@ export class NotificationGateway
         server_secret_key: process.env.SERVER_SECRET_KEY,
       },
     });
+  }
+
+  getSocketById(id: string): string {
+    return this.sockets.get(id);
   }
 
   @UseGuards(JwtSocketGuard)
