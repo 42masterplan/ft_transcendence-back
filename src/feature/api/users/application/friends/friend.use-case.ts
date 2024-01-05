@@ -8,27 +8,27 @@ export class FriendUseCase {
     @Inject(FriendRepository) private readonly repository: FriendRepository,
   ) {}
 
-  create({
+  async create({
     myId,
     friendId,
   }: {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    return this.repository.createFriend({
+    return await this.repository.createFriend({
       myId,
       friendId,
     });
   }
 
-  delete({
+  async delete({
     myId,
     friendId,
   }: {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    return this.repository.deleteFriend({
+    return await this.repository.deleteFriend({
       myId,
       friendId,
     });

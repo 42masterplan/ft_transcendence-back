@@ -15,19 +15,19 @@ export class UsersUseCase {
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.repository.findAll();
+    return await this.repository.findAll();
   }
 
   async findOne(id: string): Promise<User> {
-    return this.repository.findOneById(id);
+    return await this.repository.findOneById(id);
   }
 
   async findOneByName(name: string): Promise<User> {
-    return this.repository.findOneByName(name);
+    return await this.repository.findOneByName(name);
   }
 
   async findOneByIntraId(intraId: string): Promise<User> {
-    return this.repository.findOneByIntraId(intraId);
+    return await this.repository.findOneByIntraId(intraId);
   }
 
   async updateOne(
