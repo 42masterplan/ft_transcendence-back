@@ -87,8 +87,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       getIntraIdFromSocket(client),
     );
     if (!user) return;
-    await this.userUseCase.updateStatus(user.intraId, 'on-line');
-    this.server.emit('changeStatus');
+
     await this.joinMutex.runExclusive(async () => {
       const matchId = this.gameService.getMyMatchId(this.gameStates, client.id);
       if (!matchId) return;
@@ -112,6 +111,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           playerBScore: match.score.playerB,
           isLadder: match.gameMode === GAME_MODE.normal ? false : true,
         });
+        await this.userUseCase.updateStatus(user.intraId, 'on-line');
+        this.server.emit('changeStatus');
 
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
         this.gameStates.delete(matchId);
