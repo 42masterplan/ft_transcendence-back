@@ -1,4 +1,4 @@
 npm run migration:create
 npm run migration:up
 npm run migration:seed
-npm run start:dev
+npm run start:prod
