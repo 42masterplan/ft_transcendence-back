@@ -178,7 +178,7 @@ export class ChannelGateway
         ' 참가했습니다.',
       id,
     );
-    this.newMessageInRoom(id, newMessage);
+    await this.newMessageInRoom(id, newMessage);
     this.server
       .to(id)
       .emit(
@@ -378,7 +378,7 @@ export class ChannelGateway
         '님이 뮤트되었습니다.',
       channelId,
     );
-    this.newMessageInRoom(channelId, newMessage);
+    await this.newMessageInRoom(channelId, newMessage);
     return 'muteUser Success!';
   }
 
