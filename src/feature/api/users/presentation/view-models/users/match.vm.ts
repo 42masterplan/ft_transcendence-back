@@ -18,9 +18,12 @@ export class MatchViewModel {
   }
 
   private getDateString(date: Date): string {
-    const year = date.getFullYear().toString();
-    const month = (date.getMonth() + 1).toString();
-    const day = date.getDate().toString();
+    const offset = 1000 * 60 * 60 * 9;
+    const korDate = new Date(date.getTime() + offset);
+    const year = korDate.getFullYear().toString();
+    const month = (korDate.getMonth() + 1).toString();
+    const day = korDate.getDate().toString();
+    console.log(korDate.getHours(), korDate.getMinutes());
 
     return year + '-' + month + '-' + day;
   }

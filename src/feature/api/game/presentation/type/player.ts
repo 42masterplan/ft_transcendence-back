@@ -107,8 +107,8 @@ export class Player {
     );
     ball.velocity.x = ball.speed * (ball.velocity.x / speed);
     ball.velocity.y = ball.speed * (ball.velocity.y / speed);
-    if (ball.velocity.x > 0.75) ball.velocity.x = 0.75;
-    else if (ball.velocity.x < -0.75) ball.velocity.x = -0.75;
+    if (ball.velocity.x > 0.5) ball.velocity.x = 0.5;
+    else if (ball.velocity.x < -0.5) ball.velocity.x = -0.5;
     speed = Math.sqrt(
       ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y,
     );
