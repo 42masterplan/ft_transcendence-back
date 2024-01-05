@@ -23,7 +23,6 @@ export class MatchViewModel {
     const year = korDate.getFullYear().toString();
     const month = (korDate.getMonth() + 1).toString();
     const day = korDate.getDate().toString();
-    console.log(korDate.getHours(), korDate.getMinutes());
 
     return year + '-' + month + '-' + day;
   }
