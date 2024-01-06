@@ -14,33 +14,51 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     private readonly repository: EntityRepository<FriendRequestEntity>,
   ) {}
 
-  save({
+  async save({
     primaryUserId,
     targetUserId,
   }: {
     primaryUserId: string;
     targetUserId: string;
   }): Promise<void> {
-    const newFriendRequest = this.repository.create({
-      primaryUserId,
-      targetUserId,
-    });
+    let newFriendRequest: FriendRequestEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        const [_, count] = await entityManager.findAndCount(
+          FriendRequestEntity,
+          {
+            primaryUserId,
+            targetUserId,
+            isAccepted: null,
+          },
+        );
+        if (count) return;
+        newFriendRequest = await entityManager.create(FriendRequestEntity, {
+          primaryUserId,
+          targetUserId,
+        });
 
-    this.logger.log(newFriendRequest);
-
-    return this.repository.getEntityManager().persist(newFriendRequest).flush();
+        await entityManager.persist(newFriendRequest);
+      });
   }
 
   async findManyByPrimaryUserId(
     primaryUserId: string,
   ): Promise<FriendRequest[]> {
-    const friendRequest = await this.repository.find({ primaryUserId });
+    const friendRequest = await this.repository.find({
+      primaryUserId,
+      isAccepted: { $ne: null },
+    });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
 
   async findManyByTargetUserId(targetUserId: string): Promise<FriendRequest[]> {
-    const friendRequest = await this.repository.find({ targetUserId });
+    const friendRequest = await this.repository.find({
+      targetUserId,
+      isAccepted: { $ne: null },
+    });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
   }
@@ -55,6 +73,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     const friendRequest = await this.repository.find({
       primaryUserId,
       targetUserId,
+      isAccepted: { $ne: null },
     });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
@@ -69,13 +88,20 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   }
 
   async update(friendRequest: FriendRequest): Promise<FriendRequest> {
-    const entity = await this.repository.findOne(friendRequest.id);
-    if (!entity) return;
-
-    entity.isAccepted = friendRequest.isAccepted;
-    //TODO: 동작하는지 확인 필요
-    await this.repository.getEntityManager().flush();
-
+    let flag = false;
+    let entity: FriendRequestEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        entity = await entityManager.findOne(FriendRequestEntity, {
+          id: friendRequest.id,
+        });
+        if (!entity) return;
+        entity.isAccepted = friendRequest.isAccepted;
+        await entityManager.persist(entity);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(entity);
   }
 
