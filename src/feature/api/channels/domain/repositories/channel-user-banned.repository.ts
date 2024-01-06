@@ -2,26 +2,35 @@ import { ChannelUserBannedEntity } from '../../infrastructure/channel-user-banne
 import { ChannelUserBanned } from '../channel-user-banned';
 import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ChannelUserBannedRepository {
   constructor(
-    private readonly em: EntityManager,
     @InjectRepository(ChannelUserBannedEntity)
     private readonly repository: EntityRepository<ChannelUserBannedEntity>,
   ) {}
 
   async saveOne(userId: string, channelId: string): Promise<ChannelUserBanned> {
     console.log('repository saveBannedUser');
-    const newChannelUserBanned = this.repository.create({
-      userId: userId,
-      channelId: channelId,
-    });
+    let flag = false;
+    let newChannelUserBanned: ChannelUserBannedEntity;
     await this.repository
       .getEntityManager()
-      .persistAndFlush(newChannelUserBanned);
+      .transactional(async (entityManager) => {
+        newChannelUserBanned = await entityManager.create(
+          ChannelUserBannedEntity,
+          {
+            userId,
+            channelId,
+          },
+        );
+        if (!newChannelUserBanned) return;
+        await entityManager.persist(newChannelUserBanned);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newChannelUserBanned);
   }
 
@@ -29,9 +38,22 @@ export class ChannelUserBannedRepository {
     channelUserBanned: ChannelUserBanned,
   ): Promise<ChannelUserBanned> {
     console.log('repository updateBannedUser');
-    const entity = this.toEntity(channelUserBanned);
-    const newChannelUserBanned = await this.repository.upsert(entity);
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let newChannelUserBanned: ChannelUserBannedEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        const entity = this.toEntity(channelUserBanned);
+
+        newChannelUserBanned = await entityManager.upsert(
+          ChannelUserBannedEntity,
+          entity,
+        );
+        if (!newChannelUserBanned) return;
+        await entityManager.persist(newChannelUserBanned);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newChannelUserBanned);
   }
 
@@ -55,8 +77,8 @@ export class ChannelUserBannedRepository {
       userId: userId,
     });
 
-    if (bannedUser) return this.toDomain(bannedUser);
-    return null;
+    if (!bannedUser) return;
+    return this.toDomain(bannedUser);
   }
 
   private toDomain(

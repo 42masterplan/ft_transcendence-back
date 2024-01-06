@@ -2,13 +2,12 @@ import { ChannelParticipantEntity } from '../../infrastructure/channel-participa
 import { ChannelParticipant } from '../channel-participant';
 import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ChannelParticipantRepository {
   constructor(
-    private readonly em: EntityManager,
     @InjectRepository(ChannelParticipantEntity)
     private readonly repository: EntityRepository<ChannelParticipantEntity>,
   ) {}
