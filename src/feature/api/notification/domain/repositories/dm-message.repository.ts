@@ -2,13 +2,12 @@ import { DmMessageEntity } from '../../infrastructure/dm-message.entity';
 import { DmMessage } from '../dm-message';
 import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class DmMessageRepository {
   constructor(
-    private readonly em: EntityManager,
     @InjectRepository(DmMessageEntity)
     private readonly repository: EntityRepository<DmMessageEntity>,
   ) {}
