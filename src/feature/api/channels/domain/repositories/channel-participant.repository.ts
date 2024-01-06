@@ -17,7 +17,7 @@ export class ChannelParticipantRepository {
     userId: string,
     channelId: string,
   ): Promise<ChannelParticipant> {
-    // console.log('repository findOneByUserIdAndChannelId');
+    console.log('repository findOneByUserIdAndChannelId');
     const channelEntity = await this.repository.findOne({
       participantId: userId,
       channelId: channelId,
@@ -28,7 +28,7 @@ export class ChannelParticipantRepository {
   }
 
   async findAllByUserId(userId: string): Promise<ChannelParticipant[]> {
-    // console.log('repository: getMyChannels');
+    console.log('repository: getMyChannels');
     const list = await this.repository.find(
       { participantId: userId, isDeleted: false },
       { orderBy: { updatedAt: QueryOrder.DESC } },
@@ -38,7 +38,7 @@ export class ChannelParticipantRepository {
   }
 
   async findAllByChannelId(channelId: string): Promise<ChannelParticipant[]> {
-    // console.log('repository: findAllByChannelId ', channelId);
+    console.log('repository: findAllByChannelId ', channelId);
     const list = await this.repository.find(
       { channelId: channelId, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
@@ -50,7 +50,7 @@ export class ChannelParticipantRepository {
     channelId: string,
     role: string,
   ): Promise<ChannelParticipant[]> {
-    // console.log('repository: findAllByChannelIdAndRole ', channelId, role);
+    console.log('repository: findAllByChannelIdAndRole ', channelId, role);
     const list = await this.repository.find(
       { channelId: channelId, role: role, isDeleted: false },
       { orderBy: { createdAt: QueryOrder.ASC } },
@@ -63,7 +63,7 @@ export class ChannelParticipantRepository {
     participantId,
     channelId,
   }): Promise<ChannelParticipant> {
-    // console.log('repository: saveChannelParticipant');
+    console.log('repository: saveChannelParticipant');
     const newChannelParticipant = this.repository.create({
       role: role,
       participantId: participantId,
@@ -76,7 +76,7 @@ export class ChannelParticipantRepository {
   }
 
   async countByChannelId(channelId: string): Promise<number> {
-    // console.log('repository: countUser');
+    console.log('repository: countUser');
     return await this.repository.count({
       channelId: channelId,
       isDeleted: false,
@@ -86,7 +86,7 @@ export class ChannelParticipantRepository {
   async updateOne(
     channelParticipant: ChannelParticipant,
   ): Promise<ChannelParticipant> {
-    // console.log('repository: updateIsDeleted');
+    console.log('repository: updateIsDeleted');
     const newEntity = this.toEntity(channelParticipant);
     const newChannelParticipant = await this.repository.upsert(newEntity);
     await this.repository.getEntityManager().flush();

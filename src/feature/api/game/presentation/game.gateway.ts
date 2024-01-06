@@ -36,7 +36,7 @@ import { Server, Socket } from 'socket.io';
         return new WsException('');
       }
       const errors = this.flattenValidationErrors(validationErrors);
-      // console.log(new WsException(errors));
+      console.log(new WsException(errors));
       return new WsException(errors);
     },
   }),
@@ -68,7 +68,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.handshake.headers.server_secret_key ===
       process.env.SERVER_SECRET_KEY
     ) {
-      // console.log('Hi, you are server!');
+      console.log('Hi, you are server!');
       this.notificationSocket = client;
     } else {
       const token = client.handshake.auth?.Authorization?.split(' ')[1];
@@ -90,11 +90,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.userUseCase.updateStatusByIntraId(user.intraId, 'in-game');
       this.notificationGateway.handleSocialUpdateToServer();
     }
-    // console.log('Game is get connected!');
+    console.log('Game is get connected!');
   }
 
   async handleDisconnect(client: any) {
-    // console.log('Game is get disconnected!');
+    console.log('Game is get disconnected!');
     const user = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -159,18 +159,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.joinMutex.runExclusive(async () => {
       let mutex = this.gameStateMutexes.get(matchId);
       if (mutex) {
-        // console.log('! server has match already');
+        console.log('! server has match already');
       } else {
-        // console.log("! server create new match's mutex");
+        console.log("! server create new match's mutex");
         this.gameStateMutexes.set(matchId, new Mutex());
         mutex = this.gameStateMutexes.get(matchId);
       }
       await mutex.runExclusive(() => {
         const match = this.gameStates.get(matchId);
         if (match) {
-          // console.log('! server has match status already');
+          console.log('! server has match status already');
         } else {
-          // console.log('! server create new match status ' + matchId);
+          console.log('! server create new match status ' + matchId);
           this.gameStates.set(
             matchId,
             new GameState(matchId, gameMode, aId, bId),
@@ -190,7 +190,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       side,
     }: { matchId: string; gameMode: string; side: string },
   ) {
-    // console.log(client.id + ' join room start ' + matchId);
+    console.log(client.id + ' join room start ' + matchId);
     const user = await this.usersService.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -199,7 +199,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       /* get game's mutex */
       const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) {
-        // console.log('there is no such match(mutex)');
+        console.log('there is no such match(mutex)');
         client.emit('invalidMatch');
         client.disconnect();
         return;
@@ -208,7 +208,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await mutex.runExclusive(() => {
         const match = this.gameStates.get(matchId);
         if (!match) {
-          // console.log('there is no such match(state)');
+          console.log('there is no such match(state)');
           client.emit('invalidMatch');
           client.disconnect();
           return;
@@ -222,7 +222,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return;
           }
           client.join(matchId);
-          // console.log(client.id + ' join room finish ' + matchId);
+          console.log(client.id + ' join room finish ' + matchId);
         } else {
           client.emit('gameFull');
           client.disconnect();
@@ -322,7 +322,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   updateSingleGameTimeCron(matchId: string): ReturnType<typeof setInterval> {
-    // console.log('start update single game time cron' + matchId);
+    console.log('start update single game time cron' + matchId);
     const intervalId = setInterval(async () => {
       const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) return;
@@ -352,7 +352,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   updateSingleGameStateCron(matchId: string): ReturnType<typeof setInterval> {
-    // console.log('start update game state cron');
+    console.log('start update game state cron');
     const intervalId = setInterval(async () => {
       const mutex = this.gameStateMutexes.get(matchId);
       if (!mutex) return;

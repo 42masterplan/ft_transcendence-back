@@ -100,7 +100,7 @@ export class LadderMatchQueue {
 
   private removeFront() {
     if (this.isEmpty()) {
-      // console.log('queue is empty!');
+      console.log('queue is empty!');
       return;
     }
 
@@ -121,7 +121,7 @@ export class LadderMatchQueue {
 
   private removeBack() {
     if (this.isEmpty()) {
-      // console.log('list is empty!');
+      console.log('list is empty!');
       return;
     }
 
@@ -157,12 +157,12 @@ export class LadderMatchQueue {
 
           this._size--;
         }
-        // console.log('remove success!');
+        console.log('remove success!');
         return;
       }
       current = current.next;
     }
-    // console.log('cannot remove anything!');
+    console.log('cannot remove anything!');
   }
 
   removeUserMatch(userSocketId: string) {
@@ -182,11 +182,11 @@ export class LadderMatchQueue {
 
           this._size--;
         }
-        // console.log('remove success!');
+        console.log('remove success!');
         return;
       }
       current = current.next;
     }
-    // console.log('cannot remove anything!');
+    console.log('cannot remove anything!');
   }
 }

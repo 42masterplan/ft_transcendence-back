@@ -23,7 +23,7 @@ export class ChannelService {
   ) {}
 
   async getMyChannels(userId: string) {
-    // console.log('channel myChannels', userId);
+    console.log('channel myChannels', userId);
     const myChannelList =
       await this.channelParticipantRepository.findAllByUserId(userId);
     return await Promise.all(
@@ -41,10 +41,12 @@ export class ChannelService {
   }
 
   async getPublicChannels(userId: string): Promise<PublicChannelDto[]> {
-    // console.log('service publicChannels');
-    const myChannels = await Promise.all((
-      await this.channelParticipantRepository.findAllByUserId(userId)
-    ).map((channel) => channel.channelId));
+    console.log('service publicChannels');
+    const myChannels = await Promise.all(
+      (await this.channelParticipantRepository.findAllByUserId(userId)).map(
+        (channel) => channel.channelId,
+      ),
+    );
     const channels = await this.channelRepository.findPublicChannels(
       userId,
       myChannels,
@@ -55,7 +57,7 @@ export class ChannelService {
   }
 
   async getMyRole(userId: string, channelId: string): Promise<string> {
-    // console.log('service myRole');
+    console.log('service myRole');
     const myRole =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
@@ -67,7 +69,7 @@ export class ChannelService {
   }
 
   async joinChannel(userId: string, { id, password }): Promise<string> {
-    // console.log('service joinChannel');
+    console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
     password = this.hashPassword(password);
     if (!channel) return 'There is no channel';
@@ -116,10 +118,9 @@ export class ChannelService {
     if (
       participant.chatableAt > new Date(Date.now()) &&
       !content.startsWith('[system]')
-    )
-    {
+    ) {
       const offset = 1000 * 60 * 60 * 9;
-      const muteTime = new Date(participant.chatableAt.getTime() + offset)
+      const muteTime = new Date(participant.chatableAt.getTime() + offset);
       throw new ForbiddenException(
         muteTime.getHours() +
           '시 ' +
@@ -142,10 +143,12 @@ export class ChannelService {
   }
 
   async getChannelHistory(userId: string, channelId: string) {
-    // console.log('service channelHistory');
-    const blockedUsers = await Promise.all((
-      await this.findBlockedUserUseCase.execute(userId)
-    ).map((user) => user.id));
+    console.log('service channelHistory');
+    const blockedUsers = await Promise.all(
+      (await this.findBlockedUserUseCase.execute(userId)).map(
+        (user) => user.id,
+      ),
+    );
     const message = await this.channelMessageRepository.findAllByChannelId(
       channelId,
       blockedUsers,
@@ -159,7 +162,7 @@ export class ChannelService {
     client,
     createChannelDto: CreateChannelDto,
   ) {
-    // console.log('service createChannel');
+    console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름이 비었습니다.');
     if (await this.channelRepository.findOneByName(createChannelDto.name))
@@ -248,7 +251,7 @@ export class ChannelService {
   }
 
   async getAdminUsers(channelId: string): Promise<any[]> {
-    // console.log('service getAdminUsers');
+    console.log('service getAdminUsers');
     const channelParticipant =
       await this.channelParticipantRepository.findAllByChannelIdAndRole(
         channelId,
@@ -327,8 +330,7 @@ export class ChannelService {
         targetId,
         channelId,
       );
-    if (target.role === 'owner')
-      return 'Admin cannot ban owner!';
+    if (target.role === 'owner') return 'Admin cannot ban owner!';
 
     isTargetBanned.updatedIsDeleted(true);
     await this.channelUserBannedRepository.updateOne(isTargetBanned);
@@ -358,8 +360,7 @@ export class ChannelService {
       );
     if (!target || target.isDeleted === true)
       return 'Target is not in this channel';
-    if (target.role === 'owner')
-      return 'Admin cannot kick owner!';
+    if (target.role === 'owner') return 'Admin cannot kick owner!';
     target.updatedRole('user');
     target.updatedIsDeleted(true);
     await this.channelParticipantRepository.updateOne(target);
@@ -389,8 +390,7 @@ export class ChannelService {
       );
     if (!target || target.isDeleted === true)
       return 'Target is not in this channel';
-    if (target.role === 'owner')
-      return 'Admin cannot mute owner!';
+    if (target.role === 'owner') return 'Admin cannot mute owner!';
 
     target.updatedChatableAt(new Date(Date.now() + 3 * 60000));
     await this.channelParticipantRepository.updateOne(target);
