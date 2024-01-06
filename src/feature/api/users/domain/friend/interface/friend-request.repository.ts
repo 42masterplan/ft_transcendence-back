@@ -1,7 +1,7 @@
 import { FriendRequest } from '../friend-request';
 
 export interface FriendRequestRepository {
-  save({ primaryUserId, targetUserId }): Promise<void>;
+  save({ primaryUserId, targetUserId }): Promise<FriendRequest>;
   findManyByPrimaryUserId(primaryUserId: string): Promise<FriendRequest[]>;
   findManyByTargetUserId(primaryUserId: string): Promise<FriendRequest[]>;
   findManyByPrimaryUserIdTargetUserId({

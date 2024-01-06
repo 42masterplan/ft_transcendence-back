@@ -13,23 +13,16 @@ export class FindAcceptableFriendRequestUseCase {
   ) {}
 
   async findFriendsRequestsFromMe(myId: string): Promise<FriendRequest[]> {
-    const myFriendsRequest =
+    const myAcceptableFriendsRequest =
       await this.repository.findManyByPrimaryUserId(myId);
-
-    const myAcceptableFriendsRequest = myFriendsRequest.filter(
-      (myFriendRequest) => myFriendRequest.isAccepted === null,
-    );
 
     await this.setTargetUser(myAcceptableFriendsRequest);
     return myAcceptableFriendsRequest;
   }
 
   async findFriendsRequestsToMe(myId: string): Promise<FriendRequest[]> {
-    const myFriendsRequest = await this.repository.findManyByTargetUserId(myId);
-
-    const myAcceptableFriendsRequest = myFriendsRequest.filter(
-      (myFriendRequest) => myFriendRequest.isAccepted === null,
-    );
+    const myAcceptableFriendsRequest =
+      await this.repository.findManyByTargetUserId(myId);
 
     await this.setPrimaryUser(myAcceptableFriendsRequest);
     return myAcceptableFriendsRequest;

@@ -20,12 +20,13 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   }: {
     primaryUserId: string;
     targetUserId: string;
-  }): Promise<void> {
+  }): Promise<FriendRequest> {
+    let flag = false;
     let newFriendRequest: FriendRequestEntity;
     await this.repository
       .getEntityManager()
       .transactional(async (entityManager) => {
-        const [_, count] = await entityManager.findAndCount(
+        const [friendRequest, count] = await entityManager.findAndCount(
           FriendRequestEntity,
           {
             primaryUserId,
@@ -33,14 +34,21 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
             isAccepted: null,
           },
         );
-        if (count) return;
+        if (count) {
+          newFriendRequest = friendRequest[0];
+          flag = true;
+          return;
+        }
         newFriendRequest = await entityManager.create(FriendRequestEntity, {
           primaryUserId,
           targetUserId,
         });
 
         await entityManager.persist(newFriendRequest);
+        flag = true;
       });
+    if (!flag) return;
+    return this.toDomain(newFriendRequest);
   }
 
   async findManyByPrimaryUserId(
@@ -48,7 +56,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   ): Promise<FriendRequest[]> {
     const friendRequest = await this.repository.find({
       primaryUserId,
-      isAccepted: { $ne: null },
+      isAccepted: null,
     });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
@@ -57,7 +65,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   async findManyByTargetUserId(targetUserId: string): Promise<FriendRequest[]> {
     const friendRequest = await this.repository.find({
       targetUserId,
-      isAccepted: { $ne: null },
+      isAccepted: null,
     });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
@@ -73,7 +81,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     const friendRequest = await this.repository.find({
       primaryUserId,
       targetUserId,
-      isAccepted: { $ne: null },
+      isAccepted: null,
     });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));

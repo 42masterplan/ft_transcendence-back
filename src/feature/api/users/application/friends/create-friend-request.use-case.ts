@@ -1,4 +1,5 @@
 import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
+import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { UserRepository } from '../../domain/user.repository';
 import { BlockedUserUseCase } from '../use-case/blocked-user.use-case';
@@ -25,7 +26,7 @@ export class CreateFriendRequestUseCase {
   }: {
     primaryUserId: string;
     targetUserId: string;
-  }): Promise<void> {
+  }): Promise<FriendRequest> {
     if (primaryUserId === targetUserId) return;
     if (await this.hasExistingFriendRequest({ primaryUserId, targetUserId })) {
       return;
@@ -55,6 +56,7 @@ export class CreateFriendRequestUseCase {
       primaryUserId,
       targetUserId,
     });
+    if (!friendRequest) return;
     this.notificationGateway.handleNewFriendRequest(targetUserId);
 
     return friendRequest;
@@ -73,14 +75,10 @@ export class CreateFriendRequestUseCase {
         targetUserId,
       });
     this.logger.log(friendRequests);
-    const friendRequest = friendRequests.filter((friendRequest) =>
-      friendRequest.isAcceptedNull(),
-    );
 
-    if (friendRequest.length > 0) {
+    if (friendRequests.length > 0) {
       return true;
     }
-
     return false;
   }
 }

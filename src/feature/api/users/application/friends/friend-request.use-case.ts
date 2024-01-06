@@ -3,7 +3,7 @@ import { NotificationGateway } from '../../../notification/presentation/notifica
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { FriendUseCase } from './friend.use-case';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class FriendRequestUseCase {
@@ -21,7 +21,7 @@ export class FriendRequestUseCase {
     });
 
     if (!friendRequest) {
-      throw new Error('Friend request not found');
+      throw new NotFoundException('Friend request not found');
     }
 
     friendRequest.updateIsAccepted(true);
@@ -46,7 +46,7 @@ export class FriendRequestUseCase {
     });
 
     if (!friendRequest) {
-      throw new Error('Friend request not found');
+      throw new NotFoundException('Friend request not found');
     }
 
     friendRequest.updateIsAccepted(false);
@@ -61,22 +61,16 @@ export class FriendRequestUseCase {
     myId: string;
     targetId: string;
   }): Promise<FriendRequest[]> {
-    const friendRequestsByMe =
+    const acceptableRequestsByMe =
       await this.repository.findManyByPrimaryUserIdTargetUserId({
         primaryUserId: myId,
         targetUserId: targetId,
       });
-    const friendRequestsToMe =
+    const acceptableRequestsToMe =
       await this.repository.findManyByPrimaryUserIdTargetUserId({
         primaryUserId: myId,
         targetUserId: targetId,
       });
-    const acceptableRequestsByMe = friendRequestsByMe.filter(
-      (friendRequest) => friendRequest.isAccepted === null,
-    );
-    const acceptableRequestsToMe = friendRequestsToMe.filter(
-      (friendRequest) => friendRequest.isAccepted === null,
-    );
 
     const requests = acceptableRequestsByMe.filter((friendRequest) =>
       acceptableRequestsToMe.includes(friendRequest),
