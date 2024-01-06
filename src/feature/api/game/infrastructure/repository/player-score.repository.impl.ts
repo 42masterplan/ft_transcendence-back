@@ -24,14 +24,22 @@ export class PlayerScoreRepositoryImpl implements PlayerScoreRepository {
     value: number;
     status: GAME_STATUS;
   }): Promise<PlayerScore> {
-    const score = await this.repository.create({
-      playerId,
-      gameId,
-      value,
-      status,
-    });
-
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let score: PlayerScoreEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        score = await entityManager.create(PlayerScoreEntity, {
+          playerId,
+          gameId,
+          value,
+          status,
+        });
+        if (!score) return;
+        await entityManager.persist(score);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(score);
   }
 
