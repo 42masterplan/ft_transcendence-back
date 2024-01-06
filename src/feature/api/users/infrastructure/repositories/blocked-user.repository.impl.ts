@@ -27,11 +27,20 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
     myId: string;
     targetId: string;
   }): Promise<BlockedUser> {
-    const block = await this.repository.create({
-      primaryUserId: myId,
-      targetUserId: targetId,
-    });
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let block: BlockedUserEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        block = await entityManager.create(BlockedUserEntity, {
+          primaryUserId: myId,
+          targetUserId: targetId,
+        });
+        if (!block) return;
+        await entityManager.persist(block);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(block);
   }
 
@@ -42,16 +51,23 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
     myId: string;
     targetId: string;
   }): Promise<BlockedUser> {
-    const block = await this.repository.findOne({
-      primaryUserId: myId,
-      targetUserId: targetId,
-      isDeleted: false,
-    });
-    if (!block) return;
+    let flag = false;
+    let block: BlockedUserEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        block = await entityManager.findOne(BlockedUserEntity, {
+          primaryUserId: myId,
+          targetUserId: targetId,
+          isDeleted: false,
+        });
+        if (!block) return;
+        block.isDeleted = true;
 
-    block.isDeleted = true;
-
-    await this.repository.getEntityManager().flush();
+        await entityManager.persist(block);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(block);
   }
 
