@@ -37,23 +37,38 @@ export class ChannelRepository {
 
   async saveOne(createChannelDto: CreateChannelDto): Promise<Channel> {
     console.log('repository: saveChannel');
-    const channel = this.repository.create(createChannelDto);
-    await this.repository.getEntityManager().persistAndFlush(channel);
+    let flag = false;
+    let channel: ChannelEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        channel = await entityManager.create(ChannelEntity, createChannelDto);
+        if (!channel) return;
+        await entityManager.persist(channel);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(channel);
   }
 
   async updateOne(channel: Channel): Promise<Channel> {
     console.log('repository: updateChannel');
-    const entity = this.toEntity(channel);
-    const newChannel = await this.repository.upsert(entity);
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let newChannel: ChannelEntity;
+    const entity: ChannelEntity = this.toEntity(channel);
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        newChannel = await entityManager.upsert(ChannelEntity, entity);
+        if (!newChannel) return;
+        await entityManager.persist(channel);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newChannel);
   }
 
-  async findPublicChannels(
-    userId: string,
-    myChannels: string[],
-  ): Promise<Channel[]> {
+  async findPublicChannels(myChannels: string[]): Promise<Channel[]> {
     const channels = await this.repository.find({
       status: 'Public',
       isDeleted: false,

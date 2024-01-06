@@ -20,8 +20,9 @@ export class GameRepositoryImpl implements GameRepository {
   }
 
   async findOneById(id: number): Promise<Game> {
-    const game = await this.repository.findOneOrFail({ id });
+    const game = await this.repository.findOne({ id });
 
+    if (!game) return;
     return this.toDomain(game);
   }
 

@@ -47,10 +47,8 @@ export class ChannelService {
         (channel) => channel.channelId,
       ),
     );
-    const channels = await this.channelRepository.findPublicChannels(
-      userId,
-      myChannels,
-    );
+    const channels =
+      await this.channelRepository.findPublicChannels(myChannels);
     const channelsDto = await this.channelToPublicChannelDto(channels);
 
     return channelsDto;
