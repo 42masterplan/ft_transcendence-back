@@ -23,7 +23,7 @@ export class ChannelParticipantRepository {
       channelId: channelId,
     });
 
-    if (!channelEntity) return null;
+    if (!channelEntity) return;
     return this.toDomain(channelEntity);
   }
 
@@ -64,14 +64,24 @@ export class ChannelParticipantRepository {
     channelId,
   }): Promise<ChannelParticipant> {
     console.log('repository: saveChannelParticipant');
-    const newChannelParticipant = this.repository.create({
-      role: role,
-      participantId: participantId,
-      channelId: channelId,
-    });
+    let flag = false;
+    let newChannelParticipant: ChannelParticipantEntity;
     await this.repository
       .getEntityManager()
-      .persistAndFlush(newChannelParticipant);
+      .transactional(async (entityManager) => {
+        newChannelParticipant = await entityManager.create(
+          ChannelParticipantEntity,
+          {
+            role,
+            participantId,
+            channelId,
+          },
+        );
+        if (!newChannelParticipant) return;
+        await entityManager.persist(newChannelParticipant);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newChannelParticipant);
   }
 
@@ -87,9 +97,22 @@ export class ChannelParticipantRepository {
     channelParticipant: ChannelParticipant,
   ): Promise<ChannelParticipant> {
     console.log('repository: updateIsDeleted');
-    const newEntity = this.toEntity(channelParticipant);
-    const newChannelParticipant = await this.repository.upsert(newEntity);
-    await this.repository.getEntityManager().flush();
+
+    let flag = false;
+    let newChannelParticipant: ChannelParticipantEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        const newEntity = this.toEntity(channelParticipant);
+        newChannelParticipant = await entityManager.upsert(
+          ChannelParticipantEntity,
+          newEntity,
+        );
+        if (!newChannelParticipant) return;
+        await entityManager.persist(newChannelParticipant);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newChannelParticipant);
   }
 
