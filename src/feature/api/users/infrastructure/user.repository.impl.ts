@@ -19,12 +19,10 @@ export class UserRepositoryImpl implements UserRepository {
 
   async findAll(): Promise<User[]> {
     const users = await this.userRepository.find(
-      { isDeleted: false },
+      { isDeleted: false, name: { $ne: null } },
       { orderBy: { name: QueryOrder.ASC } },
     );
-    const notNullUsers = users.filter((user) => user.name !== null);
-    if (!notNullUsers) return [];
-    return notNullUsers.map((user) => this.toDomain(user));
+    return users.map((user) => this.toDomain(user));
   }
 
   async findOneById(id: string): Promise<User | null> {
@@ -55,121 +53,186 @@ export class UserRepositoryImpl implements UserRepository {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
-      intraId,
-      isDeleted: false,
-    });
-    if (!user) return;
-    if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
-      user.name = updateUserDto.name;
-    }
-    if (
-      updateUserDto.profileImage !== null &&
-      updateUserDto.profileImage !== undefined
-    ) {
-      user.profileImage = updateUserDto.profileImage;
-    }
-    if (
-      updateUserDto.is2faEnabled !== null &&
-      updateUserDto.is2faEnabled !== undefined
-    ) {
-      user.is2faEnabled = updateUserDto.is2faEnabled;
-    }
-    if (
-      updateUserDto.introduction !== null &&
-      updateUserDto.introduction !== undefined
-    ) {
-      user.introduction = updateUserDto.introduction;
-    }
-    if (user.isEmailValidated === false) {
-      user.email = null;
-      user.verificationCode = null;
-    }
-    await this.userRepository.getEntityManager().flush();
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.findOne(UserEntity, {
+          intraId,
+          isDeleted: false,
+        });
+        if (!user) return;
+        if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
+          const [_, count] = await entityManager.findAndCount(UserEntity, {
+            name: updateUserDto.name,
+          });
+          if (count) return;
+          user.name = updateUserDto.name;
+        }
+        if (
+          updateUserDto.profileImage !== null &&
+          updateUserDto.profileImage !== undefined
+        ) {
+          user.profileImage = updateUserDto.profileImage;
+        }
+        if (
+          updateUserDto.is2faEnabled !== null &&
+          updateUserDto.is2faEnabled !== undefined
+        ) {
+          user.is2faEnabled = updateUserDto.is2faEnabled;
+        }
+        if (
+          updateUserDto.introduction !== null &&
+          updateUserDto.introduction !== undefined
+        ) {
+          user.introduction = updateUserDto.introduction;
+        }
+        if (user.isEmailValidated === false) {
+          user.email = null;
+          user.verificationCode = null;
+        }
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
+
     return this.toDomain(user);
   }
 
   async updateStatusByIntraId(intraId: string, status: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      intraId,
-      isDeleted: false,
-    });
-    if (!user) return;
-    user.currentStatus = status;
-    await this.userRepository.getEntityManager().flush();
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.findOne(UserEntity, {
+          intraId,
+          isDeleted: false,
+        });
+        if (!user) return;
+        user.currentStatus = status;
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(user);
   }
 
   async updateStatusById(id: string, status: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      id,
-      isDeleted: false,
-    });
-    if (!user) return;
-    user.currentStatus = status;
-    await this.userRepository.getEntityManager().flush();
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.findOne(UserEntity, {
+          id,
+          isDeleted: false,
+        });
+        if (!user) return;
+        user.currentStatus = status;
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(user);
   }
 
   async updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User> {
-    const user = await this.userRepository.findOne({ id });
-    if (!user) return;
-    user.tier = tier as string;
-    user.exp = exp;
-    await this.userRepository.getEntityManager().flush();
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.findOne(UserEntity, {
+          id,
+          isDeleted: false,
+        });
+        if (!user) return;
+        user.tier = tier as string;
+        user.exp = exp;
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(user);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.create({
-      ...createUserDto,
-      currentStatus: 'on-line',
-      tier: TIER.Silver as string,
-      exp: 0,
-    });
-    await this.userRepository.getEntityManager().flush();
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.create(UserEntity, {
+          ...createUserDto,
+          currentStatus: 'on-line',
+          tier: TIER.Silver as string,
+          exp: 0,
+        });
+        if (!user) return;
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(user);
   }
 
-  async resetTwoFactorAuthValidation(intraId: string): Promise<void> {
-    const user = await this.userRepository.findOne({
-      intraId,
-      isDeleted: false,
-    });
-    if (!user) return;
-    user.is2faValidated = false;
-    await this.userRepository.getEntityManager().flush();
+  async resetTwoFactorAuthValidation(intraId: string): Promise<User> {
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.findOne(UserEntity, {
+          intraId,
+          isDeleted: false,
+        });
+        if (!user) return;
+        user.is2faValidated = false;
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
+    return this.toDomain(user);
   }
 
   async updateTwoFactorAuth(
     intraId: string,
     twoFactorAuth: TwoFactorAuthType,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
-      intraId,
-      isDeleted: false,
-    });
-    if (!user) return;
-    if (twoFactorAuth.email !== undefined) {
-      user.email = twoFactorAuth.email;
-    }
-    if (
-      twoFactorAuth.isEmailValidated !== undefined &&
-      twoFactorAuth.isEmailValidated !== null
-    ) {
-      user.isEmailValidated = twoFactorAuth.isEmailValidated;
-    }
-    if (twoFactorAuth.code !== undefined) {
-      user.verificationCode = twoFactorAuth.code;
-    }
-    if (
-      twoFactorAuth.is2faValidated !== undefined &&
-      twoFactorAuth.is2faValidated !== null
-    ) {
-      user.is2faValidated = twoFactorAuth.is2faValidated;
-    }
-
-    await this.userRepository.getEntityManager().flush();
+    let flag = false;
+    let user: UserEntity;
+    await this.userRepository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        user = await entityManager.findOne(UserEntity, {
+          intraId,
+          isDeleted: false,
+        });
+        if (!user) return;
+        if (twoFactorAuth.email !== undefined) {
+          user.email = twoFactorAuth.email;
+        }
+        if (
+          twoFactorAuth.isEmailValidated !== undefined &&
+          twoFactorAuth.isEmailValidated !== null
+        ) {
+          user.isEmailValidated = twoFactorAuth.isEmailValidated;
+        }
+        if (twoFactorAuth.code !== undefined) {
+          user.verificationCode = twoFactorAuth.code;
+        }
+        if (
+          twoFactorAuth.is2faValidated !== undefined &&
+          twoFactorAuth.is2faValidated !== null
+        ) {
+          user.is2faValidated = twoFactorAuth.is2faValidated;
+        }
+        await entityManager.persist(user);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(user);
   }
 
