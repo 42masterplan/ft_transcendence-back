@@ -23,6 +23,15 @@ export class DmRepository {
     await this.repository
       .getEntityManager()
       .transactional(async (entityManager) => {
+        const [dm, count] = await entityManager.findAndCount(DmEntity, {
+          user1Id,
+          user2Id,
+        });
+        if (count) {
+          newDm = dm[0];
+          flag = true;
+          return;
+        }
         newDm = await entityManager.create(DmEntity, {
           user1Id,
           user2Id,
