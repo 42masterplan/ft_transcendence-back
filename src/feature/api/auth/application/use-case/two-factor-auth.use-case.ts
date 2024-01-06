@@ -1,6 +1,6 @@
 import { UserRepository } from '../../../users/domain/user.repository';
 import { TwoFactorAuthType } from '../../presentation/type/two-factor-auth.type';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -20,14 +20,16 @@ export class TwoFactorAuthUseCase {
         is2faValidated: false,
       }),
     );
+    if (!user) throw new NotFoundException('There is no such user');
     return user.email;
   }
 
   async validate2fa(intraId: string): Promise<void> {
-    await this.repository.updateTwoFactorAuth(
+    const user = await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({ code: null, is2faValidated: true }),
     );
+    if (!user) throw new NotFoundException('Validate 2fa failed');
   }
 
   async updateEmailWithCode(
@@ -37,7 +39,7 @@ export class TwoFactorAuthUseCase {
   ): Promise<void> {
     const saltOrRounds = 10;
     const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
-    await this.repository.updateTwoFactorAuth(
+    const user = await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({
         code: hashedCode,
@@ -46,10 +48,11 @@ export class TwoFactorAuthUseCase {
         is2faValidated: false,
       }),
     );
+    if (!user) throw new NotFoundException('Update email with code failed');
   }
 
   async resetEmail(intraId: string): Promise<void> {
-    await this.repository.updateTwoFactorAuth(
+    const user = await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({
         code: null,
@@ -58,12 +61,14 @@ export class TwoFactorAuthUseCase {
         is2faValidated: false,
       }),
     );
+    if (!user) throw new NotFoundException('Reset email failed');
   }
 
   async acceptEmail(intraId: string): Promise<void> {
-    await this.repository.updateTwoFactorAuth(
+    const user = await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({ code: null, isEmailValidated: true }),
     );
+    if (!user) throw new NotFoundException('Accept email failed');
   }
 }

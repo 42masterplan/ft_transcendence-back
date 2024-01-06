@@ -27,14 +27,14 @@ export class UserRepositoryImpl implements UserRepository {
 
   async findOneById(id: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ id, isDeleted: false });
-    if (!user) return null;
+    if (!user) return;
 
     return this.toDomain(user);
   }
 
   async findOneByName(name: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ name, isDeleted: false });
-    if (!user) return null;
+    if (!user) return;
 
     return this.toDomain(user);
   }

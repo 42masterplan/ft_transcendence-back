@@ -3,7 +3,6 @@ import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
 import { AchievementUseCase } from '../../../users/application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
-import { UsersService } from '../../../users/users.service';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import {
@@ -26,11 +25,11 @@ import {
   new ValidationPipe({
     exceptionFactory(validationErrors: ValidationError[] = []) {
       if (this.isDetailedOutputDisable) {
-        return new WsException('');
+        throw new WsException('');
       }
       const errors = this.flattenValidationErrors(validationErrors);
       console.log(new WsException(errors));
-      return new WsException(errors);
+      throw new WsException(errors);
     },
   }),
 )
@@ -46,7 +45,6 @@ export class ChannelGateway
     private readonly channelService: ChannelService,
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
-    private readonly usersService: UsersService,
     private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
@@ -171,11 +169,13 @@ export class ChannelGateway
     if (ret != 'joinChannel Success!') return ret;
     client.join(id);
     await this.getMyChannelsInRoom(id);
+
+    const me = await this.usersUseCase.findOne(myId);
+    if (!me) throw new WsException('There is no such user.');
+
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system] ' +
-        (await this.usersUseCase.findOne(myId)).name +
-        ' 참가했습니다.',
+      '[system] ' + me.name + ' 참가했습니다.',
       id,
     );
     await this.newMessageInRoom(id, newMessage);
@@ -278,11 +278,13 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.leaveChannel(myId, channelId);
     if (result != 'leaveChannel Success!') return result;
+
+    const me = await this.usersUseCase.findOne(myId);
+    if (!me) throw new WsException('There is no such user.');
+
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system]' +
-        (await this.usersUseCase.findOne(myId)).name +
-        ' 떠났습니다.',
+      '[system]' + me.name + ' 떠났습니다.',
       channelId,
     );
     await this.newMessageInRoom(channelId, newMessage);
@@ -302,11 +304,13 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.banUser(myId, channelId, userId);
     if (result != 'success') return result;
+
+    const me = await this.usersUseCase.findOne(userId);
+    if (!me) throw new WsException('There is no such user.');
+
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system]' +
-        (await this.usersUseCase.findOne(userId)).name +
-        '님이 밴되었습니다.',
+      '[system]' + me.name + '님이 밴되었습니다.',
       channelId,
     );
     await this.channelService.kickUser(myId, channelId, userId);
@@ -341,11 +345,13 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.kickUser(myId, channelId, userId);
     if (result != 'kickUser Success!') return result;
+
+    const me = await this.usersUseCase.findOne(userId);
+    if (!me) throw new WsException('There is no such user.');
+
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system]' +
-        (await this.usersUseCase.findOne(userId)).name +
-        '님이 추방되었습니다.',
+      '[system]' + me.name + '님이 추방되었습니다.',
       channelId,
     );
     await this.newMessageInRoom(channelId, newMessage);
@@ -371,11 +377,12 @@ export class ChannelGateway
     if (result != 'muteUser Success!') return result;
     await this.achievementUseCase.handleFirstMute(myId);
 
+    const me = await this.usersUseCase.findOne(userId);
+    if (!me) throw new WsException('There is no such user.');
+
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system] ' +
-        (await this.usersUseCase.findOne(userId)).name +
-        '님이 뮤트되었습니다.',
+      '[system] ' + me.name + '님이 뮤트되었습니다.',
       channelId,
     );
     await this.newMessageInRoom(channelId, newMessage);
@@ -393,11 +400,13 @@ export class ChannelGateway
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
     if (result !== 'unBanUser Success!') return result;
+
+    const me = await this.usersUseCase.findOne(userId);
+    if (!me) throw new WsException('There is no such user.');
+
     const newMessage = await this.channelService.newMessage(
       myId,
-      '[system]' +
-        (await this.usersUseCase.findOne(userId)).name +
-        '님이 밴 해제 되었습니다.',
+      '[system]' + me.name + '님이 밴 해제 되었습니다.',
       channelId,
     );
     await this.newMessageInRoom(channelId, newMessage);

@@ -1,7 +1,7 @@
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { UsersUseCase } from '../use-case/users.use-case';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class FindAcceptableFriendRequestUseCase {
@@ -38,9 +38,11 @@ export class FindAcceptableFriendRequestUseCase {
   private async setTargetUser(friendsRequest: FriendRequest[]) {
     await Promise.all(
       friendsRequest.map(async (friendRequest) => {
-        friendRequest.connectTargetUser(
-          await this.usersUseCase.findOne(friendRequest.targetUserId),
+        const targetUser = await this.usersUseCase.findOne(
+          friendRequest.targetUserId,
         );
+        if (!targetUser) throw new NotFoundException('There is no such user.');
+        friendRequest.connectTargetUser(targetUser);
       }),
     );
   }
@@ -48,9 +50,11 @@ export class FindAcceptableFriendRequestUseCase {
   private async setPrimaryUser(friendsRequest: FriendRequest[]) {
     await Promise.all(
       friendsRequest.map(async (friendRequest) => {
-        friendRequest.connectPrimaryUser(
-          await this.usersUseCase.findOne(friendRequest.primaryUserId),
+        const primaryUser = await this.usersUseCase.findOne(
+          friendRequest.primaryUserId,
         );
+        if (!primaryUser) throw new NotFoundException('There is no such user.');
+        friendRequest.connectPrimaryUser(primaryUser);
       }),
     );
   }

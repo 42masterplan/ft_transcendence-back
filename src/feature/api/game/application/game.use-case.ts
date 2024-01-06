@@ -5,6 +5,7 @@ import { PlayerScoreRepository } from '../domain/interface/player-score.reposito
 import { GAME_STATUS } from '../presentation/type/game-status.enum';
 import { TIER } from '../presentation/type/tier.enum';
 import { Inject, Injectable } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class GameUseCase {
@@ -65,7 +66,7 @@ export class GameUseCase {
     const result: Array<Game> = [];
 
     const user = await this.usersUseCase.findOneByName(name);
-    if (!user) return;
+    if (!user) throw new WsException('There is no such user.');
 
     const scores = await this.playerScoreRepository.findManyByUserId(user.id);
     for await (const score of scores) {
@@ -76,7 +77,8 @@ export class GameUseCase {
 
   private async getTierNumById(playerId: string): Promise<number> {
     const player = await this.usersUseCase.findOne(playerId);
-    if (!player) return;
+    if (!player) throw new WsException('There is no such user.');
+
     switch (player.tier) {
       case TIER.Bronze:
         return 0;

@@ -3,7 +3,7 @@ import { FriendRequestRepository } from '../../domain/friend/interface/friend-re
 import { UserRepository } from '../../domain/user.repository';
 import { BlockedUserUseCase } from '../use-case/blocked-user.use-case';
 import { FriendUseCase } from './friend.use-case';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class CreateFriendRequestUseCase {
@@ -48,7 +48,7 @@ export class CreateFriendRequestUseCase {
     const targetUser = await this.userRepository.findOneById(targetUserId);
 
     if (!targetUser) {
-      throw new Error('Target user not found');
+      throw new NotFoundException('Target user not found');
     }
     this.logger.log(targetUser);
     const friendRequest = await this.repository.save({

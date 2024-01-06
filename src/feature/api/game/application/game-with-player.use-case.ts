@@ -4,6 +4,7 @@ import { PlayerScoreRepository } from '../domain/interface/player-score.reposito
 import { GAME_STATUS } from '../presentation/type/game-status.enum';
 import { GameUseCase } from './game.use-case';
 import { Inject, Injectable } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class GameWithPlayerUseCase {
@@ -24,15 +25,12 @@ export class GameWithPlayerUseCase {
       if (playerScores.length !== 2) continue;
       const playerAScore = playerScores.at(0);
       const playerBScore = playerScores.at(1);
+      const playerA = await this.usersUseCase.findOne(playerAScore.playerId);
+      const playerB = await this.usersUseCase.findOne(playerBScore.playerId);
+      if (!playerA || !playerB) throw new WsException('There is no such user.');
 
-      game.connectPlayerA(
-        await this.usersUseCase.findOne(playerAScore.playerId),
-        playerAScore.value,
-      );
-      game.connectPlayerB(
-        await this.usersUseCase.findOne(playerBScore.playerId),
-        playerBScore.value,
-      );
+      game.connectPlayerA(playerA, playerAScore.value);
+      game.connectPlayerB(playerB, playerBScore.value);
       if (!game.playerA || !game.playerB) continue;
       result.push(game);
     }
@@ -43,6 +41,8 @@ export class GameWithPlayerUseCase {
     name: string,
   ): Promise<{ win: number; lose: number }> {
     const user = await this.usersUseCase.findOneByName(name);
+    if (!user) throw new WsException('There is no such user.');
+
     const playerScores = await this.playerScoreRepository.findManyByUserId(
       user.id,
     );

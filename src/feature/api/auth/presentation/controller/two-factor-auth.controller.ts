@@ -1,5 +1,5 @@
 import { MailService } from '../../../mail/mail.service';
-import { UsersService } from '../../../users/users.service';
+import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
 import { JwtEmailGuard } from '../../jwt/jwt-email.guard';
 import { JwtRegisterGuard } from '../../jwt/jwt-register.guard';
@@ -9,6 +9,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  NotFoundException,
   Post,
   Put,
   Request,
@@ -20,7 +21,7 @@ import * as bcrypt from 'bcrypt';
 export class TwoFactorAuthController {
   constructor(
     private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
-    private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
     private readonly mailService: MailService,
   ) {}
 
@@ -48,7 +49,7 @@ export class TwoFactorAuthController {
     @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ): Promise<boolean> {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 
@@ -72,6 +73,7 @@ export class TwoFactorAuthController {
     const intraId = req.user.sub;
     const code = Math.floor(Math.random() * 899999) + 100000;
     const email = await this.twoFactorAuthUseCase.update2faCode(intraId, code);
+    if (!email) throw new NotFoundException('There is no email');
     await this.mailService.sendMail(email, code);
     return { email: email };
   }
@@ -83,7 +85,7 @@ export class TwoFactorAuthController {
     @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ) {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 

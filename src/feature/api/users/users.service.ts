@@ -3,7 +3,7 @@ import { UsersUseCase } from './application/use-case/users.use-case';
 import { User } from './domain/user';
 import { CreateUserDto } from './presentation/dto/create-user.dto';
 import { UpdateUserDto } from './presentation/dto/update-user.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -12,18 +12,11 @@ export class UsersService {
     private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
-  async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
-    return await this.usersUseCase.updateOne(intraId, updateUserDto);
-  }
-
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     const user = await this.usersUseCase.createOne(createUserDto);
+    if (!user) throw new NotFoundException('There is no such user.');
     await this.achievementUseCase.initAchievementStatus(user.id);
     return user;
-  }
-
-  async findOneByIntraId(intraId: string): Promise<User> {
-    return await this.usersUseCase.findOneByIntraId(intraId);
   }
 
   async isDuplicatedName(name: string, intraId: string): Promise<boolean> {

@@ -4,7 +4,13 @@ import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../../presentation/dto/update-user.dto';
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class UsersUseCase {
@@ -35,6 +41,7 @@ export class UsersUseCase {
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
     const user = await this.repository.updateOne(intraId, updateUserDto);
+    if (!user) throw new NotFoundException('There is no such user.');
     if (updateUserDto.is2faEnabled && user.email && user.isEmailValidated) {
       await this.twoFactorAuthUseCase.validate2fa(intraId);
     }
@@ -42,15 +49,21 @@ export class UsersUseCase {
   }
 
   async updateStatusByIntraId(intraId: string, status: string): Promise<User> {
-    return await this.repository.updateStatusByIntraId(intraId, status);
+    const user = await this.repository.updateStatusByIntraId(intraId, status);
+    if (!user) throw new WsException('There is no such user.');
+    return user;
   }
 
   async updateStatusById(intraId: string, status: string): Promise<User> {
-    return await this.repository.updateStatusById(intraId, status);
+    const user = await this.repository.updateStatusById(intraId, status);
+    if (!user) throw new WsException('There is no such user.');
+    return user;
   }
 
   async updateTierAndExp(id: string, exp: number): Promise<User> {
     const user = await this.repository.findOneById(id);
+    if (!user) throw new NotFoundException('There is no such user.');
+
     let newExp: number = user.exp + exp;
     let newTier: TIER;
     if (newExp < 0) {
@@ -88,20 +101,13 @@ export class UsersUseCase {
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    try {
-      return await this.repository.createOne(createUserDto);
-    } catch (e) {
-      throw new ConflictException(e, 'Create user failed.');
-    }
+    const user = await this.repository.createOne(createUserDto);
+    if (!user) throw new ConflictException('Create user failed.');
+    return user;
   }
 
   async resetTwoFactorAuthValidation(intraId: string): Promise<void> {
-    await this.repository.resetTwoFactorAuthValidation(intraId);
-  }
-
-  async isTwoFactorAuthEnabled(intraId: string): Promise<boolean> {
-    intraId;
-    return true;
-    // return await this.repository.isTw;
+    const user = await this.repository.resetTwoFactorAuthValidation(intraId);
+    if (!user) throw new WsException('There is no such user.');
   }
 }

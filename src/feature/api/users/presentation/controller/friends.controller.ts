@@ -1,11 +1,11 @@
 import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
+import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindAcceptableFriendRequestUseCase } from '../../application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
 import { FriendUseCase } from '../../application/friends/friend.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
-import { UsersService } from '../../users.service';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 import { FindFriendsRequestToMeViewModel } from '../view-models/friends-request/find-friends-request-to-me.vm';
 
@@ -23,7 +23,6 @@ import {
   Query,
   NotFoundException,
 } from '@nestjs/common';
-import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 
 @Controller('users/friends')
 export class FriendsController {
@@ -35,8 +34,7 @@ export class FriendsController {
     private readonly friendRequestUseCase: FriendRequestUseCase,
     private readonly friendUseCase: FriendUseCase,
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
-    private readonly userService: UsersService,
-    private readonly userUseCase: UsersUseCase,
+    private readonly usersUseCase: UsersUseCase,
     private readonly notificationGateway: NotificationGateway,
   ) {}
   @UseGuards(JwtAuthGuard)
@@ -44,7 +42,8 @@ export class FriendsController {
   async getFriends(@Request() req) {
     this.logger.log('getFriends');
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    if (!user) throw new NotFoundException('There is no such user.');
     const friends = await this.findUseCase.execute(user.id);
     return friends.map((friend) => new FindFriendViewModel(friend));
   }
@@ -53,9 +52,9 @@ export class FriendsController {
   @Get('isFriend')
   async isFriend(@Request() req, @Query('name') friendName: string) {
     const intraId = req.user.sub;
-    const user = await this.userUseCase.findOneByIntraId(intraId);
-    const friend = await this.userUseCase.findOneByName(friendName);
-    if (!friend) throw new NotFoundException('There is no such user.');
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    const friend = await this.usersUseCase.findOneByName(friendName);
+    if (!friend || !user) throw new NotFoundException('There is no such user.');
     const isFriend = await this.friendUseCase.isFriend({
       myId: user.id,
       friendId: friend.id,
@@ -72,7 +71,8 @@ export class FriendsController {
     @Param('friendId') friendId: string,
   ): Promise<boolean> {
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    if (!user) throw new NotFoundException('There is no such user.');
     await this.friendUseCase.delete({
       myId: user.id,
       friendId,
@@ -88,7 +88,8 @@ export class FriendsController {
     @Request() req,
   ): Promise<FindFriendsRequestToMeViewModel[]> {
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    if (!user) throw new NotFoundException('There is no such user.');
 
     const friendsRequest =
       await this.findAcceptableFriendRequestUseCase.findFriendsRequestsToMe(
@@ -107,7 +108,8 @@ export class FriendsController {
     @Body('friendId') friendId: string,
   ): Promise<boolean> {
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    if (!user) throw new NotFoundException('There is no such user.');
 
     await this.createRequestUseCase.execute({
       primaryUserId: user.id,

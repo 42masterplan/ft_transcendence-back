@@ -9,6 +9,7 @@ import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { UsersUseCase } from 'src/feature/api/users/application/use-case/users.use-case';
 
 @Injectable()
@@ -108,6 +109,8 @@ export class ChannelService {
     channelId: string,
   ): Promise<any> {
     const user = await this.usersUseCase.findOne(userId);
+    if (!user) throw new WsException('There is no such user.');
+
     const participant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
@@ -190,6 +193,8 @@ export class ChannelService {
     for await (const participant of channelParticipant) {
       if (participant.participantId === userId) continue;
       const user = await this.usersUseCase.findOne(participant.participantId);
+      if (!user) throw new WsException('There is no such user.');
+
       participants.push({
         channelId: participant.channelId,
         userId: user.id,
@@ -207,6 +212,8 @@ export class ChannelService {
     for await (const bannedUser of channelBannedUsers) {
       if (bannedUser.isDeleted === true) continue;
       const user = await this.usersUseCase.findOne(bannedUser.userId);
+      if (!user) throw new WsException('There is no such user.');
+
       bannedUsers.push({
         channelId: bannedUser.channelId,
         userId: user.id,
@@ -258,6 +265,8 @@ export class ChannelService {
     const adminUsers = [];
     for await (const participant of channelParticipant) {
       const user = await this.usersUseCase.findOne(participant.participantId);
+      if (!user) throw new WsException('There is no such user.');
+
       adminUsers.push({
         channelId: participant.channelId,
         userId: user.id,
@@ -461,6 +470,8 @@ export class ChannelService {
     const history = [];
     for await (const data of list) {
       const user = await this.usersUseCase.findOne(data.participantId);
+      if (!user) throw new WsException('There is no such user.');
+
       history.push({
         id: data.participantId,
         name: user.name,
