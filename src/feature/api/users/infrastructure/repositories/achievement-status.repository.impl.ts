@@ -39,21 +39,44 @@ export class AchievementStatusRepositoryImpl
     userId: string,
     achievementId: number,
   ): Promise<AchievementStatus> {
-    const achievementStatus = this.repository.create({
-      userId: userId,
-      achievementId: achievementId,
-    });
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let achievementStatus: AchievementStatusEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        achievementStatus = await entityManager.create(
+          AchievementStatusEntity,
+          {
+            userId,
+            achievementId,
+          },
+        );
+        if (!achievementStatus) return;
+        await entityManager.persist(achievementStatus);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(achievementStatus);
   }
 
   async updateOne(
     achievementStatus: AchievementStatus,
   ): Promise<AchievementStatus> {
-    const newAchievementStatus = await this.repository.upsert(
-      this.toEntity(achievementStatus),
-    );
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let newAchievementStatus: AchievementStatusEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        const entity = this.toEntity(achievementStatus);
+        newAchievementStatus = await entityManager.upsert(
+          AchievementStatusEntity,
+          entity,
+        );
+        if (!newAchievementStatus) return;
+        await entityManager.persist(newAchievementStatus);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newAchievementStatus);
   }
 
