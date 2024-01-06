@@ -22,12 +22,21 @@ export class DmMessageRepository {
   }
 
   async saveOne({ dmId, content, participantId }): Promise<DmMessage> {
-    const newMessage = this.repository.create({
-      dmId,
-      content,
-      participantId,
-    });
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let newMessage: DmMessageEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        newMessage = await entityManager.create(DmMessageEntity, {
+          dmId,
+          content,
+          participantId,
+        });
+        if (!newMessage) return;
+        await entityManager.persist(newMessage);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(newMessage);
   }
 
