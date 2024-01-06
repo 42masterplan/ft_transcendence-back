@@ -25,30 +25,39 @@ export class FriendRepositoryImpl implements FriendRepository {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    if (
-      (await this.repository.count({
-        myId,
-        friendId,
-        isDeleted: false,
-      })) ||
-      (await this.repository.count({
-        myId: friendId,
-        friendId: myId,
-        isDeleted: false,
-      }))
-    )
-      return;
-    const meAndFriend = await this.repository.create({
-      myId,
-      friendId,
-    });
-    await this.repository.create({
-      myId: friendId,
-      friendId: myId,
-    });
+    let flag = false;
+    let meAndFriend: FriendEntity;
 
-    await this.repository.getEntityManager().flush();
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        if (
+          (await entityManager.count(FriendEntity, {
+            myId,
+            friendId,
+            isDeleted: false,
+          })) ||
+          (await entityManager.count(FriendEntity, {
+            myId: friendId,
+            friendId: myId,
+            isDeleted: false,
+          }))
+        )
+          return;
 
+        meAndFriend = await entityManager.create(FriendEntity, {
+          myId,
+          friendId,
+        });
+        const friendAndMe = await entityManager.create(FriendEntity, {
+          myId: friendId,
+          friendId: myId,
+        });
+        await entityManager.persist(meAndFriend);
+        await entityManager.persist(friendAndMe);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(meAndFriend);
   }
 
@@ -59,23 +68,32 @@ export class FriendRepositoryImpl implements FriendRepository {
     myId: string;
     friendId: string;
   }): Promise<Friend> {
-    const meAndFriend = await this.repository.findOne({
-      myId,
-      friendId,
-      isDeleted: false,
-    });
-    const friendAndMe = await this.repository.findOne({
-      myId: friendId,
-      friendId: myId,
-      isDeleted: false,
-    });
-    if (!meAndFriend || !friendAndMe) return;
+    let flag = false;
+    let meAndFriend: FriendEntity;
 
-    meAndFriend.isDeleted = true;
-    friendAndMe.isDeleted = true;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        meAndFriend = await entityManager.findOne(FriendEntity, {
+          myId,
+          friendId,
+          isDeleted: false,
+        });
+        const friendAndMe = await entityManager.findOne(FriendEntity, {
+          myId: friendId,
+          friendId: myId,
+          isDeleted: false,
+        });
+        if (!meAndFriend || !friendAndMe) return;
 
-    await this.repository.getEntityManager().flush();
+        meAndFriend.isDeleted = true;
+        friendAndMe.isDeleted = true;
 
+        await entityManager.persist(meAndFriend);
+        await entityManager.persist(friendAndMe);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(meAndFriend);
   }
 
