@@ -13,9 +13,19 @@ export class GameRepositoryImpl implements GameRepository {
   ) {}
 
   async createOne({ isLadder }: { isLadder: boolean }): Promise<Game> {
-    const game = await this.repository.create({ isLadder });
-
-    await this.repository.getEntityManager().flush();
+    let flag = false;
+    let game: GameEntity;
+    await this.repository
+      .getEntityManager()
+      .transactional(async (entityManager) => {
+        game = await entityManager.create(GameEntity, {
+          isLadder,
+        });
+        if (!game) return;
+        await entityManager.persist(game);
+        flag = true;
+      });
+    if (!flag) return;
     return this.toDomain(game);
   }
 
