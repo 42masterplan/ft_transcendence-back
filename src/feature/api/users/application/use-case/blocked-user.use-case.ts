@@ -17,13 +17,6 @@ export class BlockedUserUseCase {
   async block({ myId, targetId }: { myId: string; targetId: string }) {
     if (await this.repository.alreadyBlock({ myId, targetId })) return;
 
-    if (await this.friendUseCase.isFriend({ myId, friendId: targetId })) {
-      await this.friendUseCase.delete({
-        myId: myId,
-        friendId: targetId,
-      });
-    }
-
     const requests = await this.friendRequestUseCase.getFriendRequestBetween({
       myId,
       targetId,
@@ -31,6 +24,12 @@ export class BlockedUserUseCase {
     for (const request of requests) {
       await this.friendRequestUseCase.rejectFriendRequest({
         requestId: request.id,
+      });
+    }
+    if (await this.friendUseCase.isFriend({ myId, friendId: targetId })) {
+      await this.friendUseCase.delete({
+        myId: myId,
+        friendId: targetId,
       });
     }
 

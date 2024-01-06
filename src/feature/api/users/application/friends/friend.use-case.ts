@@ -1,4 +1,3 @@
-import { Friend } from '../../domain/friend/friend';
 import { FriendRepository } from '../../domain/friend/interface/friend.repository';
 import { Inject, Injectable } from '@nestjs/common';
 
@@ -14,11 +13,15 @@ export class FriendUseCase {
   }: {
     myId: string;
     friendId: string;
-  }): Promise<Friend> {
-    return await this.repository.createFriend({
-      myId,
-      friendId,
-    });
+  }): Promise<boolean> {
+    if (
+      await this.repository.createFriend({
+        myId,
+        friendId,
+      })
+    )
+      return true;
+    return false;
   }
 
   async delete({
@@ -27,11 +30,15 @@ export class FriendUseCase {
   }: {
     myId: string;
     friendId: string;
-  }): Promise<Friend> {
-    return await this.repository.deleteFriend({
-      myId,
-      friendId,
-    });
+  }): Promise<boolean> {
+    if (
+      await this.repository.deleteFriend({
+        myId,
+        friendId,
+      })
+    )
+      return true;
+    return false;
   }
 
   async isFriend({

@@ -28,16 +28,22 @@ export class FriendRequestUseCase {
 
     const myId = friendRequest.targetUserId;
     const friendId = friendRequest.primaryUserId;
-    await this.friendUseCase.create({
-      myId,
-      friendId,
-    });
+    await this.repository.update(friendRequest);
+    if (await this.friendUseCase.isFriend({ myId, friendId })) return;
+
+    if (
+      await this.friendUseCase.create({
+        myId,
+        friendId,
+      })
+    )
+      return;
 
     await this.dmUseCase.createDm(myId, friendId);
     this.notificationGateway.handleSocialUpdate(myId);
     this.notificationGateway.handleSocialUpdate(friendId);
 
-    return await this.repository.update(friendRequest);
+    return friendRequest;
   }
 
   async rejectFriendRequest({ requestId }: { requestId: number }) {

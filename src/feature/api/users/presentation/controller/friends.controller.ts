@@ -73,12 +73,15 @@ export class FriendsController {
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     if (!user) throw new NotFoundException('There is no such user.');
-    await this.friendUseCase.delete({
-      myId: user.id,
-      friendId,
-    });
-    this.notificationGateway.handleSocialUpdate(user.id);
-    this.notificationGateway.handleSocialUpdate(friendId);
+    if (
+      await this.friendUseCase.delete({
+        myId: user.id,
+        friendId,
+      })
+    ) {
+      this.notificationGateway.handleSocialUpdate(user.id);
+      this.notificationGateway.handleSocialUpdate(friendId);
+    }
     return true;
   }
 
