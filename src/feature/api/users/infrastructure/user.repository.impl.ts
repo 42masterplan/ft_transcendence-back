@@ -64,10 +64,12 @@ export class UserRepositoryImpl implements UserRepository {
         });
         if (!user) return;
         if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
-          const [_, count] = await entityManager.findAndCount(UserEntity, {
-            name: updateUserDto.name,
-          });
-          if (count) return;
+          if (
+            await entityManager.count(UserEntity, {
+              name: updateUserDto.name,
+            })
+          )
+            return;
           user.name = updateUserDto.name;
         }
         if (

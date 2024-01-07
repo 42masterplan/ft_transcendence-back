@@ -42,6 +42,8 @@ export class ChannelRepository {
     await this.repository
       .getEntityManager()
       .transactional(async (entityManager) => {
+        if (entityManager.count(ChannelEntity, { name: createChannelDto.name }))
+          return;
         channel = await entityManager.create(ChannelEntity, createChannelDto);
         if (!channel) return;
         await entityManager.persist(channel);

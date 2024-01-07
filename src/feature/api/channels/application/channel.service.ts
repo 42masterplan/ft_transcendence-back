@@ -28,16 +28,21 @@ export class ChannelService {
     const myChannelList =
       await this.channelParticipantRepository.findAllByUserId(userId);
     return await Promise.all(
-      myChannelList.map(async (participants) => ({
-        id: participants.channelId,
-        name: (await this.channelRepository.findOneById(participants.channelId))
-          .name,
-        userCount: await this.channelParticipantRepository.countByChannelId(
+      myChannelList.map(async (participants) => {
+        const channel = await this.channelRepository.findOneById(
           participants.channelId,
-        ),
-        role: participants.role,
-        isUnread: true,
-      })),
+        );
+        if (!channel) throw new WsException('There is no such channel');
+        const userCount =
+          await this.channelParticipantRepository.countByChannelId(channel.id);
+        return {
+          id: channel.id,
+          name: channel.name,
+          userCount: userCount,
+          role: participants.role,
+          isUnread: true,
+        };
+      }),
     );
   }
 
@@ -62,7 +67,7 @@ export class ChannelService {
         userId,
         channelId,
       );
-    if (!myRole && myRole.isDeleted === true)
+    if (!myRole || myRole.isDeleted === true)
       throw new ForbiddenException('You are not in this channel');
     return myRole.role;
   }
@@ -87,13 +92,13 @@ export class ChannelService {
         userId,
         id,
       );
-    if (!user)
+    if (!user) {
       await this.channelParticipantRepository.saveOne({
         role: 'user',
         participantId: userId,
         channelId: channel.id,
       });
-    else if (user.isDeleted === true) {
+    } else if (user.isDeleted === true) {
       user.updatedIsDeleted(false);
       user.updatedRole('user');
       await this.channelParticipantRepository.updateOne(user);
@@ -113,9 +118,12 @@ export class ChannelService {
 
     const participant =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
-        userId,
+        user.id,
         channelId,
       );
+    if (!participant) {
+      throw new WsException('There is no such participant.');
+    }
     if (
       participant.chatableAt > new Date(Date.now()) &&
       !content.startsWith('[system]')
@@ -459,9 +467,8 @@ export class ChannelService {
 
   hashPassword(password: string): string {
     if (password === '') return password;
-    const secret = 'pipapopu';
     return crypto
-      .createHmac('sha256', secret)
+      .createHmac('sha256', process.env.SERVER_HASH_KEY)
       .update(password)
       .digest('base64');
   }
