@@ -39,6 +39,7 @@ export class AchievementStatusRepositoryImpl
     userId: string,
     achievementId: number,
   ): Promise<AchievementStatus> {
+    if (await this.repository.count({ userId, achievementId })) return;
     const achievementStatus = this.repository.create({
       userId: userId,
       achievementId: achievementId,
