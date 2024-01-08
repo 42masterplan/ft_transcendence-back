@@ -17,6 +17,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   NotFoundException,
   Param,
   Post,
@@ -32,6 +33,8 @@ import { diskStorage } from 'multer';
 
 @Controller('users')
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly usersUseCase: UsersUseCase,
@@ -44,6 +47,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('')
   async getAll(@Request() req, @Query('status') status: string) {
+    this.logger.log('get all users');
     const intraId = req.user.sub;
     if (
       status !== undefined &&
@@ -67,6 +71,7 @@ export class UsersController {
   @UseGuards(JwtSignInGuard)
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+    this.logger.log('update my info');
     await this.usersUseCase.updateOne(req.user.sub, updateUserDto);
   }
 
@@ -79,6 +84,7 @@ export class UsersController {
   @UseGuards(JwtSignInGuard)
   @Get('is-duplicated-name')
   async isDuplicatedName(@Request() req, @Query('name') name: string) {
+    this.logger.log('check is duplicated name');
     const isDuplicated = await this.usersService.isDuplicatedName(
       name,
       req.user.sub,
@@ -108,6 +114,7 @@ export class UsersController {
     }),
   )
   updateProfileImage(@UploadedFile() image: Express.Multer.File) {
+    this.logger.log('upload profile image');
     return {
       profileImage: image.path,
     };
@@ -116,6 +123,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('info/:name')
   async getInfo(@Param('name') name: string) {
+    this.logger.log('get user info');
     const user = await this.usersUseCase.findOneByName(name);
     if (!user) throw new NotFoundException('There is no such user.');
     return {
@@ -130,6 +138,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('rank/:name')
   async getRank(@Param('name') name: string) {
+    this.logger.log('get user rank');
     const user = await this.usersUseCase.findOneByName(name);
     if (!user) throw new NotFoundException('There is no such user.');
     const gameStat = await this.gameWithPlayerUseCase.getPlayerGameStat(name);
@@ -143,6 +152,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('challenges/:name')
   async getChallenges(@Param('name') name: string): Promise<any> {
+    this.logger.log('get user challenges');
     const user = await this.usersUseCase.findOneByName(name);
     if (!user) throw new NotFoundException('There is no such user.');
     const achieves = await this.achievementUseCase.findAllByUserId(user.id);
@@ -152,6 +162,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
+    this.logger.log('get user matches');
     // console.log('matches');
     const user = await this.usersUseCase.findOneByName(name);
     if (!user) throw new NotFoundException('There is no such user.');
@@ -162,6 +173,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('my-name')
   async getMyName(@Request() req) {
+    this.logger.log('get my name');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     return { name: user.name };
@@ -170,6 +182,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('my-info')
   async getMyInfo(@Request() req) {
+    this.logger.log('get my info');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     return {
@@ -183,6 +196,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('block')
   async getBlockedUser(@Request() req) {
+    this.logger.log('get blocked user');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     const blocked = await this.findBlockedUserUseCase.execute(user.id);
@@ -192,6 +206,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Post('block')
   async block(@Request() req, @Body('id') targetId: string) {
+    this.logger.log('block user');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     await this.blockedUserUseCase.block({ myId: user.id, targetId });
@@ -202,6 +217,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Delete('block/:id')
   async unblock(@Request() req, @Param('id') targetId: string) {
+    this.logger.log('unblock user');
     const intraId = req.user.sub;
     // console.log('unblock');
     // console.log(targetId);

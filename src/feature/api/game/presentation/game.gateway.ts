@@ -11,6 +11,7 @@ import { GameState } from './type/game-state';
 import { GAME_STATE_UPDATE_RATE, PLAYER_A_COLOR, SCORE_LIMIT } from './util';
 import { GameStateViewModel } from './view-model/game-state.vm';
 import {
+  Logger,
   UseGuards,
   UsePipes,
   ValidationError,
@@ -41,6 +42,8 @@ import { Server, Socket } from 'socket.io';
   }),
 )
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(GameGateway.name);
+
   private gameStateMutexes: Map<string, Mutex> = new Map();
   private gameStates: Map<string, GameState> = new Map();
   private gameTimeCrons: Map<string, ReturnType<typeof setInterval>> =
@@ -62,6 +65,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: any) {
+    this.logger.log('connected: game gateway');
+
     if (
       client.handshake.headers.server_secret_key ===
       process.env.SERVER_SECRET_KEY
@@ -92,6 +97,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: any) {
+    this.logger.log('disconnected: game gateway');
+
     // console.log('Game is get disconnected!');
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
@@ -154,6 +161,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
   ) {
     if (client !== this.notificationSocket) return;
+    this.logger.log('create game room');
     await this.joinMutex.runExclusive(async () => {
       let mutex = this.gameStateMutexes.get(matchId);
       if (mutex) {
@@ -189,6 +197,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }: { matchId: string; gameMode: string; side: string },
   ) {
     // console.log(client.id + ' join room start ' + matchId);
+    this.logger.log('join game room');
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -231,6 +240,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('gameReady')
   async startGame(client: Socket) {
+    this.logger.log('game start');
+
     await this.joinMutex.runExclusive(async () => {
       const matchId = this.gameService.getMyMatchIdBySocket(
         this.gameStates,

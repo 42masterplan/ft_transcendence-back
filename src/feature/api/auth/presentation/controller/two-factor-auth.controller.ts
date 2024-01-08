@@ -9,6 +9,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Logger,
   Post,
   Put,
   Request,
@@ -18,6 +19,8 @@ import * as bcrypt from 'bcrypt';
 
 @Controller('users/two-factor-auth')
 export class TwoFactorAuthController {
+  private readonly logger = new Logger(TwoFactorAuthController.name);
+
   constructor(
     private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
     private readonly usersUseCase: UsersUseCase,
@@ -30,6 +33,7 @@ export class TwoFactorAuthController {
     @Request() req,
     @Body() twoFactorAuthEmail: TwoFactorAuthEmailDto,
   ): Promise<boolean> {
+    this.logger.log('update email');
     const intraId = req.user.sub;
     const code = Math.floor(Math.random() * 899999) + 100000;
     if (
@@ -51,6 +55,7 @@ export class TwoFactorAuthController {
     @Request() req,
     @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ): Promise<boolean> {
+    this.logger.log('update email validated');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     const expiredDate = new Date();
@@ -73,6 +78,7 @@ export class TwoFactorAuthController {
   @UseGuards(JwtEmailGuard)
   @Post('')
   async request2fa(@Request() req) {
+    this.logger.log('two factor authentication');
     const intraId = req.user.sub;
     const code = Math.floor(Math.random() * 899999) + 100000;
     const email = await this.twoFactorAuthUseCase.update2faCode(intraId, code);
@@ -86,6 +92,7 @@ export class TwoFactorAuthController {
     @Request() req,
     @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ) {
+    this.logger.log('two factor authentication validate');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     const expiredDate = new Date();

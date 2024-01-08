@@ -40,7 +40,7 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Get('')
   async getFriends(@Request() req) {
-    this.logger.log('getFriends');
+    this.logger.log('get friends');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     const friends = await this.findUseCase.execute(user.id);
@@ -50,6 +50,7 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Get('isFriend')
   async isFriend(@Request() req, @Query('name') friendName: string) {
+    this.logger.log('is friend');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     const friend = await this.usersUseCase.findOneByName(friendName);
@@ -69,6 +70,7 @@ export class FriendsController {
     @Request() req,
     @Param('friendId') friendId: string,
   ): Promise<boolean> {
+    this.logger.log('delete friend');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     if (
@@ -88,6 +90,7 @@ export class FriendsController {
   async getFriendsRequest(
     @Request() req,
   ): Promise<FindFriendsRequestToMeViewModel[]> {
+    this.logger.log('get my friend request');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
 
@@ -107,6 +110,7 @@ export class FriendsController {
     @Request() req,
     @Body('friendId') friendId: string,
   ): Promise<boolean> {
+    this.logger.log('send friend request');
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
 
@@ -120,6 +124,7 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Put('request')
   async acceptFriendRequest(@Body('requestId') requestId: number) {
+    this.logger.log('accept friend request');
     await this.friendRequestUseCase.acceptFriendRequest({
       requestId: requestId,
     });
@@ -130,6 +135,7 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Delete('request/:requestId')
   async rejectFriendRequest(@Param('requestId') requestId: number) {
+    this.logger.log('reject friend request');
     await this.friendRequestUseCase.rejectFriendRequest({
       requestId: requestId,
     });

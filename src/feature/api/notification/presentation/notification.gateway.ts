@@ -5,12 +5,12 @@ import { GAME_MODE } from '../../game/presentation/type/game-mode.enum';
 import { THEME } from '../../game/presentation/type/theme.enum';
 import { FriendUseCase } from '../../users/application/friends/friend.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
-import { UsersService } from '../../users/users.service';
 import { DmUseCase } from '../application/dm.use-case';
 import { LadderMatch } from './type/ladder-match';
 import { LadderMatchQueue } from './type/ladder-match-queue';
 import { NormalMatch } from './type/normal-match.type';
 import {
+  Logger,
   OnModuleInit,
   UseGuards,
   UsePipes,
@@ -59,9 +59,10 @@ type gameCancel = {
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
+  private readonly logger = new Logger(NotificationGateway.name);
+
   constructor(
     private readonly authService: AuthService,
-    private readonly usersService: UsersService,
     private readonly usersUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
     private readonly friendUseCase: FriendUseCase,
@@ -85,6 +86,8 @@ export class NotificationGateway
    *  유저가 이미 네임스페이스에 연결된 소켓을 가지고 있다면, 이전 소켓을 끊고 새로운 소켓으로 교체합니다.
    */
   async handleConnection(@ConnectedSocket() socket: Socket) {
+    this.logger.log('connect with server');
+
     const token = socket.handshake.auth?.Authorization?.split(' ')[1];
     const user = await this.authService.verifySocket(token);
     if (!user) {
@@ -105,6 +108,8 @@ export class NotificationGateway
    * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
    */
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
+    this.logger.log('disconnect with server');
+
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(socket),
     );
@@ -148,6 +153,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameRequest')
   async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
+    this.logger.log('normal game request');
     const destSocketId = this.sockets.get(userId);
     const srcSocketId = client.id;
     const srcUser = await this.usersUseCase.findOneByIntraId(
@@ -218,6 +224,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('ladderGameRequest')
   async handleLadderGameRequest(client) {
+    this.logger.log('ladder game request');
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -254,6 +261,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
+    this.logger.log('normal game response');
     // console.log('socket gameResponse');
     // console.log(this.normalMatchQueue);
     // console.log(isAccept, matchId);
@@ -311,6 +319,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameCancel')
   async handleNormalGameCancel(client, { matchId }: gameCancel) {
+    this.logger.log('normal game cancel');
     // console.log('socket gameCancel' + matchId);
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
@@ -330,6 +339,7 @@ export class NotificationGateway
 
   @SubscribeMessage('ladderGameCancel')
   async handleLadderGameCancel(client) {
+    this.logger.log('ladder game cancel');
     // console.log('socket gameCancel');
     await this.ladderQueueMutex.runExclusive(() =>
       this.ladderMatchQueue.removeUserMatch(client.id),
@@ -344,6 +354,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmHistory')
   async handleDMHistory(client, userName: string) {
+    this.logger.log('get dm history');
     // console.log('socket DmHistory');
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
@@ -380,6 +391,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmNewMessage')
   async handleDMNewMessage(client, { dmId, participantId, content }) {
+    this.logger.log('send dm new message');
     // console.log('socket DmNewMessage');
     if (content.length >= 512) return 'Dm New message fail: Too long!';
     const user = await this.usersUseCase.findOneByIntraId(
