@@ -80,7 +80,7 @@ export class FriendRepositoryImpl implements FriendRepository {
   }
 
   private toDomain(entity: FriendEntity): Friend {
-    if (!entity) return;
+    if (!entity) return null;
     return new Friend({
       id: entity.id,
       createdAt: entity.createdAt,
