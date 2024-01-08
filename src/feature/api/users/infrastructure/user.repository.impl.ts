@@ -185,6 +185,7 @@ export class UserRepositoryImpl implements UserRepository {
   }
 
   private toDomain(userEntity: UserEntity): User {
+    if (!userEntity) return;
     return new User({
       id: userEntity.id,
       intraId: userEntity.intraId,

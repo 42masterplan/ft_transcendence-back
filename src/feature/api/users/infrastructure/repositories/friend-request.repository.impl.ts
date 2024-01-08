@@ -88,6 +88,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   }
 
   private toDomain(entity: FriendRequestEntity): FriendRequest {
+    if (!entity) return;
     return new FriendRequest({
       id: entity.id,
       primaryUserId: entity.primaryUserId,

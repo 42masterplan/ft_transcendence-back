@@ -26,6 +26,7 @@ export class GameRepositoryImpl implements GameRepository {
   }
 
   private toDomain(entity: GameEntity): Game {
+    if (!entity) return;
     return new Game({
       id: entity.id,
       isLadder: entity.isLadder,

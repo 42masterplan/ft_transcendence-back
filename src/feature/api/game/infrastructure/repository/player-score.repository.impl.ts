@@ -58,6 +58,7 @@ export class PlayerScoreRepositoryImpl implements PlayerScoreRepository {
   }
 
   private toDomain(entity: PlayerScoreEntity): PlayerScore {
+    if (!entity) return;
     return new PlayerScore({
       playerId: entity.playerId,
       gameId: entity.gameId,

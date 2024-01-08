@@ -44,6 +44,7 @@ export class ChannelMessageRepository {
   }
 
   private toDomain(entity: ChannelMessageEntity): ChannelMessage {
+    if (!entity) return;
     return new ChannelMessage({
       id: entity.id,
       participantId: entity.participantId,

@@ -82,6 +82,7 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
   }
 
   private toDomain(entity: BlockedUserEntity): BlockedUser {
+    if (!entity) return;
     return new BlockedUser({
       id: entity.id,
       primaryUserId: entity.primaryUserId,

@@ -68,6 +68,7 @@ export class ChannelUserBannedRepository {
   private toDomain(
     channelUserBanned: ChannelUserBannedEntity,
   ): ChannelUserBanned {
+    if (!channelUserBanned) return;
     return new ChannelUserBanned({
       userId: channelUserBanned.userId,
       channelId: channelUserBanned.channelId,
