@@ -14,35 +14,33 @@ import { Injectable } from '@nestjs/common';
 export class UserRepositoryImpl implements UserRepository {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly userRepository: EntityRepository<UserEntity>,
+    private readonly repository: EntityRepository<UserEntity>,
   ) {}
 
   async findAll(): Promise<User[]> {
-    const users = await this.userRepository.find(
-      { isDeleted: false },
+    const notNullUsers = await this.repository.find(
+      { isDeleted: false, name: { $ne: null } },
       { orderBy: { name: QueryOrder.ASC } },
     );
-    const notNullUsers = users.filter((user) => user.name !== null);
-    if (!notNullUsers) return [];
     return notNullUsers.map((user) => this.toDomain(user));
   }
 
-  async findOneById(id: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ id, isDeleted: false });
-    if (!user) return null;
+  async findOneById(id: string): Promise<User> {
+    const user = await this.repository.findOne({ id, isDeleted: false });
+    if (!user) return;
 
     return this.toDomain(user);
   }
 
-  async findOneByName(name: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ name, isDeleted: false });
-    if (!user) return null;
+  async findOneByName(name: string): Promise<User> {
+    const user = await this.repository.findOne({ name, isDeleted: false });
+    if (!user) return;
 
     return this.toDomain(user);
   }
 
   async findOneByIntraId(intraId: string): Promise<User> {
-    const user = await this.userRepository.findOne({
+    const user = await this.repository.findOne({
       intraId,
       isDeleted: false,
     });
@@ -55,13 +53,14 @@ export class UserRepositoryImpl implements UserRepository {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
+    const user = await this.repository.findOne({
       intraId,
       isDeleted: false,
     });
     if (!user) return;
     if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
-      user.name = updateUserDto.name;
+      if (!this.repository.count({ name: updateUserDto.name }))
+        user.name = updateUserDto.name;
     }
     if (
       updateUserDto.profileImage !== null &&
@@ -85,67 +84,68 @@ export class UserRepositoryImpl implements UserRepository {
       user.email = null;
       user.verificationCode = null;
     }
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
   async updateStatusByIntraId(intraId: string, status: string): Promise<User> {
-    const user = await this.userRepository.findOne({
+    const user = await this.repository.findOne({
       intraId,
       isDeleted: false,
     });
     if (!user) return;
     user.currentStatus = status;
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
   async updateStatusById(id: string, status: string): Promise<User> {
-    const user = await this.userRepository.findOne({
+    const user = await this.repository.findOne({
       id,
       isDeleted: false,
     });
     if (!user) return;
     user.currentStatus = status;
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
   async updateTierAndExp(id: string, tier: TIER, exp: number): Promise<User> {
-    const user = await this.userRepository.findOne({ id });
+    const user = await this.repository.findOne({ id });
     if (!user) return;
     user.tier = tier as string;
     user.exp = exp;
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.create({
+    if (this.repository.count({ intraId: createUserDto.intraId })) return;
+    const user = await this.repository.create({
       ...createUserDto,
       currentStatus: 'on-line',
       tier: TIER.Silver as string,
       exp: 0,
     });
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
   async resetTwoFactorAuthValidation(intraId: string): Promise<void> {
-    const user = await this.userRepository.findOne({
+    const user = await this.repository.findOne({
       intraId,
       isDeleted: false,
     });
     if (!user) return;
     user.is2faValidated = false;
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
   }
 
   async updateTwoFactorAuth(
     intraId: string,
     twoFactorAuth: TwoFactorAuthType,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
+    const user = await this.repository.findOne({
       intraId,
       isDeleted: false,
     });
@@ -169,7 +169,7 @@ export class UserRepositoryImpl implements UserRepository {
       user.is2faValidated = twoFactorAuth.is2faValidated;
     }
 
-    await this.userRepository.getEntityManager().flush();
+    await this.repository.getEntityManager().flush();
     return this.toDomain(user);
   }
 
