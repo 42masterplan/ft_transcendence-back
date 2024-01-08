@@ -71,9 +71,10 @@ export class ChannelService {
   async joinChannel(userId: string, { id, password }): Promise<string> {
     console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
+    password = password.replace(/\s/g, '');
     password = this.hashPassword(password);
     if (!channel) return 'There is no channel';
-    if (channel.status === 'private') return 'Cannot join private channel';
+    if (channel.status === 'Private') return 'Cannot join private channel';
     if (channel.password != password) return 'Wrong password!';
 
     const isBanned =
@@ -167,6 +168,7 @@ export class ChannelService {
       client.emit('error_exist', '방 이름이 비었습니다.');
     if (await this.channelRepository.findOneByName(createChannelDto.name))
       throw new ForbiddenException('Already exist channel name');
+    createChannelDto.password = createChannelDto.password.replace(/\s/g, '');
     createChannelDto.password = this.hashPassword(createChannelDto.password);
     const channel = await this.channelRepository.saveOne(createChannelDto);
     await this.channelParticipantRepository.saveOne({

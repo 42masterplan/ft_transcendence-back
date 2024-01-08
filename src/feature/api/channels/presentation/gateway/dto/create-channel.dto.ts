@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString, NotContains } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+
+const status = ['Public', 'Private'];
 
 export class CreateChannelDto {
   @IsString()
@@ -6,7 +8,6 @@ export class CreateChannelDto {
   name: string;
 
   @IsString()
-  @NotContains(' ')
   password: string;
 
   // @IsString()
@@ -14,5 +15,6 @@ export class CreateChannelDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsIn(status)
   status: string;
 }

@@ -4,14 +4,14 @@ import {
   IsOptional,
   IsString,
   IsUrl,
-  NotContains,
+  Matches,
 } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
   @IsNotEmpty()
-  @NotContains(' ')
   @IsOptional()
+  @Matches(/[^가-힣a-zA-Z0-9]/g)
   name?: string;
 
   @IsUrl({
