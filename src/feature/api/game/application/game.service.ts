@@ -28,12 +28,12 @@ export class GameService {
     if (side === 'A') {
       if (state.playerA.socketId !== null) return false;
       if (state.playerA.id !== userId) return false;
-      // console.log(socketId + ' join as playerA ' + state.matchId);
+      console.log(socketId + ' join as playerA ' + state.matchId);
       state.playerA.socketId = socketId;
     } else if (side === 'B') {
       if (state.playerB.socketId !== null) return false;
       if (state.playerB.id !== userId) return false;
-      // console.log(socketId + ' join as playerB ' + state.matchId);
+      console.log(socketId + ' join as playerB ' + state.matchId);
       state.playerB.socketId = socketId;
     }
     return true;

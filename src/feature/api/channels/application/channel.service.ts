@@ -23,7 +23,7 @@ export class ChannelService {
   ) {}
 
   async getMyChannels(userId: string) {
-    // console.log('channel myChannels', userId);
+    console.log('channel myChannels', userId);
     const myChannelList =
       await this.channelParticipantRepository.findAllByUserId(userId);
     return await Promise.all(
@@ -41,7 +41,7 @@ export class ChannelService {
   }
 
   async getPublicChannels(userId: string): Promise<PublicChannelDto[]> {
-    // console.log('service publicChannels');
+    console.log('service publicChannels');
     const myChannels = await Promise.all(
       (await this.channelParticipantRepository.findAllByUserId(userId)).map(
         (channel) => channel.channelId,
@@ -57,7 +57,7 @@ export class ChannelService {
   }
 
   async getMyRole(userId: string, channelId: string): Promise<string> {
-    // console.log('service myRole');
+    console.log('service myRole');
     const myRole =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
@@ -69,7 +69,7 @@ export class ChannelService {
   }
 
   async joinChannel(userId: string, { id, password }): Promise<string> {
-    // console.log('service joinChannel');
+    console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
     password = this.hashPassword(password);
     if (!channel) return 'There is no channel';
@@ -143,7 +143,7 @@ export class ChannelService {
   }
 
   async getChannelHistory(userId: string, channelId: string) {
-    // console.log('service channelHistory');
+    console.log('service channelHistory');
     const blockedUsers = await Promise.all(
       (await this.findBlockedUserUseCase.execute(userId)).map(
         (user) => user.id,
@@ -162,7 +162,7 @@ export class ChannelService {
     client,
     createChannelDto: CreateChannelDto,
   ) {
-    // console.log('service createChannel');
+    console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름이 비었습니다.');
     if (await this.channelRepository.findOneByName(createChannelDto.name))
@@ -251,7 +251,7 @@ export class ChannelService {
   }
 
   async getAdminUsers(channelId: string): Promise<any[]> {
-    // console.log('service getAdminUsers');
+    console.log('service getAdminUsers');
     const channelParticipant =
       await this.channelParticipantRepository.findAllByChannelIdAndRole(
         channelId,

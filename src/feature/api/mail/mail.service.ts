@@ -19,7 +19,7 @@ export class MailService {
         `, // HTML body content
       });
     } catch (e) {
-      // console.log(e);
+      console.log(e);
     }
   }
 }

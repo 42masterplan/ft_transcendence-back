@@ -14,7 +14,7 @@ export class ChannelUserBannedRepository {
   ) {}
 
   async saveOne(userId: string, channelId: string): Promise<ChannelUserBanned> {
-    // console.log('repository saveBannedUser');
+    console.log('repository saveBannedUser');
     const newChannelUserBanned = this.repository.create({
       userId: userId,
       channelId: channelId,
@@ -28,7 +28,7 @@ export class ChannelUserBannedRepository {
   async updateOne(
     channelUserBanned: ChannelUserBanned,
   ): Promise<ChannelUserBanned> {
-    // console.log('repository updateBannedUser');
+    console.log('repository updateBannedUser');
     const entity = this.toEntity(channelUserBanned);
     const newChannelUserBanned = await this.repository.upsert(entity);
     await this.repository.getEntityManager().flush();
@@ -36,7 +36,7 @@ export class ChannelUserBannedRepository {
   }
 
   async findAllByChannelId(channelId: string): Promise<ChannelUserBanned[]> {
-    // console.log('repository findBannedUserByChannelId');
+    console.log('repository findBannedUserByChannelId');
     const list = await this.repository.find(
       { channelId: channelId, isDeleted: false },
       { orderBy: { updatedAt: QueryOrder.DESC } },
@@ -49,7 +49,7 @@ export class ChannelUserBannedRepository {
     channelId: string,
     userId: string,
   ): Promise<ChannelUserBanned> {
-    // console.log('repository findBannedUserByChannelIdAndUserId');
+    console.log('repository findBannedUserByChannelIdAndUserId');
     const bannedUser = await this.repository.findOne({
       channelId: channelId,
       userId: userId,
