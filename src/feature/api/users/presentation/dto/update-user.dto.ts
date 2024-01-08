@@ -12,7 +12,7 @@ export class UpdateUserDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  @Matches(/[^가-힣a-zA-Z0-9]/g)
+  @Matches(/^[^ {}[\]/?.,;:|)*~`!^\-_+┼<>@#$%&'"\\(=]*$/g)
   @MaxLength(32)
   name?: string;
 
