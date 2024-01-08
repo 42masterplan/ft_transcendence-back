@@ -61,7 +61,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly notificationGateway: NotificationGateway,
   ) {}
 
-  async handleConnection(client: any, ...args: any[]) {
+  async handleConnection(client: any) {
     if (
       client.handshake.headers.server_secret_key ===
       process.env.SERVER_SECRET_KEY

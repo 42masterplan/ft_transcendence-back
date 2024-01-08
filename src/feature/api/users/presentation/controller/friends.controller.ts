@@ -71,12 +71,15 @@ export class FriendsController {
   ): Promise<boolean> {
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
-    await this.friendUseCase.delete({
-      myId: user.id,
-      friendId,
-    });
-    this.notificationGateway.handleSocialUpdate(user.id);
-    this.notificationGateway.handleSocialUpdate(friendId);
+    if (
+      await this.friendUseCase.delete({
+        myId: user.id,
+        friendId,
+      })
+    ) {
+      this.notificationGateway.handleSocialUpdate(user.id);
+      this.notificationGateway.handleSocialUpdate(friendId);
+    }
     return true;
   }
 

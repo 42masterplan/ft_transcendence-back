@@ -17,7 +17,6 @@ export class User {
   private readonly _isDeleted: boolean;
   private readonly _updatedAt: Date;
 
-  // TODO: implement validation
   constructor(props: {
     id: string;
     intraId: string;

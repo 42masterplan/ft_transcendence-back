@@ -3,7 +3,6 @@ export class ChannelUserBanned {
   private readonly _channelId: string;
   private _isDeleted: boolean;
 
-  // TODO: implement validation
   constructor(props: {
     userId: string;
     channelId: string;

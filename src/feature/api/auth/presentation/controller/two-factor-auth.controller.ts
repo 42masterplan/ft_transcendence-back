@@ -32,13 +32,17 @@ export class TwoFactorAuthController {
   ): Promise<boolean> {
     const intraId = req.user.sub;
     const code = Math.floor(Math.random() * 899999) + 100000;
-    await this.twoFactorAuthUseCase.updateEmailWithCode(
-      intraId,
-      twoFactorAuthEmail.email,
-      code,
-    );
-    await this.mailService.sendMail(twoFactorAuthEmail.email, code);
-    return true;
+    if (
+      await this.twoFactorAuthUseCase.updateEmailWithCode(
+        intraId,
+        twoFactorAuthEmail.email,
+        code,
+      )
+    ) {
+      await this.mailService.sendMail(twoFactorAuthEmail.email, code);
+      return true;
+    }
+    return false;
   }
 
   @UseGuards(JwtRegisterGuard)
@@ -87,8 +91,7 @@ export class TwoFactorAuthController {
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 
-    // TODO: 2FA enabled가 false라면?
-    if (user.is2faValidated === true) return true;
+    if (user.is2faEnabled === true || user.is2faValidated === true) return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate)
       throw new BadRequestException();
 

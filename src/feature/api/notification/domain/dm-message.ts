@@ -4,7 +4,6 @@ export class DmMessage {
   private readonly _participantId: string;
   private readonly _dmId: string;
 
-  // TODO: implement validation
   constructor(props: {
     id: number;
     content: string;

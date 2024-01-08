@@ -5,7 +5,6 @@ export class Channel {
   private _password: string;
   private _isDeleted: boolean;
 
-  // TODO: implement validation
   constructor(props: {
     id: string;
     name: string;

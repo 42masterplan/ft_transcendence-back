@@ -8,7 +8,11 @@ import { ChannelUserBannedRepository } from '../domain/repositories/channel-user
 import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersUseCase } from 'src/feature/api/users/application/use-case/users.use-case';
 
 @Injectable()
@@ -116,6 +120,7 @@ export class ChannelService {
         userId,
         channelId,
       );
+    if (!participant) throw new NotFoundException('You are not in channel');
     if (
       participant.chatableAt > new Date(Date.now()) &&
       !content.startsWith('[system]')
@@ -332,7 +337,7 @@ export class ChannelService {
         targetId,
         channelId,
       );
-    if (target.role === 'owner') return 'Admin cannot ban owner!';
+    if (!target || target.role === 'owner') return 'Admin cannot ban owner!';
 
     isTargetBanned.updatedIsDeleted(true);
     await this.channelUserBannedRepository.updateOne(isTargetBanned);
@@ -446,6 +451,7 @@ export class ChannelService {
 
     const channel = await this.channelRepository.findOneById(channelId);
     if (!channel) return 'There is no channel';
+    password = password.replace(/\s/g, '');
     password = this.hashPassword(password);
     channel.updatedPassword(password);
     await this.channelRepository.updateOne(channel);

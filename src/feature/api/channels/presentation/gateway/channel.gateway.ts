@@ -3,7 +3,6 @@ import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
 import { AchievementUseCase } from '../../../users/application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
-import { UsersService } from '../../../users/users.service';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import {
@@ -46,11 +45,10 @@ export class ChannelGateway
     private readonly channelService: ChannelService,
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
-    private readonly usersService: UsersService,
     private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
-  async handleConnection(client, ...args: any[]) {
+  async handleConnection(client) {
     console.log("It's get connected!");
     const token = client.handshake.auth?.Authorization?.split(' ')[1];
     const user = await this.authService.verifySocket(token);
@@ -78,11 +76,11 @@ export class ChannelGateway
     // 소켓 토큰으로 유저정보 삭제하기
     // 유저가 가지고있는 모든 채널에서 나가기
     const myId = this.socketToUser.get(client.id);
-    this.socketToUser.delete(client.id);
-    this.userToSocket.delete(myId);
     const channels = await this.channelService.getMyChannels(
       this.socketToUser.get(client.id),
     );
+    this.socketToUser.delete(client.id);
+    this.userToSocket.delete(myId);
     client.leave(channels.map((channel) => channel.id));
   }
 
@@ -249,7 +247,6 @@ export class ChannelGateway
   @SubscribeMessage('getBannedUsers')
   async getBannedUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getBannedUsers', channelId);
-    const myId = this.socketToUser.get(client.id);
     const bannedUsers = await this.channelService.getBannedUsers(channelId);
     client.emit('getBannedUsers', {
       bannedUsers: bannedUsers,
@@ -262,7 +259,6 @@ export class ChannelGateway
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
     console.log('socket: getAdminUsers', channelId);
-    const myId = this.socketToUser.get(client.id);
     const adminUsers = await this.channelService.getAdminUsers(channelId);
     client.emit('getAdminUsers', {
       adminUsers: adminUsers,
