@@ -12,7 +12,9 @@ export class UpdateUserDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  @Matches(/^[^ {}[\]/?.,;:|)*~`!^\-_+┼<>@#$%&'"\\(=]*$/g)
+  @Matches(/^[^ {}[\]/?.,;:|)*~`!^\-_+┼<>@#$%&'"\\(=]*$/g, {
+    message: 'Name should not contain special characters.',
+  })
   @MaxLength(32)
   name?: string;
 
@@ -20,6 +22,9 @@ export class UpdateUserDto {
     require_tld: false,
     require_protocol: true,
     require_port: true,
+  })
+  @Matches(new RegExp('^http://' + process.env.SERVER_DOMAIN + '/resources/'), {
+    message: "Profile image url should be server's url.",
   })
   @IsOptional()
   @MaxLength(128)
