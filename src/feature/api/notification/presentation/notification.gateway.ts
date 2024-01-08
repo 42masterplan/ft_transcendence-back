@@ -62,7 +62,7 @@ export class NotificationGateway
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-    private readonly userUseCase: UsersUseCase,
+    private readonly usersUseCase: UsersUseCase,
     private readonly dmUseCase: DmUseCase,
     private readonly friendUseCase: FriendUseCase,
   ) {
@@ -96,7 +96,7 @@ export class NotificationGateway
     //TODO: 두명이 연속으로 접속하는 경우 에러 처리
     if (this.sockets.has(user.id)) return;
     this.sockets.set(user.id, socket.id);
-    await this.userUseCase.updateStatusByIntraId(user.intraId, 'on-line');
+    await this.usersUseCase.updateStatusByIntraId(user.intraId, 'on-line');
     this.server.emit('changeStatus');
   }
 
@@ -106,7 +106,7 @@ export class NotificationGateway
    * map에서 해당 유저와 매핑된 소켓 정보를 삭제해줍니다.
    */
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
@@ -129,7 +129,7 @@ export class NotificationGateway
       }
     });
     this.sockets.delete(user.id);
-    await this.userUseCase.updateStatusByIntraId(user.intraId, 'off-line');
+    await this.usersUseCase.updateStatusByIntraId(user.intraId, 'off-line');
     this.server.emit('changeStatus');
   }
 
@@ -151,10 +151,10 @@ export class NotificationGateway
   async handleNormalGameRequest(client, { userId, theme }: gameRequest) {
     const destSocketId = this.sockets.get(userId);
     const srcSocketId = client.id;
-    const srcUser = await this.usersService.findOneByIntraId(
+    const srcUser = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
-    const destUser = await this.userUseCase.findOne(userId);
+    const destUser = await this.usersUseCase.findOne(userId);
     if (!srcUser || !destUser) return;
     const srcId = srcUser.id; //게임 요청을 보낸 사람의 아이디
     const destId = userId; //요청을 받는 사람의 아이디
@@ -219,7 +219,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('ladderGameRequest')
   async handleLadderGameRequest(client) {
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!user) return;
@@ -244,7 +244,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('isDoubleLogin')
   async handleDoubleLogin(socket) {
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(socket),
     );
     if (!user) return;
@@ -258,7 +258,7 @@ export class NotificationGateway
     console.log('socket gameResponse');
     console.log(this.normalMatchQueue);
     console.log(isAccept, matchId);
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!user) return;
@@ -268,8 +268,8 @@ export class NotificationGateway
 
       const destSocketId = this.sockets.get(matchInfo.destId);
       const userSocketId = this.sockets.get(matchInfo.srcId);
-      const srcUser = await this.userUseCase.findOne(matchInfo.srcId);
-      const destUser = await this.userUseCase.findOne(matchInfo.destId);
+      const srcUser = await this.usersUseCase.findOne(matchInfo.srcId);
+      const destUser = await this.usersUseCase.findOne(matchInfo.destId);
       if (isAccept) {
         console.log('game accept');
         this.server.to(userSocketId).emit('gameStart', {
@@ -313,7 +313,7 @@ export class NotificationGateway
   @SubscribeMessage('normalGameCancel')
   async handleNormalGameCancel(client, { matchId }: gameCancel) {
     console.log('socket gameCancel' + matchId);
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!user) return;
@@ -346,10 +346,10 @@ export class NotificationGateway
   @SubscribeMessage('DmHistory')
   async handleDMHistory(client, userName: string) {
     console.log('socket DmHistory');
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
-    const friend = await this.userUseCase.findOneByName(userName);
+    const friend = await this.usersUseCase.findOneByName(userName);
     if (!user || !friend) return;
     const user1Id = friend.id > user.id ? user.id : friend.id;
     const user2Id = friend.id > user.id ? friend.id : user.id;
@@ -383,7 +383,7 @@ export class NotificationGateway
   async handleDMNewMessage(client, { dmId, participantId, content }) {
     console.log('socket DmNewMessage');
     if (content.length >= 512) return 'Dm New message fail: Too long!';
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     try {
@@ -413,7 +413,7 @@ export class NotificationGateway
   @SubscribeMessage('myInfo')
   async handleMyInfo(client) {
     console.log('socket myInfo');
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     return {
@@ -512,8 +512,8 @@ export class NotificationGateway
             else result = nextMatch;
             console.log('match success!' + match.id + ' vs ' + result.id);
 
-            const playerA = await this.userUseCase.findOne(match.id);
-            const playerB = await this.userUseCase.findOne(result.id);
+            const playerA = await this.usersUseCase.findOne(match.id);
+            const playerB = await this.usersUseCase.findOne(result.id);
             const matchId = 'ladder-' + this.ladderMatchId.toString();
             this.ladderMatchId++;
             this.server.to(match.socketId).emit('gameStart', {

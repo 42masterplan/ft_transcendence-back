@@ -12,18 +12,10 @@ export class UsersService {
     private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
-  async updateOne(intraId: string, updateUserDto: UpdateUserDto) {
-    return await this.usersUseCase.updateOne(intraId, updateUserDto);
-  }
-
   async createOne(createUserDto: CreateUserDto): Promise<User> {
     const user = await this.usersUseCase.createOne(createUserDto);
     await this.achievementUseCase.initAchievementStatus(user.id);
     return user;
-  }
-
-  async findOneByIntraId(intraId: string): Promise<User> {
-    return await this.usersUseCase.findOneByIntraId(intraId);
   }
 
   async isDuplicatedName(name: string, intraId: string): Promise<boolean> {

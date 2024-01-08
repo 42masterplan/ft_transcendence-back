@@ -51,7 +51,7 @@ export class UsersController {
       status !== 'off-line' &&
       status !== 'in-game'
     )
-      return new BadRequestException();
+      throw new BadRequestException('Invalid status');
     const usersExceptMe = (await this.usersUseCase.findAll()).filter(
       (user) => user.intraId !== intraId,
     );
@@ -67,7 +67,7 @@ export class UsersController {
   @UseGuards(JwtSignInGuard)
   @Put('')
   async updateOne(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    await this.usersService.updateOne(req.user.sub, updateUserDto);
+    await this.usersUseCase.updateOne(req.user.sub, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -163,7 +163,7 @@ export class UsersController {
   @Get('my-name')
   async getMyName(@Request() req) {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     return { name: user.name };
   }
 
@@ -171,7 +171,7 @@ export class UsersController {
   @Get('my-info')
   async getMyInfo(@Request() req) {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     return {
       name: user.name,
       profileImage: user.profileImage,
@@ -184,7 +184,7 @@ export class UsersController {
   @Get('block')
   async getBlockedUser(@Request() req) {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     const blocked = await this.findBlockedUserUseCase.execute(user.id);
     return blocked.map((block) => new FindBlockedUserViewModel(block));
   }
@@ -193,7 +193,7 @@ export class UsersController {
   @Post('block')
   async block(@Request() req, @Body('id') targetId: string) {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     await this.blockedUserUseCase.block({ myId: user.id, targetId });
 
     return true;
@@ -205,7 +205,7 @@ export class UsersController {
     const intraId = req.user.sub;
     console.log('unblock');
     console.log(targetId);
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
 
     return true;

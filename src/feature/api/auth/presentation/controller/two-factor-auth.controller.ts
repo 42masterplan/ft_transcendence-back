@@ -1,5 +1,5 @@
 import { MailService } from '../../../mail/mail.service';
-import { UsersService } from '../../../users/users.service';
+import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
 import { TwoFactorAuthUseCase } from '../../application/use-case/two-factor-auth.use-case';
 import { JwtEmailGuard } from '../../jwt/jwt-email.guard';
 import { JwtRegisterGuard } from '../../jwt/jwt-register.guard';
@@ -20,7 +20,7 @@ import * as bcrypt from 'bcrypt';
 export class TwoFactorAuthController {
   constructor(
     private readonly twoFactorAuthUseCase: TwoFactorAuthUseCase,
-    private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
     private readonly mailService: MailService,
   ) {}
 
@@ -48,7 +48,7 @@ export class TwoFactorAuthController {
     @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ): Promise<boolean> {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 
@@ -83,7 +83,7 @@ export class TwoFactorAuthController {
     @Body() twoFactorAuthEmailValidate: TwoFactorAuthEmailValidateDto,
   ) {
     const intraId = req.user.sub;
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 

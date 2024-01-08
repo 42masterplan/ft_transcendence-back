@@ -4,7 +4,6 @@ import { getIntraIdFromSocket } from '../../auth/tools/socketTools';
 import { NotificationGateway } from '../../notification/presentation/notification.gateway';
 import { AchievementUseCase } from '../../users/application/use-case/achievement.use-case';
 import { UsersUseCase } from '../../users/application/use-case/users.use-case';
-import { UsersService } from '../../users/users.service';
 import { GameService } from '../application/game.service';
 import { GameUseCase } from '../application/game.use-case';
 import { GAME_MODE } from './type/game-mode.enum';
@@ -56,9 +55,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly authService: AuthService,
     private readonly gameService: GameService,
-    private readonly usersService: UsersService,
     private readonly gameUseCase: GameUseCase,
-    private readonly userUseCase: UsersUseCase,
+    private readonly usersUseCase: UsersUseCase,
     private readonly achievementUseCase: AchievementUseCase,
     private readonly notificationGateway: NotificationGateway,
   ) {}
@@ -87,7 +85,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
       });
       if (!flag) return;
-      await this.userUseCase.updateStatusByIntraId(user.intraId, 'in-game');
+      await this.usersUseCase.updateStatusByIntraId(user.intraId, 'in-game');
       this.notificationGateway.handleSocialUpdateToServer();
     }
     console.log('Game is get connected!');
@@ -95,7 +93,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: any) {
     console.log('Game is get disconnected!');
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!user) return;
@@ -129,9 +127,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
         if (this.notificationGateway.getSocketById(match.playerA.id))
-          await this.userUseCase.updateStatusById(match.playerA.id, 'on-line');
+          await this.usersUseCase.updateStatusById(match.playerA.id, 'on-line');
         if (this.notificationGateway.getSocketById(match.playerB.id))
-          await this.userUseCase.updateStatusById(match.playerB.id, 'on-line');
+          await this.usersUseCase.updateStatusById(match.playerB.id, 'on-line');
         this.notificationGateway.handleSocialUpdateToServer();
         this.gameStates.delete(matchId);
         this.server.socketsLeave(matchId);
@@ -191,7 +189,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }: { matchId: string; gameMode: string; side: string },
   ) {
     console.log(client.id + ' join room start ' + matchId);
-    const user = await this.usersService.findOneByIntraId(
+    const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
 
@@ -448,12 +446,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             );
             if (match.resetTimeout !== null) clearTimeout(match.resetTimeout);
             if (this.notificationGateway.getSocketById(match.playerA.id))
-              await this.userUseCase.updateStatusById(
+              await this.usersUseCase.updateStatusById(
                 match.playerA.id,
                 'on-line',
               );
             if (this.notificationGateway.getSocketById(match.playerB.id))
-              await this.userUseCase.updateStatusById(
+              await this.usersUseCase.updateStatusById(
                 match.playerB.id,
                 'on-line',
               );

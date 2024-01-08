@@ -18,7 +18,7 @@ export class AuthController {
       await this.authService.getAccessTokenFromFT(code);
     const intraId: string = await this.authService.getUserIntraId(accessToken);
     const jwtToken: string = await this.authService.getJwtToken(intraId);
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     let isExist = false;
     let is2faEnabled = false;
     let isSignInFinish = false;
