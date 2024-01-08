@@ -8,6 +8,7 @@ import { TwoFactorAuthEmailDto } from '../dto/two-factor-auth-email.dto';
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Logger,
   Post,
@@ -46,7 +47,7 @@ export class TwoFactorAuthController {
       await this.mailService.sendMail(twoFactorAuthEmail.email, code);
       return true;
     }
-    return false;
+    throw new ConflictException('이메일 갱신 중 오류가 발생하였습니다.');
   }
 
   @UseGuards(JwtRegisterGuard)
@@ -64,7 +65,7 @@ export class TwoFactorAuthController {
     if (user.isEmailValidated === true) return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate) {
       await this.twoFactorAuthUseCase.resetEmail(intraId);
-      throw new BadRequestException();
+      throw new BadRequestException('이메일 검증에 오류가 발생하였습니다.');
     }
     const isMatch = await bcrypt.compare(
       twoFactorAuthEmailValidate.code.toString(),
@@ -100,7 +101,7 @@ export class TwoFactorAuthController {
 
     if (user.is2faEnabled === true || user.is2faValidated === true) return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate)
-      throw new BadRequestException();
+      throw new BadRequestException('이메일 검증에 오류가 발생하였습니다.');
 
     const isMatch = await bcrypt.compare(
       twoFactorAuthEmailValidate.code.toString(),
