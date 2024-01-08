@@ -36,7 +36,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
 
     this.logger.log(newFriendRequest);
 
-    return this.repository.getEntityManager().persist(newFriendRequest).flush();
+    return await this.repository.getEntityManager().persist(newFriendRequest).flush();
   }
 
   async findManyByPrimaryUserId(
@@ -88,6 +88,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
   }
 
   private toDomain(entity: FriendRequestEntity): FriendRequest {
+    if (!entity) return null;
     return new FriendRequest({
       id: entity.id,
       primaryUserId: entity.primaryUserId,
