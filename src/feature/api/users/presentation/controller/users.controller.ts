@@ -152,7 +152,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
-    console.log('matches');
+    // console.log('matches');
     const user = await this.usersUseCase.findOneByName(name);
     if (!user) throw new NotFoundException('There is no such user.');
     const games = await this.gameWithPlayerUseCase.findGamesWithPlayer(name);
@@ -203,8 +203,8 @@ export class UsersController {
   @Delete('block/:id')
   async unblock(@Request() req, @Param('id') targetId: string) {
     const intraId = req.user.sub;
-    console.log('unblock');
-    console.log(targetId);
+    // console.log('unblock');
+    // console.log(targetId);
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
 

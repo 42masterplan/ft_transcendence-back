@@ -3,7 +3,7 @@ import { SqlHighlighter } from '@mikro-orm/sql-highlighter';
 import { Logger } from '@nestjs/common';
 import custom_env from 'custom-env';
 
-custom_env.env('develop');
+custom_env.env('production');
 
 const logger = new Logger('MikroORM');
 const MikroORMConfig: Options = {
@@ -15,7 +15,6 @@ const MikroORMConfig: Options = {
   type: 'postgresql',
   entities: ['./dist/**/*.entity.js'],
   entitiesTs: ['./src/**/*.entity.ts'],
-  debug: true,
   highlighter: new SqlHighlighter(),
   migrations: {
     path: './src/migrations',

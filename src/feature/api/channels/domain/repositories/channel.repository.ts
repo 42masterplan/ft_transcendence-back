@@ -13,14 +13,14 @@ export class ChannelRepository {
   ) {}
 
   async findOneById(id: string): Promise<Channel> {
-    console.log('repository: findOneById');
+    // console.log('repository: findOneById');
     const channel = await this.repository.findOne({ id: id, isDeleted: false });
     if (!channel) return;
     return this.toDomain(channel);
   }
 
   async findOneByName(name: string): Promise<Channel> {
-    console.log('repository: findOneByName');
+    // console.log('repository: findOneByName');
     const channel = await this.repository.findOne({
       name: name,
       isDeleted: false,
@@ -30,13 +30,13 @@ export class ChannelRepository {
   }
 
   async findAllByStatus(status: string): Promise<Channel[]> {
-    console.log('repository: getAllByStatus');
+    // console.log('repository: getAllByStatus');
     const channels = await this.repository.find({ status: status });
     return channels.map((channel) => this.toDomain(channel));
   }
 
   async saveOne(createChannelDto: CreateChannelDto): Promise<Channel> {
-    console.log('repository: saveChannel');
+    // console.log('repository: saveChannel');
     if (
       await this.repository.count({
         name: createChannelDto.name,
@@ -50,7 +50,7 @@ export class ChannelRepository {
   }
 
   async updateOne(channel: Channel): Promise<Channel> {
-    console.log('repository: updateChannel');
+    // console.log('repository: updateChannel');
     const entity = this.toEntity(channel);
     const newChannel = await this.repository.upsert(entity);
     await this.repository.getEntityManager().flush();

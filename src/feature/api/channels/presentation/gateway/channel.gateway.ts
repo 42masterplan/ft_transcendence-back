@@ -28,7 +28,7 @@ import {
         return new WsException('');
       }
       const errors = this.flattenValidationErrors(validationErrors);
-      console.log(new WsException(errors));
+      // console.log(new WsException(errors));
       return new WsException(errors);
     },
   }),
@@ -49,7 +49,7 @@ export class ChannelGateway
   ) {}
 
   async handleConnection(client) {
-    console.log("It's get connected!");
+    // console.log("It's get connected!");
     const token = client.handshake.auth?.Authorization?.split(' ')[1];
     const user = await this.authService.verifySocket(token);
     if (!user) {
@@ -72,7 +72,7 @@ export class ChannelGateway
   }
 
   async handleDisconnect(client: any) {
-    console.log("It's get disconnected!");
+    // console.log("It's get disconnected!");
     // 소켓 토큰으로 유저정보 삭제하기
     // 유저가 가지고있는 모든 채널에서 나가기
     const myId = this.socketToUser.get(client.id);
@@ -88,7 +88,7 @@ export class ChannelGateway
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
     const myId = this.socketToUser.get(client.id);
-    console.log('socket newMessage');
+    // console.log('socket newMessage');
     if (content.length >= 512) return 'New message fail: Too long!';
     try {
       const newMessage = await this.channelService.newMessage(
@@ -107,7 +107,7 @@ export class ChannelGateway
   @SubscribeMessage('myChannels')
   async getMyChannels(client) {
     const myId = this.socketToUser.get(client.id);
-    console.log('socket: myChannels', myId);
+    // console.log('socket: myChannels', myId);
     const list = await this.channelService.getMyChannels(myId);
     client.emit('myChannels', list);
   }
@@ -154,7 +154,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getPublicChannels')
   async getPublicChannels(client) {
-    console.log('socket: allPublicChannel');
+    // console.log('socket: allPublicChannel');
     const myId = this.socketToUser.get(client.id);
     const channels = await this.channelService.getPublicChannels(myId);
     client.emit('getPublicChannels', channels);
@@ -163,7 +163,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('joinChannel')
   async joinChannel(client, { id, password }) {
-    console.log('socket: joinChannel');
+    // console.log('socket: joinChannel');
     const myId = this.socketToUser.get(client.id);
     const ret = await this.channelService.joinChannel(myId, { id, password });
     if (ret != 'joinChannel Success!') return ret;
@@ -190,7 +190,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client, { channelId }) {
-    console.log('socket: channelHistory');
+    // console.log('socket: channelHistory');
     const myId = this.socketToUser.get(client.id);
     const history = await this.channelService.getChannelHistory(
       myId,
@@ -202,7 +202,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('createChannel')
   async createChannel(client: any, createChannelDto: CreateChannelDto) {
-    console.log('socket: createChannel');
+    // console.log('socket: createChannel');
     const myId = this.socketToUser.get(client.id);
     try {
       const channelId = await this.channelService.createChannel(
@@ -220,7 +220,7 @@ export class ChannelGateway
       await this.getMyChannelsInRoom(channelId);
       await this.achievementUseCase.handleFirstChannel(myId);
     } catch (e) {
-      console.log(e.message);
+      // console.log(e.message);
       return '이미 존재하는 방입니다.';
     }
     await this.getPublicChannelsToAll();
@@ -230,7 +230,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getParticipants')
   async getParticipants(client: any, { channelId }) {
-    console.log('socket: getParticipants', channelId);
+    // console.log('socket: getParticipants', channelId);
     const myId = this.socketToUser.get(client.id);
     const participants = await this.channelService.getParticipants(
       myId,
@@ -246,7 +246,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getBannedUsers')
   async getBannedUsers(client: any, { channelId }: { channelId: string }) {
-    console.log('socket: getBannedUsers', channelId);
+    // console.log('socket: getBannedUsers', channelId);
     const bannedUsers = await this.channelService.getBannedUsers(channelId);
     client.emit('getBannedUsers', {
       bannedUsers: bannedUsers,
@@ -258,7 +258,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
-    console.log('socket: getAdminUsers', channelId);
+    // console.log('socket: getAdminUsers', channelId);
     const adminUsers = await this.channelService.getAdminUsers(channelId);
     client.emit('getAdminUsers', {
       adminUsers: adminUsers,
@@ -270,7 +270,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('leaveChannel')
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
-    console.log('socket: leaveChannel', channelId);
+    // console.log('socket: leaveChannel', channelId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.leaveChannel(myId, channelId);
     if (result != 'leaveChannel Success!') return result;
@@ -294,7 +294,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    console.log('socket: banUser', channelId, userId);
+    // console.log('socket: banUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.banUser(myId, channelId, userId);
     if (result != 'success') return result;
@@ -333,7 +333,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    console.log('socket: kickUser', channelId, userId);
+    // console.log('socket: kickUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.kickUser(myId, channelId, userId);
     if (result != 'kickUser Success!') return result;
@@ -361,7 +361,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    console.log('socket: muteUser', channelId, userId);
+    // console.log('socket: muteUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.muteUser(myId, channelId, userId);
     if (result != 'muteUser Success!') return result;
@@ -385,7 +385,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
-    console.log('socket: unBanUser', channelId, userId);
+    // console.log('socket: unBanUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
     if (result !== 'unBanUser Success!') return result;
@@ -413,7 +413,7 @@ export class ChannelGateway
     client: any,
     { channelId, password }: { channelId: string; password: string },
   ) {
-    console.log('socket: changePassword', channelId, password);
+    // console.log('socket: changePassword', channelId, password);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.changePassword(
       myId,
@@ -433,7 +433,7 @@ export class ChannelGateway
       types,
     }: { channelId: string; userId: string; types: 'admin' | 'user' },
   ) {
-    console.log('socket: changeAdmin', channelId, userId);
+    // console.log('socket: changeAdmin', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.changeAdmin(
       myId,

@@ -51,7 +51,7 @@ type gameCancel = {
         return new WsException('');
       }
       const errors = this.flattenValidationErrors(validationErrors);
-      console.log(new WsException(errors));
+      // console.log(new WsException(errors));
       return new WsException(errors);
     },
   }),
@@ -92,7 +92,7 @@ export class NotificationGateway
       return;
     }
 
-    console.log('알림 소켓 연결!!', user);
+    // console.log('알림 소켓 연결!!', user);
     if (this.sockets.has(user.id)) return;
     this.sockets.set(user.id, socket.id);
     await this.usersUseCase.updateStatusByIntraId(user.intraId, 'on-line');
@@ -116,11 +116,11 @@ export class NotificationGateway
         if (match.destId === user.id || match.srcId === user.id) {
           if (match.destId === user.id) {
             const srcId = this.sockets.get(match.srcId);
-            console.log('game reject');
+            // console.log('game reject');
             this.server.to(srcId).emit('normalGameReject');
           } else if (match.srcId === user.id) {
             const destId = this.sockets.get(match.destId);
-            console.log('game cancel');
+            // console.log('game cancel');
             this.server.to(destId).emit('normalGameCancel', { matchId });
           }
           this.normalMatchQueue.delete(matchId);
@@ -133,7 +133,7 @@ export class NotificationGateway
   }
 
   onModuleInit() {
-    console.log('notification to game');
+    // console.log('notification to game');
     this.gameClientSocket = io(process.env.SERVER_URL + '/game', {
       extraHeaders: {
         server_secret_key: process.env.SERVER_SECRET_KEY,
@@ -185,7 +185,7 @@ export class NotificationGateway
       }
       matchId = 'normal-' + this.normalMatchId.toString();
       this.normalMatchId++;
-      console.log('game request' + matchId);
+      // console.log('game request' + matchId);
       this.normalMatchQueue.set(matchId, {
         srcId,
         destId,
@@ -194,16 +194,16 @@ export class NotificationGateway
       });
     });
     if (flag) return;
-    console.log(
-      'socket gameRequest',
-      'srcUserId',
-      srcId,
-      'destUserId: ',
-      destId,
-      'normal',
-      theme,
-      matchId,
-    );
+    // console.log(
+    //   'socket gameRequest',
+    //   'srcUserId',
+    //   srcId,
+    //   'destUserId: ',
+    //   destId,
+    //   'normal',
+    //   theme,
+    //   matchId,
+    // );
 
     this.server.to(destSocketId).emit('gameRequest', {
       profileImage: srcUser.profileImage,
@@ -223,9 +223,9 @@ export class NotificationGateway
     );
     if (!user) return;
     await this.ladderQueueMutex.runExclusive(() => {
-      console.log('ladder game request');
+      // console.log('ladder game request');
       if (this.ladderMatchQueue.hasUser(user)) {
-        console.log('you are already in ladder match queue!');
+        // console.log('you are already in ladder match queue!');
         return;
       }
       this.ladderMatchQueue.insert(
@@ -254,9 +254,9 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameResponse')
   async handleGameResponse(client, { isAccept, matchId }: gameResponse) {
-    console.log('socket gameResponse');
-    console.log(this.normalMatchQueue);
-    console.log(isAccept, matchId);
+    // console.log('socket gameResponse');
+    // console.log(this.normalMatchQueue);
+    // console.log(isAccept, matchId);
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -270,7 +270,7 @@ export class NotificationGateway
       const srcUser = await this.usersUseCase.findOne(matchInfo.srcId);
       const destUser = await this.usersUseCase.findOne(matchInfo.destId);
       if (isAccept) {
-        console.log('game accept');
+        // console.log('game accept');
         this.server.to(userSocketId).emit('gameStart', {
           matchId: matchId,
           aName: srcUser.name,
@@ -298,7 +298,7 @@ export class NotificationGateway
           gameMode: GAME_MODE.normal,
         });
       } else {
-        console.log('game reject');
+        // console.log('game reject');
         this.server
           .to(userSocketId)
           .emit('normalGameReject', '상대방이 게임 요청을 거절했습니다.');
@@ -311,26 +311,26 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('normalGameCancel')
   async handleNormalGameCancel(client, { matchId }: gameCancel) {
-    console.log('socket gameCancel' + matchId);
+    // console.log('socket gameCancel' + matchId);
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
     if (!user) return;
     await this.normalQueueMutex.runExclusive(() => {
       const matchInfo = this.normalMatchQueue.get(matchId);
-      console.log(matchInfo);
+      // console.log(matchInfo);
       if (!matchInfo || matchInfo.srcId !== user.id) return;
       const destId = this.sockets.get(matchInfo.destId);
       this.server.to(destId).emit('normalGameCancel', { matchId });
       this.normalMatchQueue.delete(matchId);
-      console.log(this.normalMatchQueue);
+      // console.log(this.normalMatchQueue);
     });
     return 'gameCancel Success!';
   }
 
   @SubscribeMessage('ladderGameCancel')
   async handleLadderGameCancel(client) {
-    console.log('socket gameCancel');
+    // console.log('socket gameCancel');
     await this.ladderQueueMutex.runExclusive(() =>
       this.ladderMatchQueue.removeUserMatch(client.id),
     );
@@ -344,7 +344,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmHistory')
   async handleDMHistory(client, userName: string) {
-    console.log('socket DmHistory');
+    // console.log('socket DmHistory');
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -367,7 +367,7 @@ export class NotificationGateway
         name: friend.name,
       };
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       return 'DmHistory Fail!';
     }
   }
@@ -380,7 +380,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('DmNewMessage')
   async handleDMNewMessage(client, { dmId, participantId, content }) {
-    console.log('socket DmNewMessage');
+    // console.log('socket DmNewMessage');
     if (content.length >= 512) return 'Dm New message fail: Too long!';
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
@@ -403,7 +403,7 @@ export class NotificationGateway
       }
       return 'DmNewMessage Success!';
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       return 'DmNewMessage Fail!';
     }
   }
@@ -411,7 +411,7 @@ export class NotificationGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('myInfo')
   async handleMyInfo(client) {
-    console.log('socket myInfo');
+    // console.log('socket myInfo');
     const user = await this.usersUseCase.findOneByIntraId(
       getIntraIdFromSocket(client),
     );
@@ -439,7 +439,7 @@ export class NotificationGateway
   }
 
   tickLadderQueue() {
-    console.log('start tick ladder queue cron');
+    // console.log('start tick ladder queue cron');
     setInterval(async () => {
       await this.ladderQueueMutex.runExclusive(async () => {
         this.ladderMatchQueue.tickQueue();
@@ -448,13 +448,13 @@ export class NotificationGateway
   }
 
   matchLadderQueue() {
-    console.log('start update ladder queue cron');
+    // console.log('start update ladder queue cron');
     setInterval(async () => {
       await this.ladderQueueMutex.runExclusive(async () => {
         const matchArray: Array<LadderMatch> =
           this.ladderMatchQueue.getMatchArrayByTime();
         for (const match of matchArray) {
-          console.log('check about' + match.id);
+          // console.log('check about' + match.id);
           if (!match || match.removed === true) continue;
           let prevMatch: LadderMatch = match.prev;
           while (prevMatch && prevMatch.removed === true) {
@@ -509,7 +509,7 @@ export class NotificationGateway
               }
             } else if (canMatchWithPrev) result = prevMatch;
             else result = nextMatch;
-            console.log('match success!' + match.id + ' vs ' + result.id);
+            // console.log('match success!' + match.id + ' vs ' + result.id);
 
             const playerA = await this.usersUseCase.findOne(match.id);
             const playerB = await this.usersUseCase.findOne(result.id);
@@ -549,7 +549,7 @@ export class NotificationGateway
             matchPoint - matchRange < 0 &&
             matchPoint + matchRange >= 400
           ) {
-            console.log('there is no match for ' + match.id + ', reject game');
+            // console.log('there is no match for ' + match.id + ', reject game');
             this.server.to(match.socketId).emit('ladderGameReject');
             this.ladderMatchQueue.remove(match);
             return;
