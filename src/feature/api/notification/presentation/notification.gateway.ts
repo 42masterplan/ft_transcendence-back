@@ -406,7 +406,7 @@ export class NotificationGateway
         })) === false
       )
         return 'Not Friend!';
-      this.dmUseCase.saveNewMessage({ dmId, participantId, content });
+      await this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverSocketId = this.sockets.get(receiverId);
       if (receiverSocketId) {
         this.server

@@ -37,6 +37,7 @@ import * as Joi from 'joi';
         EMAIL_PASSWORD: Joi.string().required(),
         EMAIL_HOST_NAME: Joi.string().required(),
         SERVER_URL: Joi.string().uri().required(),
+        SERVER_DOMAIN: Joi.string().required(),
         SERVER_SECRET_KEY: Joi.string().required(),
         SERVER_HASH_KEY: Joi.string().required(),
       }),

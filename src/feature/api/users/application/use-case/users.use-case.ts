@@ -1,10 +1,16 @@
+import { readFileSync } from 'node:fs';
 import { TwoFactorAuthUseCase } from '../../../auth/application/use-case/two-factor-auth.use-case';
 import { TIER } from '../../../game/presentation/type/tier.enum';
 import { User } from '../../domain/user';
 import { UserRepository } from '../../domain/user.repository';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { UpdateUserDto } from '../../presentation/dto/update-user.dto';
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 
 @Injectable()
 export class UsersUseCase {
@@ -34,6 +40,24 @@ export class UsersUseCase {
     intraId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
+    if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
+      const duplicatedUser = await this.findOneByName(updateUserDto.name);
+      if (duplicatedUser && duplicatedUser.intraId !== intraId)
+        throw new BadRequestException('Duplicated name');
+    }
+    if (
+      updateUserDto.profileImage !== null &&
+      updateUserDto.profileImage !== undefined
+    ) {
+      try {
+        const fileName = updateUserDto.profileImage.slice(
+          process.env.SERVER_URL.length + 1,
+        );
+        readFileSync(__dirname + '/../../../../../../' + fileName);
+      } catch (e) {
+        throw new BadRequestException('Invalid profile image');
+      }
+    }
     const user = await this.repository.updateOne(intraId, updateUserDto);
     if (updateUserDto.is2faEnabled && user.email && user.isEmailValidated) {
       await this.twoFactorAuthUseCase.validate2fa(intraId);

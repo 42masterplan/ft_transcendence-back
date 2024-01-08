@@ -3,7 +3,13 @@ import { FriendRequestRepository } from '../../domain/friend/interface/friend-re
 import { UserRepository } from '../../domain/user.repository';
 import { BlockedUserUseCase } from '../use-case/blocked-user.use-case';
 import { FriendUseCase } from './friend.use-case';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class CreateFriendRequestUseCase {
@@ -28,7 +34,7 @@ export class CreateFriendRequestUseCase {
   }): Promise<void> {
     if (primaryUserId === targetUserId) return;
     if (await this.hasExistingFriendRequest({ primaryUserId, targetUserId })) {
-      return;
+      throw new ConflictException('이미 둘 사이의 친구 신청이 존재합니다.');
     }
     if (
       await this.friendUseCase.isFriend({
@@ -36,19 +42,20 @@ export class CreateFriendRequestUseCase {
         friendId: targetUserId,
       })
     )
-      return;
+      throw new ConflictException('이미 친구입니다.');
+
     if (
       await this.blockedUserUseCase.someoneBlocked({
         myId: primaryUserId,
         targetId: targetUserId,
       })
     )
-      return;
+      throw new ConflictException('친구 신청이 불가합니다.');
 
     const targetUser = await this.userRepository.findOneById(targetUserId);
 
     if (!targetUser) {
-      throw new Error('Target user not found');
+      throw new NotFoundException('Target user not found');
     }
     this.logger.log(targetUser);
     const friendRequest = await this.repository.save({

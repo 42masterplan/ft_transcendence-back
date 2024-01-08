@@ -101,6 +101,7 @@ export class ChannelParticipantRepository {
   private toDomain(
     channelParticipant: ChannelParticipantEntity,
   ): ChannelParticipant {
+    if (!channelParticipant) return;
     return new ChannelParticipant({
       participantId: channelParticipant.participantId,
       channelId: channelParticipant.channelId,

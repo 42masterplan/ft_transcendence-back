@@ -18,6 +18,7 @@ import {
   Delete,
   Get,
   Logger,
+  NotAcceptableException,
   NotFoundException,
   Param,
   Post,
@@ -111,10 +112,30 @@ export class UsersController {
       limits: {
         fileSize: 1024 * 1024,
       },
+      fileFilter: (req, file, callback) => {
+        const allowedMimes = [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'image/svg+xml',
+        ];
+
+        if (allowedMimes.includes(file.mimetype)) {
+          callback(null, true);
+        } else {
+          callback(
+            new NotAcceptableException(
+              'Invalid file type. Only JPEG, PNG, SVG, and GIF are allowed.',
+            ),
+            false,
+          );
+        }
+      },
     }),
   )
   updateProfileImage(@UploadedFile() image: Express.Multer.File) {
     this.logger.log('upload profile image');
+    if (!image) return;
     return {
       profileImage: image.path,
     };
@@ -163,7 +184,6 @@ export class UsersController {
   @Get('matches/:name')
   async getMatch(@Param('name') name: string) {
     this.logger.log('get user matches');
-    // console.log('matches');
     const user = await this.usersUseCase.findOneByName(name);
     if (!user) throw new NotFoundException('There is no such user.');
     const games = await this.gameWithPlayerUseCase.findGamesWithPlayer(name);
@@ -219,8 +239,6 @@ export class UsersController {
   async unblock(@Request() req, @Param('id') targetId: string) {
     this.logger.log('unblock user');
     const intraId = req.user.sub;
-    // console.log('unblock');
-    // console.log(targetId);
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     await this.blockedUserUseCase.unblock({ myId: user.id, targetId });
 

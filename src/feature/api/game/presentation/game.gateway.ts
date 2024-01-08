@@ -36,7 +36,6 @@ import { Server, Socket } from 'socket.io';
         return new WsException('');
       }
       const errors = this.flattenValidationErrors(validationErrors);
-      // console.log(new WsException(errors));
       return new WsException(errors);
     },
   }),
@@ -71,7 +70,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.handshake.headers.server_secret_key ===
       process.env.SERVER_SECRET_KEY
     ) {
-      // console.log('Hi, you are server!');
       this.notificationSocket = client;
     } else {
       const token = client.handshake.auth?.Authorization?.split(' ')[1];

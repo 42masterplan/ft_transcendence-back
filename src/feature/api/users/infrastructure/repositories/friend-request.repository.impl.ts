@@ -36,7 +36,10 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
 
     this.logger.log(newFriendRequest);
 
-    return await this.repository.getEntityManager().persist(newFriendRequest).flush();
+    return await this.repository
+      .getEntityManager()
+      .persist(newFriendRequest)
+      .flush();
   }
 
   async findManyByPrimaryUserId(

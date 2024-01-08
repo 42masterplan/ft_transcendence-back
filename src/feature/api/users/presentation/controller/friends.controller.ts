@@ -54,7 +54,7 @@ export class FriendsController {
     const intraId = req.user.sub;
     const user = await this.usersUseCase.findOneByIntraId(intraId);
     const friend = await this.usersUseCase.findOneByName(friendName);
-    if (!friend) throw new NotFoundException('There is no such user.');
+    if (!friend) throw new NotFoundException('There is no such user(friend).');
     const isFriend = await this.friendUseCase.isFriend({
       myId: user.id,
       friendId: friend.id,
@@ -81,8 +81,9 @@ export class FriendsController {
     ) {
       this.notificationGateway.handleSocialUpdate(user.id);
       this.notificationGateway.handleSocialUpdate(friendId);
+      return true;
     }
-    return true;
+    return false;
   }
 
   @UseGuards(JwtAuthGuard)
