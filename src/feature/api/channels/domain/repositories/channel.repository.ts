@@ -1,14 +1,13 @@
 import { CreateChannelDto } from '../../presentation/gateway/dto/create-channel.dto';
 import { Channel } from '../channel';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ChannelEntity } from 'src/feature/api/channels/infrastructure/channel.entity';
 
 @Injectable()
 export class ChannelRepository {
   constructor(
-    private readonly em: EntityManager,
     @InjectRepository(ChannelEntity)
     private readonly repository: EntityRepository<ChannelEntity>,
   ) {}
@@ -38,6 +37,13 @@ export class ChannelRepository {
 
   async saveOne(createChannelDto: CreateChannelDto): Promise<Channel> {
     console.log('repository: saveChannel');
+    if (
+      await this.repository.count({
+        name: createChannelDto.name,
+        isDeleted: false,
+      })
+    )
+      return;
     const channel = this.repository.create(createChannelDto);
     await this.repository.getEntityManager().persistAndFlush(channel);
     return this.toDomain(channel);

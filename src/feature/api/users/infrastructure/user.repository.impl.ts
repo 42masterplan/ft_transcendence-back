@@ -59,7 +59,12 @@ export class UserRepositoryImpl implements UserRepository {
     });
     if (!user) return;
     if (updateUserDto.name !== null && updateUserDto.name !== undefined) {
-      if (!this.repository.count({ name: updateUserDto.name }))
+      if (
+        !(await this.repository.count({
+          name: updateUserDto.name,
+          isDeleted: false,
+        }))
+      )
         user.name = updateUserDto.name;
     }
     if (
@@ -120,7 +125,13 @@ export class UserRepositoryImpl implements UserRepository {
   }
 
   async createOne(createUserDto: CreateUserDto): Promise<User> {
-    if (this.repository.count({ intraId: createUserDto.intraId })) return;
+    if (
+      await this.repository.count({
+        intraId: createUserDto.intraId,
+        isDeleted: false,
+      })
+    )
+      return;
     const user = await this.repository.create({
       ...createUserDto,
       currentStatus: 'on-line',
