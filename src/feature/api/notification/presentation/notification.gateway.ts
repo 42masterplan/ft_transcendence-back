@@ -398,7 +398,7 @@ export class NotificationGateway
       getIntraIdFromSocket(client),
     );
     try {
-      this.dmUseCase.saveNewMessage({ dmId, participantId, content });
+      await this.dmUseCase.saveNewMessage({ dmId, participantId, content });
       const receiverId = await this.dmUseCase.getReceiverId(dmId, user.id);
       if (
         (await this.friendUseCase.isFriend({

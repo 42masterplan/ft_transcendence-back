@@ -15,7 +15,7 @@ export class DmUseCase {
     if (user1Id > user2Id) [user1Id, user2Id] = [user2Id, user1Id];
     const dm = await this.dmRepository.findOneByUserIds({ user1Id, user2Id });
     if (dm) return dm;
-    return this.dmRepository.saveOne({ user1Id, user2Id });
+    return await this.dmRepository.saveOne({ user1Id, user2Id });
   }
 
   async getDmMessages(
@@ -31,7 +31,7 @@ export class DmUseCase {
   }
 
   async saveNewMessage({ dmId, content, participantId }) {
-    return this.dmMessageRepository.saveOne({ dmId, content, participantId });
+    return await this.dmMessageRepository.saveOne({ dmId, content, participantId });
   }
 
   async getReceiverId(dmId: string, senderId: string): Promise<string> {
