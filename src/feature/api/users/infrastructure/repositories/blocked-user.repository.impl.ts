@@ -27,6 +27,14 @@ export class BlockedUserRepositoryImpl implements BlockedUserRepository {
     myId: string;
     targetId: string;
   }): Promise<BlockedUser> {
+    if (
+      await this.repository.count({
+        primaryUserId: myId,
+        targetUserId: targetId,
+        isDeleted: false,
+      })
+    )
+      return;
     const block = await this.repository.create({
       primaryUserId: myId,
       targetUserId: targetId,
