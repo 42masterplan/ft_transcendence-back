@@ -3,7 +3,7 @@ import { NotificationGateway } from '../../../notification/presentation/notifica
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { FriendUseCase } from './friend.use-case';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class FriendRequestUseCase {
@@ -21,21 +21,23 @@ export class FriendRequestUseCase {
     });
 
     if (!friendRequest) {
-      throw new Error('Friend request not found');
+      throw new NotFoundException('Friend request not found');
     }
 
     friendRequest.updateIsAccepted(true);
 
     const myId = friendRequest.targetUserId;
     const friendId = friendRequest.primaryUserId;
-    await this.friendUseCase.create({
-      myId,
-      friendId,
-    });
+    if (!(await this.friendUseCase.isFriend({ myId, friendId }))) {
+      await this.friendUseCase.create({
+        myId,
+        friendId,
+      });
 
-    await this.dmUseCase.createDm(myId, friendId);
-    this.notificationGateway.handleSocialUpdate(myId);
-    this.notificationGateway.handleSocialUpdate(friendId);
+      await this.dmUseCase.createDm(myId, friendId);
+      this.notificationGateway.handleSocialUpdate(myId);
+      this.notificationGateway.handleSocialUpdate(friendId);
+    }
 
     return await this.repository.update(friendRequest);
   }
@@ -46,7 +48,7 @@ export class FriendRequestUseCase {
     });
 
     if (!friendRequest) {
-      throw new Error('Friend request not found');
+      throw new NotFoundException('Friend request not found');
     }
 
     friendRequest.updateIsAccepted(false);
