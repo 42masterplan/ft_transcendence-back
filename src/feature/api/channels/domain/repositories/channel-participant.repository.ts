@@ -2,13 +2,12 @@ import { ChannelParticipantEntity } from '../../infrastructure/channel-participa
 import { ChannelParticipant } from '../channel-participant';
 import { QueryOrder } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ChannelParticipantRepository {
   constructor(
-    private readonly em: EntityManager,
     @InjectRepository(ChannelParticipantEntity)
     private readonly repository: EntityRepository<ChannelParticipantEntity>,
   ) {}
@@ -64,15 +63,21 @@ export class ChannelParticipantRepository {
     channelId,
   }): Promise<ChannelParticipant> {
     // console.log('repository: saveChannelParticipant');
-    const newChannelParticipant = this.repository.create({
-      role: role,
-      participantId: participantId,
-      channelId: channelId,
+    let participant = await this.repository.findOne({
+      participantId,
+      channelId,
     });
-    await this.repository
-      .getEntityManager()
-      .persistAndFlush(newChannelParticipant);
-    return this.toDomain(newChannelParticipant);
+    if (!participant) {
+      participant = await this.repository.create({
+        role: role,
+        participantId: participantId,
+        channelId: channelId,
+      });
+    }
+    if (participant.isDeleted === true) participant.isDeleted = false;
+    if (participant.role !== role) participant.role = role;
+    await this.repository.getEntityManager().persistAndFlush(participant);
+    return this.toDomain(participant);
   }
 
   async countByChannelId(channelId: string): Promise<number> {

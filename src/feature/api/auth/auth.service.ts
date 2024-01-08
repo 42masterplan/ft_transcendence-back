@@ -1,5 +1,5 @@
+import { UsersUseCase } from '../users/application/use-case/users.use-case';
 import { User } from '../users/domain/user';
-import { UsersService } from '../users/users.service';
 import { JwtPayload } from './presentation/jwt-payload.interface';
 import {
   Injectable,
@@ -12,7 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
+    private readonly usersUseCase: UsersUseCase,
   ) {}
 
   async getAccessTokenFromFT(code: string): Promise<string> {
@@ -100,7 +100,7 @@ export class AuthService {
       const intraId = decoded?.sub as string;
 
       if (!intraId) return null;
-      const user = await this.usersService.findOneByIntraId(intraId);
+      const user = await this.usersUseCase.findOneByIntraId(intraId);
       if (
         !user ||
         user.name == null ||

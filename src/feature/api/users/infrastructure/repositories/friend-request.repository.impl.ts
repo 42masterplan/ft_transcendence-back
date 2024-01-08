@@ -14,13 +14,21 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     private readonly repository: EntityRepository<FriendRequestEntity>,
   ) {}
 
-  save({
+  async save({
     primaryUserId,
     targetUserId,
   }: {
     primaryUserId: string;
     targetUserId: string;
   }): Promise<void> {
+    if (
+      await this.repository.count({
+        primaryUserId,
+        targetUserId,
+        isAccepted: null,
+      })
+    )
+      return;
     const newFriendRequest = this.repository.create({
       primaryUserId,
       targetUserId,
@@ -73,7 +81,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     if (!entity) return;
 
     entity.isAccepted = friendRequest.isAccepted;
-    //TODO: 동작하는지 확인 필요
+
     await this.repository.getEntityManager().flush();
 
     return this.toDomain(entity);

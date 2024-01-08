@@ -3,10 +3,10 @@ import { JwtSocketGuard } from '../../../auth/jwt/jwt-socket.guard';
 import { AchievementUseCase } from '../../../users/application/use-case/achievement.use-case';
 import { BlockedUserUseCase } from '../../../users/application/use-case/blocked-user.use-case';
 import { UsersUseCase } from '../../../users/application/use-case/users.use-case';
-import { UsersService } from '../../../users/users.service';
 import { ChannelService } from '../../application/channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import {
+  Logger,
   UseGuards,
   UsePipes,
   ValidationError,
@@ -37,6 +37,8 @@ import {
 export class ChannelGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  private readonly logger = new Logger(ChannelGateway.name);
+
   @WebSocketServer()
   private readonly server;
   private socketToUser: Map<string, string> = new Map();
@@ -46,11 +48,12 @@ export class ChannelGateway
     private readonly channelService: ChannelService,
     private readonly blockedUserUseCase: BlockedUserUseCase,
     private readonly usersUseCase: UsersUseCase,
-    private readonly usersService: UsersService,
     private readonly achievementUseCase: AchievementUseCase,
   ) {}
 
-  async handleConnection(client, ...args: any[]) {
+  async handleConnection(client) {
+    this.logger.log('connected: channel gateway');
+
     // console.log("It's get connected!");
     const token = client.handshake.auth?.Authorization?.split(' ')[1];
     const user = await this.authService.verifySocket(token);
@@ -74,21 +77,24 @@ export class ChannelGateway
   }
 
   async handleDisconnect(client: any) {
+    this.logger.log('disconnected: channel gateway');
+
     // console.log("It's get disconnected!");
     // 소켓 토큰으로 유저정보 삭제하기
     // 유저가 가지고있는 모든 채널에서 나가기
     const myId = this.socketToUser.get(client.id);
-    this.socketToUser.delete(client.id);
-    this.userToSocket.delete(myId);
     const channels = await this.channelService.getMyChannels(
       this.socketToUser.get(client.id),
     );
+    this.socketToUser.delete(client.id);
+    this.userToSocket.delete(myId);
     client.leave(channels.map((channel) => channel.id));
   }
 
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('newMessage')
   async handleMessage(client, { content, channelId }) {
+    this.logger.log('send new message');
     const myId = this.socketToUser.get(client.id);
     // console.log('socket newMessage');
     if (content.length >= 512) return 'New message fail: Too long!';
@@ -108,6 +114,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('myChannels')
   async getMyChannels(client) {
+    this.logger.log('get my channels');
     const myId = this.socketToUser.get(client.id);
     // console.log('socket: myChannels', myId);
     const list = await this.channelService.getMyChannels(myId);
@@ -156,6 +163,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getPublicChannels')
   async getPublicChannels(client) {
+    this.logger.log('get public channels');
     // console.log('socket: allPublicChannel');
     const myId = this.socketToUser.get(client.id);
     const channels = await this.channelService.getPublicChannels(myId);
@@ -165,6 +173,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('joinChannel')
   async joinChannel(client, { id, password }) {
+    this.logger.log('join channel');
     // console.log('socket: joinChannel');
     const myId = this.socketToUser.get(client.id);
     const ret = await this.channelService.joinChannel(myId, { id, password });
@@ -192,6 +201,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('channelHistory')
   async getChannelHistory(client, { channelId }) {
+    this.logger.log('get channel history');
     // console.log('socket: channelHistory');
     const myId = this.socketToUser.get(client.id);
     const history = await this.channelService.getChannelHistory(
@@ -204,6 +214,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('createChannel')
   async createChannel(client: any, createChannelDto: CreateChannelDto) {
+    this.logger.log('create channel');
     // console.log('socket: createChannel');
     const myId = this.socketToUser.get(client.id);
     try {
@@ -232,6 +243,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getParticipants')
   async getParticipants(client: any, { channelId }) {
+    this.logger.log('get participants');
     // console.log('socket: getParticipants', channelId);
     const myId = this.socketToUser.get(client.id);
     const participants = await this.channelService.getParticipants(
@@ -248,8 +260,8 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getBannedUsers')
   async getBannedUsers(client: any, { channelId }: { channelId: string }) {
+    this.logger.log('get banned users');
     // console.log('socket: getBannedUsers', channelId);
-    const myId = this.socketToUser.get(client.id);
     const bannedUsers = await this.channelService.getBannedUsers(channelId);
     client.emit('getBannedUsers', {
       bannedUsers: bannedUsers,
@@ -261,8 +273,8 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('getAdminUsers')
   async getAdminUsers(client: any, { channelId }: { channelId: string }) {
+    this.logger.log('get admin user');
     // console.log('socket: getAdminUsers', channelId);
-    const myId = this.socketToUser.get(client.id);
     const adminUsers = await this.channelService.getAdminUsers(channelId);
     client.emit('getAdminUsers', {
       adminUsers: adminUsers,
@@ -274,6 +286,7 @@ export class ChannelGateway
   @UseGuards(JwtSocketGuard)
   @SubscribeMessage('leaveChannel')
   async leaveChannel(client: any, { channelId }: { channelId: string }) {
+    this.logger.log('leave channel');
     // console.log('socket: leaveChannel', channelId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.leaveChannel(myId, channelId);
@@ -298,6 +311,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
+    this.logger.log('ban user');
     // console.log('socket: banUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.banUser(myId, channelId, userId);
@@ -337,6 +351,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
+    this.logger.log('kick user');
     // console.log('socket: kickUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.kickUser(myId, channelId, userId);
@@ -365,6 +380,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
+    this.logger.log('mute user');
     // console.log('socket: muteUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.muteUser(myId, channelId, userId);
@@ -389,6 +405,7 @@ export class ChannelGateway
     client: any,
     { channelId, userId }: { channelId: string; userId: string },
   ) {
+    this.logger.log('unBan user');
     // console.log('socket: unBanUser', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.unBanUser(myId, channelId, userId);
@@ -417,6 +434,7 @@ export class ChannelGateway
     client: any,
     { channelId, password }: { channelId: string; password: string },
   ) {
+    this.logger.log('change channel password');
     // console.log('socket: changePassword', channelId, password);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.changePassword(
@@ -437,6 +455,7 @@ export class ChannelGateway
       types,
     }: { channelId: string; userId: string; types: 'admin' | 'user' },
   ) {
+    this.logger.log('change admin');
     // console.log('socket: changeAdmin', channelId, userId);
     const myId = this.socketToUser.get(client.id);
     const result = await this.channelService.changeAdmin(

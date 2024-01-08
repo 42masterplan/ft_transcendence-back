@@ -8,7 +8,11 @@ import { ChannelUserBannedRepository } from '../domain/repositories/channel-user
 import { ChannelRepository } from '../domain/repositories/channel.repository';
 import { CreateChannelDto } from '../presentation/gateway/dto/create-channel.dto';
 import { PublicChannelDto } from '../presentation/gateway/dto/public-channel.dto';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersUseCase } from 'src/feature/api/users/application/use-case/users.use-case';
 
 @Injectable()
@@ -23,7 +27,7 @@ export class ChannelService {
   ) {}
 
   async getMyChannels(userId: string) {
-    // console.log('channel myChannels', userId);
+    console.log('channel myChannels', userId);
     const myChannelList =
       await this.channelParticipantRepository.findAllByUserId(userId);
     return await Promise.all(
@@ -41,10 +45,12 @@ export class ChannelService {
   }
 
   async getPublicChannels(userId: string): Promise<PublicChannelDto[]> {
-    // console.log('service publicChannels');
-    const myChannels = await Promise.all((
-      await this.channelParticipantRepository.findAllByUserId(userId)
-    ).map((channel) => channel.channelId));
+    console.log('service publicChannels');
+    const myChannels = await Promise.all(
+      (await this.channelParticipantRepository.findAllByUserId(userId)).map(
+        (channel) => channel.channelId,
+      ),
+    );
     const channels = await this.channelRepository.findPublicChannels(
       userId,
       myChannels,
@@ -55,7 +61,7 @@ export class ChannelService {
   }
 
   async getMyRole(userId: string, channelId: string): Promise<string> {
-    // console.log('service myRole');
+    console.log('service myRole');
     const myRole =
       await this.channelParticipantRepository.findOneByUserIdAndChannelId(
         userId,
@@ -67,11 +73,12 @@ export class ChannelService {
   }
 
   async joinChannel(userId: string, { id, password }): Promise<string> {
-    // console.log('service joinChannel');
+    console.log('service joinChannel');
     const channel = await this.channelRepository.findOneById(id);
+    password = password.replace(/\s/g, '');
     password = this.hashPassword(password);
     if (!channel) return 'There is no channel';
-    if (channel.status === 'private') return 'Cannot join private channel';
+    if (channel.status === 'Private') return 'Cannot join private channel';
     if (channel.password != password) return 'Wrong password!';
 
     const isBanned =
@@ -113,13 +120,13 @@ export class ChannelService {
         userId,
         channelId,
       );
+    if (!participant) throw new NotFoundException('You are not in channel');
     if (
       participant.chatableAt > new Date(Date.now()) &&
       !content.startsWith('[system]')
-    )
-    {
+    ) {
       const offset = 1000 * 60 * 60 * 9;
-      const muteTime = new Date(participant.chatableAt.getTime() + offset)
+      const muteTime = new Date(participant.chatableAt.getTime() + offset);
       throw new ForbiddenException(
         muteTime.getHours() +
           '시 ' +
@@ -142,10 +149,12 @@ export class ChannelService {
   }
 
   async getChannelHistory(userId: string, channelId: string) {
-    // console.log('service channelHistory');
-    const blockedUsers = await Promise.all((
-      await this.findBlockedUserUseCase.execute(userId)
-    ).map((user) => user.id));
+    console.log('service channelHistory');
+    const blockedUsers = await Promise.all(
+      (await this.findBlockedUserUseCase.execute(userId)).map(
+        (user) => user.id,
+      ),
+    );
     const message = await this.channelMessageRepository.findAllByChannelId(
       channelId,
       blockedUsers,
@@ -159,11 +168,12 @@ export class ChannelService {
     client,
     createChannelDto: CreateChannelDto,
   ) {
-    // console.log('service createChannel');
+    console.log('service createChannel');
     if (createChannelDto.name === '')
       client.emit('error_exist', '방 이름이 비었습니다.');
     if (await this.channelRepository.findOneByName(createChannelDto.name))
       throw new ForbiddenException('Already exist channel name');
+    createChannelDto.password = createChannelDto.password.replace(/\s/g, '');
     createChannelDto.password = this.hashPassword(createChannelDto.password);
     const channel = await this.channelRepository.saveOne(createChannelDto);
     await this.channelParticipantRepository.saveOne({
@@ -248,7 +258,7 @@ export class ChannelService {
   }
 
   async getAdminUsers(channelId: string): Promise<any[]> {
-    // console.log('service getAdminUsers');
+    console.log('service getAdminUsers');
     const channelParticipant =
       await this.channelParticipantRepository.findAllByChannelIdAndRole(
         channelId,
@@ -327,8 +337,7 @@ export class ChannelService {
         targetId,
         channelId,
       );
-    if (target.role === 'owner')
-      return 'Admin cannot ban owner!';
+    if (!target || target.role === 'owner') return 'Admin cannot ban owner!';
 
     isTargetBanned.updatedIsDeleted(true);
     await this.channelUserBannedRepository.updateOne(isTargetBanned);
@@ -358,8 +367,7 @@ export class ChannelService {
       );
     if (!target || target.isDeleted === true)
       return 'Target is not in this channel';
-    if (target.role === 'owner')
-      return 'Admin cannot kick owner!';
+    if (target.role === 'owner') return 'Admin cannot kick owner!';
     target.updatedRole('user');
     target.updatedIsDeleted(true);
     await this.channelParticipantRepository.updateOne(target);
@@ -389,8 +397,7 @@ export class ChannelService {
       );
     if (!target || target.isDeleted === true)
       return 'Target is not in this channel';
-    if (target.role === 'owner')
-      return 'Admin cannot mute owner!';
+    if (target.role === 'owner') return 'Admin cannot mute owner!';
 
     target.updatedChatableAt(new Date(Date.now() + 3 * 60000));
     await this.channelParticipantRepository.updateOne(target);
@@ -444,6 +451,7 @@ export class ChannelService {
 
     const channel = await this.channelRepository.findOneById(channelId);
     if (!channel) return 'There is no channel';
+    password = password.replace(/\s/g, '');
     password = this.hashPassword(password);
     channel.updatedPassword(password);
     await this.channelRepository.updateOne(channel);
@@ -452,9 +460,8 @@ export class ChannelService {
 
   hashPassword(password: string): string {
     if (password === '') return password;
-    const secret = 'pipapopu';
     return crypto
-      .createHmac('sha256', secret)
+      .createHmac('sha256', process.env.SERVER_HASH_KEY)
       .update(password)
       .digest('base64');
   }

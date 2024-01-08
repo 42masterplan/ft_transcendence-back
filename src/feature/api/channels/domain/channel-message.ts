@@ -4,7 +4,6 @@ export class ChannelMessage {
   private readonly _channelId: string;
   private readonly _content: string;
 
-  // TODO: implement validation
   constructor(props: {
     id: string;
     participantId: string;

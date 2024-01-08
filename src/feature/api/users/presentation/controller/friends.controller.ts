@@ -1,11 +1,11 @@
 import { JwtAuthGuard } from '../../../auth/jwt/jwt-auth.guard';
+import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 import { CreateFriendRequestUseCase } from '../../application/friends/create-friend-request.use-case';
 import { FindAcceptableFriendRequestUseCase } from '../../application/friends/find-acceptable-friend-request.use-case';
 import { FindFriendsUseCase } from '../../application/friends/find-friends.use-case';
 import { FriendRequestUseCase } from '../../application/friends/friend-request.use-case';
 import { FriendUseCase } from '../../application/friends/friend.use-case';
 import { UsersUseCase } from '../../application/use-case/users.use-case';
-import { UsersService } from '../../users.service';
 import { FindFriendViewModel } from '../view-models/friends/find-friend.vm';
 import { FindFriendsRequestToMeViewModel } from '../view-models/friends-request/find-friends-request-to-me.vm';
 
@@ -23,7 +23,6 @@ import {
   Query,
   NotFoundException,
 } from '@nestjs/common';
-import { NotificationGateway } from '../../../notification/presentation/notification.gateway';
 
 @Controller('users/friends')
 export class FriendsController {
@@ -35,16 +34,15 @@ export class FriendsController {
     private readonly friendRequestUseCase: FriendRequestUseCase,
     private readonly friendUseCase: FriendUseCase,
     private readonly findAcceptableFriendRequestUseCase: FindAcceptableFriendRequestUseCase,
-    private readonly userService: UsersService,
-    private readonly userUseCase: UsersUseCase,
+    private readonly usersUseCase: UsersUseCase,
     private readonly notificationGateway: NotificationGateway,
   ) {}
   @UseGuards(JwtAuthGuard)
   @Get('')
   async getFriends(@Request() req) {
-    this.logger.log('getFriends');
+    this.logger.log('get friends');
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     const friends = await this.findUseCase.execute(user.id);
     return friends.map((friend) => new FindFriendViewModel(friend));
   }
@@ -52,9 +50,10 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Get('isFriend')
   async isFriend(@Request() req, @Query('name') friendName: string) {
+    this.logger.log('is friend');
     const intraId = req.user.sub;
-    const user = await this.userUseCase.findOneByIntraId(intraId);
-    const friend = await this.userUseCase.findOneByName(friendName);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    const friend = await this.usersUseCase.findOneByName(friendName);
     if (!friend) throw new NotFoundException('There is no such user.');
     const isFriend = await this.friendUseCase.isFriend({
       myId: user.id,
@@ -71,14 +70,18 @@ export class FriendsController {
     @Request() req,
     @Param('friendId') friendId: string,
   ): Promise<boolean> {
+    this.logger.log('delete friend');
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
-    await this.friendUseCase.delete({
-      myId: user.id,
-      friendId,
-    });
-    this.notificationGateway.handleSocialUpdate(user.id);
-    this.notificationGateway.handleSocialUpdate(friendId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
+    if (
+      await this.friendUseCase.delete({
+        myId: user.id,
+        friendId,
+      })
+    ) {
+      this.notificationGateway.handleSocialUpdate(user.id);
+      this.notificationGateway.handleSocialUpdate(friendId);
+    }
     return true;
   }
 
@@ -87,8 +90,9 @@ export class FriendsController {
   async getFriendsRequest(
     @Request() req,
   ): Promise<FindFriendsRequestToMeViewModel[]> {
+    this.logger.log('get my friend request');
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
 
     const friendsRequest =
       await this.findAcceptableFriendRequestUseCase.findFriendsRequestsToMe(
@@ -106,8 +110,9 @@ export class FriendsController {
     @Request() req,
     @Body('friendId') friendId: string,
   ): Promise<boolean> {
+    this.logger.log('send friend request');
     const intraId = req.user.sub;
-    const user = await this.userService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
 
     await this.createRequestUseCase.execute({
       primaryUserId: user.id,
@@ -119,6 +124,7 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Put('request')
   async acceptFriendRequest(@Body('requestId') requestId: number) {
+    this.logger.log('accept friend request');
     await this.friendRequestUseCase.acceptFriendRequest({
       requestId: requestId,
     });
@@ -129,6 +135,7 @@ export class FriendsController {
   @UseGuards(JwtAuthGuard)
   @Delete('request/:requestId')
   async rejectFriendRequest(@Param('requestId') requestId: number) {
+    this.logger.log('reject friend request');
     await this.friendRequestUseCase.rejectFriendRequest({
       requestId: requestId,
     });

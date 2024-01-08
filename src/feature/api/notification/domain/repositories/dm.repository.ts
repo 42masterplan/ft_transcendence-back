@@ -19,6 +19,7 @@ export class DmRepository {
     user1Id: string;
     user2Id: string;
   }): Promise<Dm> {
+    if (await this.repository.count({ user1Id, user2Id })) return;
     const newDm = this.repository.create({
       user1Id,
       user2Id,

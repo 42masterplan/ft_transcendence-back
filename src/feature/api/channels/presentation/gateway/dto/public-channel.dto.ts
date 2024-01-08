@@ -1,7 +1,8 @@
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsString, MaxLength } from 'class-validator';
 
 export class PublicChannelDto {
   @IsString()
+  @MaxLength(64)
   name: string;
 
   @IsNumber()

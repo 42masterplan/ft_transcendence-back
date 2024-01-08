@@ -15,14 +15,20 @@ export class ChannelUserBannedRepository {
 
   async saveOne(userId: string, channelId: string): Promise<ChannelUserBanned> {
     // console.log('repository saveBannedUser');
-    const newChannelUserBanned = this.repository.create({
+    let channelUserBanned = await this.repository.findOne({
       userId: userId,
       channelId: channelId,
     });
-    await this.repository
-      .getEntityManager()
-      .persistAndFlush(newChannelUserBanned);
-    return this.toDomain(newChannelUserBanned);
+    if (!channelUserBanned) {
+      channelUserBanned = await this.repository.create({
+        userId: userId,
+        channelId: channelId,
+      });
+    }
+    if (channelUserBanned.isDeleted === false)
+      channelUserBanned.isDeleted = true;
+    await this.repository.getEntityManager().persistAndFlush(channelUserBanned);
+    return this.toDomain(channelUserBanned);
   }
 
   async updateOne(

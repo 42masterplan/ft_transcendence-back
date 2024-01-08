@@ -1,3 +1,4 @@
+import { User } from '../../../users/domain/user';
 import { UserRepository } from '../../../users/domain/user.repository';
 import { TwoFactorAuthType } from '../../presentation/type/two-factor-auth.type';
 import { Inject, Injectable } from '@nestjs/common';
@@ -34,10 +35,10 @@ export class TwoFactorAuthUseCase {
     intraId: string,
     email: string,
     code: number,
-  ): Promise<void> {
+  ): Promise<User> {
     const saltOrRounds = 10;
     const hashedCode = await bcrypt.hash(code.toString(), saltOrRounds);
-    await this.repository.updateTwoFactorAuth(
+    return await this.repository.updateTwoFactorAuth(
       intraId,
       new TwoFactorAuthType({
         code: hashedCode,
@@ -63,7 +64,11 @@ export class TwoFactorAuthUseCase {
   async acceptEmail(intraId: string): Promise<void> {
     await this.repository.updateTwoFactorAuth(
       intraId,
-      new TwoFactorAuthType({ code: null, isEmailValidated: true }),
+      new TwoFactorAuthType({
+        code: null,
+        isEmailValidated: true,
+        is2faValidated: true,
+      }),
     );
   }
 }

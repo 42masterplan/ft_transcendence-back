@@ -4,7 +4,6 @@ export class BlockedUser {
   private readonly _primaryUserId: string;
   private readonly _targetUserId: string;
 
-  // TODO: implement validation
   constructor(props: {
     id: number;
     isDeleted: boolean;

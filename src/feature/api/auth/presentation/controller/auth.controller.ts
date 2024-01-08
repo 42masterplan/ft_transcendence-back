@@ -2,10 +2,12 @@ import { UsersUseCase } from '../../../users/application/use-case/users.use-case
 import { CreateUserDto } from '../../../users/presentation/dto/create-user.dto';
 import { UsersService } from '../../../users/users.service';
 import { AuthService } from '../../auth.service';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Logger, Query } from '@nestjs/common';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
@@ -14,11 +16,12 @@ export class AuthController {
 
   @Get('callback')
   async getAccessTokenFromFT(@Query('code') code: string) {
+    this.logger.log('login from 42');
     const accessToken: string =
       await this.authService.getAccessTokenFromFT(code);
     const intraId: string = await this.authService.getUserIntraId(accessToken);
     const jwtToken: string = await this.authService.getJwtToken(intraId);
-    const user = await this.usersService.findOneByIntraId(intraId);
+    const user = await this.usersUseCase.findOneByIntraId(intraId);
     let isExist = false;
     let is2faEnabled = false;
     let isSignInFinish = false;
