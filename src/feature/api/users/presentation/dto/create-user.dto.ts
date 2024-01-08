@@ -1,13 +1,16 @@
-import { IsBoolean, IsString, IsUrl } from 'class-validator';
+import { IsBoolean, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
+  @MaxLength(32)
   intraId: string;
 
   @IsUrl()
+  @MaxLength(128)
   profileImage: string = process.env.SERVER_URL + '/resources/panda_health.svg';
 
   @IsString()
+  @MaxLength(128)
   introduction: string = '';
 
   @IsBoolean()

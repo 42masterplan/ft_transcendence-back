@@ -5,6 +5,7 @@ import {
   IsString,
   IsUrl,
   Matches,
+  MaxLength,
 } from 'class-validator';
 
 export class UpdateUserDto {
@@ -12,6 +13,7 @@ export class UpdateUserDto {
   @IsNotEmpty()
   @IsOptional()
   @Matches(/[^가-힣a-zA-Z0-9]/g)
+  @MaxLength(32)
   name?: string;
 
   @IsUrl({
@@ -20,10 +22,12 @@ export class UpdateUserDto {
     require_port: true,
   })
   @IsOptional()
+  @MaxLength(128)
   profileImage?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(128)
   introduction?: string;
 
   @IsBoolean()
