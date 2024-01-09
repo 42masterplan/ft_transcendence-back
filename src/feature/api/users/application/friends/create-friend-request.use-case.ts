@@ -79,12 +79,19 @@ export class CreateFriendRequestUseCase {
         primaryUserId,
         targetUserId,
       });
-    this.logger.log(friendRequests);
+    const friendRequests2 =
+      await this.repository.findManyByPrimaryUserIdTargetUserId({
+        primaryUserId: targetUserId,
+        targetUserId: primaryUserId,
+      });
     const friendRequest = friendRequests.filter((friendRequest) =>
       friendRequest.isAcceptedNull(),
     );
+    const friendRequest2 = friendRequests2.filter((friendRequest) =>
+      friendRequest.isAcceptedNull(),
+    );
 
-    if (friendRequest.length > 0) {
+    if (friendRequest.length > 0 || friendRequest2.length > 0) {
       return true;
     }
 
