@@ -84,15 +84,9 @@ export class CreateFriendRequestUseCase {
         primaryUserId: targetUserId,
         targetUserId: primaryUserId,
       });
-    const friendRequest = friendRequests.filter((friendRequest) =>
-      friendRequest.isAcceptedNull(),
-    );
-    const friendRequest2 = friendRequests2.filter((friendRequest) =>
-      friendRequest.isAcceptedNull(),
-    );
 
-    if (!friendRequest || !friendRequest2) return false;
-    if (friendRequest.length > 0 || friendRequest2.length > 0) {
+    if (!friendRequests || !friendRequests2) return false;
+    if (friendRequests.length > 0 || friendRequests2.length > 0) {
       return true;
     }
 

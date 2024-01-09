@@ -3,7 +3,12 @@ import { NotificationGateway } from '../../../notification/presentation/notifica
 import { FriendRequest } from '../../domain/friend/friend-request';
 import { FriendRequestRepository } from '../../domain/friend/interface/friend-request.repository';
 import { FriendUseCase } from './friend.use-case';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class FriendRequestUseCase {
@@ -23,6 +28,8 @@ export class FriendRequestUseCase {
     if (!friendRequest) {
       throw new NotFoundException('Friend request not found');
     }
+    if (friendRequest.isAccepted !== null)
+      throw new ConflictException('이미 처리된 친구 요청입니다.');
 
     friendRequest.updateIsAccepted(true);
 
@@ -50,6 +57,8 @@ export class FriendRequestUseCase {
     if (!friendRequest) {
       throw new NotFoundException('Friend request not found');
     }
+    if (friendRequest.isAccepted !== null)
+      throw new ConflictException('이미 처리된 친구 요청입니다.');
 
     friendRequest.updateIsAccepted(false);
 
@@ -63,22 +72,16 @@ export class FriendRequestUseCase {
     myId: string;
     targetId: string;
   }): Promise<FriendRequest[]> {
-    const friendRequestsByMe =
+    const acceptableRequestsByMe =
       await this.repository.findManyByPrimaryUserIdTargetUserId({
         primaryUserId: myId,
         targetUserId: targetId,
       });
-    const friendRequestsToMe =
+    const acceptableRequestsToMe =
       await this.repository.findManyByPrimaryUserIdTargetUserId({
         primaryUserId: myId,
         targetUserId: targetId,
       });
-    const acceptableRequestsByMe = friendRequestsByMe.filter(
-      (friendRequest) => friendRequest.isAccepted === null,
-    );
-    const acceptableRequestsToMe = friendRequestsToMe.filter(
-      (friendRequest) => friendRequest.isAccepted === null,
-    );
 
     const requests = acceptableRequestsByMe.filter((friendRequest) =>
       acceptableRequestsToMe.includes(friendRequest),

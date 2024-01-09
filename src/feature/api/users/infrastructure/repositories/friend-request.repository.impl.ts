@@ -66,6 +66,7 @@ export class FriendRequestRepositoryImpl implements FriendRequestRepository {
     const friendRequest = await this.repository.find({
       primaryUserId,
       targetUserId,
+      isAccepted: null,
     });
 
     return friendRequest.map((friendRequest) => this.toDomain(friendRequest));
