@@ -485,7 +485,7 @@ export class ChannelService {
   ): Promise<PublicChannelDto[]> {
     const publicChannels = (PublicChannelDto[channels.length] = []);
 
-    for (const channel of channels) {
+    for await (const channel of channels) {
       if (channel.status !== 'Public') continue;
       const publicChannelDto = new PublicChannelDto();
       publicChannelDto.name = channel.name;

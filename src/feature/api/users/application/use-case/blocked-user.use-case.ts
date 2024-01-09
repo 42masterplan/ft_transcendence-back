@@ -28,7 +28,7 @@ export class BlockedUserUseCase {
       myId,
       targetId,
     });
-    for (const request of requests) {
+    for await (const request of requests) {
       await this.friendRequestUseCase.rejectFriendRequest({
         requestId: request.id,
       });

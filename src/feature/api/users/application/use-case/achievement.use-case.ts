@@ -43,7 +43,7 @@ export class AchievementUseCase {
 
   async initAchievementStatus(userId: string) {
     const achievements = await this.achievementRepository.findAll();
-    for (const achievement of achievements) {
+    for await (const achievement of achievements) {
       await this.achievementStatusRepository.saveOne(userId, achievement.id);
     }
   }

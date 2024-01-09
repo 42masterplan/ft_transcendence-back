@@ -124,7 +124,7 @@ export class ChannelGateway
   async getMyChannelsInRoom(room: string) {
     const clients = this.server.adapter.rooms.get(room);
     if (clients) {
-      for (const client of clients) {
+      for await (const client of clients) {
         const myId = this.socketToUser.get(client);
         const list = await this.channelService.getMyChannels(myId);
         this.server.to(client).emit('myChannels', list);
@@ -135,7 +135,7 @@ export class ChannelGateway
   async newMessageInRoom(room: string, newMessage) {
     const clients = this.server.adapter.rooms.get(room);
     if (clients) {
-      for (const client of clients) {
+      for await (const client of clients) {
         const myId = this.socketToUser.get(client);
         if (
           await this.blockedUserUseCase.isBlocked({
@@ -152,7 +152,7 @@ export class ChannelGateway
   async getPublicChannelsToAll() {
     const clients = this.server.sockets.keys();
     if (clients) {
-      for (const client of clients) {
+      for await (const client of clients) {
         const myId = this.socketToUser.get(client);
         const channels = await this.channelService.getPublicChannels(myId);
         this.server.to(client).emit('getPublicChannels', channels);
