@@ -209,6 +209,7 @@ export class UsersController {
       name: user.name,
       profileImage: user.profileImage,
       introduction: user.introduction,
+      is2faEnabled: user.is2faEnabled,
     };
   }
 
