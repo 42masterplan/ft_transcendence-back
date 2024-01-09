@@ -79,13 +79,11 @@ export class FriendRequestUseCase {
       });
     const acceptableRequestsToMe =
       await this.repository.findManyByPrimaryUserIdTargetUserId({
-        primaryUserId: myId,
-        targetUserId: targetId,
+        primaryUserId: targetId,
+        targetUserId: myId,
       });
 
-    const requests = acceptableRequestsByMe.filter((friendRequest) =>
-      acceptableRequestsToMe.includes(friendRequest),
-    );
-    return requests;
+    acceptableRequestsByMe.push(...acceptableRequestsToMe);
+    return acceptableRequestsByMe;
   }
 }
