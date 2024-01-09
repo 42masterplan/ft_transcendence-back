@@ -99,7 +99,8 @@ export class TwoFactorAuthController {
     const expiredDate = new Date();
     expiredDate.setMinutes(expiredDate.getMinutes() - 5);
 
-    if (user.is2faEnabled === true || user.is2faValidated === true) return true;
+    if (user.is2faEnabled === false || user.is2faValidated === true)
+      return true;
     if (user.verificationCode === null || user.updatedAt <= expiredDate)
       throw new BadRequestException('이메일 검증에 오류가 발생하였습니다.');
 
