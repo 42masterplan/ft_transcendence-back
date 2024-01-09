@@ -91,6 +91,7 @@ export class CreateFriendRequestUseCase {
       friendRequest.isAcceptedNull(),
     );
 
+    if (!friendRequest || !friendRequest2) return false;
     if (friendRequest.length > 0 || friendRequest2.length > 0) {
       return true;
     }
