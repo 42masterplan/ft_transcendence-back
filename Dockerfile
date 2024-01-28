@@ -1,12 +1,16 @@
 FROM node:lts-alpine
 WORKDIR /usr/src/app
-COPY package*.json ./
+COPY package.json ./
 
 RUN npm install
 
 COPY . .
+# install packages
+RUN npm install
+RUN npm install -g @nestjs/cli
+# build
+RUN nest build
 
-RUN npm i
-RUN npm run build
+RUN chmod +x entry.sh
 
-CMD ["npm", "run", "start:prod"]
+CMD ["./entry.sh"]

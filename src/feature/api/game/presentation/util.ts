@@ -1,0 +1,16 @@
+export const SCREEN_WIDTH = 400;
+export const SCREEN_HEIGHT = 600; //screen ratio is 2:3
+export const PLAYER_WIDTH = 100;
+export const PLAYER_HEIGHT = 15;
+export const PLAYER_A_COLOR = 'rgba(217, 217, 217, 1)';
+export const PLAYER_B_COLOR = 'rgba(0, 133, 255, 1)';
+export const BALL_RADIUS = 5;
+export const BALL_COLOR = 'white';
+export const BALL_SPEED = 1.3;
+export const BALL_VELOCITY_X = 1;
+export const BALL_VELOCITY_Y = 1;
+export const PADDLE_OFFSET = SCREEN_WIDTH / 100;
+export const SCORE_LIMIT = 10;
+export const GAME_TIME_LIMIT = 90;
+export const DEBOUNCING_TIME = 500;
+export const GAME_STATE_UPDATE_RATE = 5;
